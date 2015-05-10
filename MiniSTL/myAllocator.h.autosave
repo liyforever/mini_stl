@@ -1,8 +1,0 @@
-#ifndef MYALLOCATOR_H
-#define MYALLOCATOR_H
-#include "global.h"
-
-MINI_STL_BEGIN
-
-
-#endif // MYALLOCATOR_H
