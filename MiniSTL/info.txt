@@ -1,0 +1,2 @@
+如果定义 c11
+#ifdef MINI_STL_SET_MALLOC_HANLDER
