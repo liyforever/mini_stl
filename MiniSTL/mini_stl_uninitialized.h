@@ -15,7 +15,7 @@ uninitialized_copy_aux(InputIter first, InputIter last,
                         ForwardIter result,
                         true_type)
 {
-    copy(first, last, result);
+    return copy(first, last, result);
 }
 
 //有构造函数类型

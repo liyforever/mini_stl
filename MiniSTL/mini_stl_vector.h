@@ -23,7 +23,11 @@ protected:
     iterator m_end;
 
     void insert_aux(iterator position, const T& x);
-    void deallocate();
+    void deallocate()
+    {
+        if(m_first)
+            data_allocator::deallocate(m_first, m_end - m_first);
+    }
 
     void fill_initialize(size_type n, const value_type& value)
     {
@@ -73,12 +77,81 @@ public:
     }
 #endif
 
-    //void swap(vector<value_type,allocator> rightVec);
+    void swap(vector<T, Alloc> &rightVec);
+    friend void swap(vector &leftVec, vector &rightVec)
+    {
+        leftVec.swap(rightVec);
+    }
+
     size_type size() const
     {
-        return m_last - m_first;
+        return static_cast<size_type>(m_last - m_first);
     }
+
+    iterator begin() { return m_first; }
+    iterator end() { return m_last; }
+    iterator erase(iterator position);
+    iterator erase(iterator first, iterator last);
+    void resize(size_type newSize, const T &x);
+    void resize(size_type newSize);
 };
+
+template <class T, class Alloc>
+void vector<T, Alloc>::swap(vector<T, Alloc> &rightVec)
+{
+    if(this == &rightVec)
+        ;
+    else {
+        iterator tempIter = m_first;
+        m_first = rightVec.m_first;
+        rightVec.m_first = tempIter;
+
+        tempIter = m_last;
+        m_last = rightVec.m_last;
+        rightVec.m_last = tempIter;
+
+        tempIter = m_end;
+        m_end = rightVec.m_end;
+        rightVec.m_end = tempIter;
+    }
+}
+
+template <class T, class Alloc>
+typename vector<T, Alloc>::iterator
+vector<T, Alloc>::erase(iterator position)
+{
+    //如果迭代器位置超过end 那么结果未定义
+    if (position + 1 != m_end)
+        copy(position + 1, m_last, position);
+    --m_last;
+    destroy(m_last);
+    return position;
+}
+
+template <class T, class Alloc>
+typename vector<T, Alloc>::iterator
+vector<T, Alloc>::erase(iterator first, iterator last)
+{
+    iterator i = copy(last, m_last, first);
+    destroy(i, m_last);
+    m_last = m_last - (last - first);
+    return first;
+}
+
+template <class T, class Alloc>
+void vector<T, Alloc>::resize(size_type newSize, const T &x)
+{
+    if(newSize < size())
+        erase(m_first + newSize, m_last);
+    else
+        insert(m_last, newSize - size(), x);
+}
+
+template <class T, class Alloc>
+void vector<T, Alloc>::resize(size_type newSize)
+{
+    resize(newSize, T());
+}
 
 MINI_STL_END
 #endif // VECTOR_H
