@@ -14,7 +14,8 @@ HEADERS += \
     mini_stl_uninitialized.h \
     mini_stl_vector.h \
     mini_stl_algobase.h \
-    mini_stl_config.h
+    mini_stl_config.h \
+    mini_std_pair.h
 
 OTHER_FILES += \
     info.txt

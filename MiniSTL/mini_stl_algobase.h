@@ -6,6 +6,31 @@
 #include <string.h>
 #include <wchar.h>
 MINI_STL_BEGIN
+
+template <class Type>
+inline Type& max(Type &left, Type &right)
+{
+    return right < left ? left : right;
+}
+
+template <class Type, class Cmp>
+inline Type& max(Type &left, Type &right, Cmp cp)
+{
+    return cp(right, left) ? left : right;
+}
+
+template <class Type, class Cmp>
+inline Type& min(Type &left, Type &right, Cmp cp)
+{
+    return cp(left, right) ? left : right;
+}
+
+template <class Type>
+inline Type& min(Type &left, Type &right)
+{
+    return left < right ? left : right;
+}
+
 template <class ForwardIter, class T>
 inline void
 fill(ForwardIter first, ForwardIter last, const T& value)
@@ -36,7 +61,7 @@ __copy_d(RandomAccessIter first, RandomAccessIter last,
 template <class T>
 inline T*
 __copy_t(const T* first, const T* last, T* result,
-         true_type)
+         __true_type)
 {
     memmove(result, first, sizeof(T) * (last - first));
     return result + (last - first);
@@ -45,7 +70,7 @@ __copy_t(const T* first, const T* last, T* result,
 template <class T>
 inline T*
 __copy_t(const T* first, const T* last, T* result,
-         false_type)
+         __false_type)
 {
     return __copy_d(first, last, result, (ptrdiff_t*)0);
 }
@@ -66,7 +91,7 @@ inline OutputIter
 __copy(RandomAccessIter first, RandomAccessIter last,
        OutputIter result, random_access_iterator_tag)
 {
-    return __copy_d(first, last, result, distance_type(first));
+    return __copy_d(first, last, result, DISTANCE_TYPE(first));
 }
 template <class InputIter, class OutputIter>
 struct __copy_dispatch
@@ -74,7 +99,7 @@ struct __copy_dispatch
     OutputIter operator()(InputIter first, InputIter last,
                           OutputIter result)
     {
-        return __copy(first, last, result, iterator_category(first));
+        return __copy(first, last, result, ITERATOR_CATEGORY(first));
     }
 };
 
@@ -83,7 +108,7 @@ struct __copy_dispatch<T*, T*>
 {
     T* operator ()(T* first, T* last, T* result)
     {
-        typedef typename type_traits<T>::has_trivial_assignment_operator t;
+        typedef typename _type_traits<T>::has_trivial_assignment_operator t;
         return __copy_t(first, last, result, t());
     }
 };
@@ -93,7 +118,7 @@ struct __copy_dispatch<const T*, T*>
 {
     T* operator ()(const T* first, const T* last, T* result)
     {
-        typedef typename type_traits<T>::has_trivial_assignment_operator t;
+        typedef typename _type_traits<T>::has_trivial_assignment_operator t;
         return __copy_t(first, last, result, t());
     }
 };
@@ -118,5 +143,29 @@ inline wchar_t* copy(const wchar_t *first, const wchar_t *last, wchar_t *result)
     return result + (last - first);
 }
 
+
+/************************copy_backward__begin**************************/
+
+template <class BidirectionalIter1, class BidirectionalIter2>
+inline BidirectionalIter2 copy_backward(BidirectionalIter1 first,
+                                        BidirectionalIter1 last,
+                                        BidirectionalIter2 result)
+{
+    while (first != last)
+        *--result = *--last;
+    return result;
+}
+
+template <class RandomAccessIter, class BidirectionalIter, class Distance>
+inline BidirectionalIter copy_backward(RandomAccessIter first,
+                                       RandomAccessIter last,
+                                       BidirectionalIter result,
+                                       Distance*)
+{
+    for (Distance n = last - first; n > 0; --n)
+        *--result = *--last;
+    return result;
+}
+/************************copy_backward__end**************************/
 MINI_STL_END
 #endif // MINI_STL_ALGOBASE_H
