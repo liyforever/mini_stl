@@ -143,6 +143,22 @@ protected://aux_function
         _M_data_allocator::deallocate(p);
     }
 
+    void _M_transfer_aux(iterator position, iterator first, iterator last)
+    {
+        if(position != last) {
+            // Remove [first, last) from its old position.
+            last._M_node->_M_prev->_M_next = position._M_node;
+            first._M_node->_M_prev->_M_next = last._M_node;
+            position._M_node->_M_prev->_M_next = first._M_node;
+
+            // Splice [first, last) into its new position.
+            __list_node_base* tmp      = position._M_node->_M_prev;
+            position._M_node->_M_prev = last._M_node->_M_prev;
+            last._M_node->_M_prev = first._M_node->_M_prev;
+            first._M_node->_M_prev = tmp;
+        }
+    }
+
 public://constructor and destroy
     explicit list()
     {
@@ -340,21 +356,59 @@ public:
 #endif //MINI_STL_MEMBER_TEMPLATES
 
    void sort();
+   void splice(iterator position, list& rhs)
+   {
+       if(this==&rhs || rhs.empty())
+           //不支持自我splice
+           ;
+       else {
+           _M_size += rhs._M_size;
+           rhs._M_size = 0;
+           _M_transfer_aux(position, rhs.begin(), rhs.end());
+       }
+   }
+
+   //将i插入position之前
+   void splice(iterator position, list& rhs, iterator i)
+   {
+       iterator j = i;
+       ++j;
+       if(this==&rhs || position==i || position==j)
+           return;
+       --rhs._M_size;
+       ++_M_size;
+       _M_transfer_aux(position, i, j);
+   }
+
+   void splice(iterator position, list& rhs,
+               iterator first, iterator last)
+   {
+       if(this==&rhs || first!=last) {
+           size_type n = 0;
+           iterator tmpFirst = first;
+           iterator tmpLast = last;
+           while(tmpFirst++!=tmpLast)
+               ++n;
+           rhs._M_size -= n;
+           this->_M_size += n;
+           _M_transfer_aux(position, first, last);
+       }
+   }
 
 // list cmp
-    bool operator == (const list& rhsList)
-    {
-        if(size() != rhsList.size())
-            return false;
-        iterator lhsIter =  begin();
-        const_iterator rhsIter = rhsList.begin();
-        for( ; lhsIter!=end(); ++lhsIter,++rhsIter)
-        {
-            if(*lhsIter != *rhsIter)
-                return false;
-        }
-        return true;
-    }
+   bool operator == (const list& rhsList)
+   {
+       if(size() != rhsList.size())
+           return false;
+       iterator lhsIter =  begin();
+       const_iterator rhsIter = rhsList.begin();
+       for( ; lhsIter!=end(); ++lhsIter,++rhsIter)
+       {
+           if(*lhsIter != *rhsIter)
+               return false;
+       }
+       return true;
+   }
     bool operator != (const list& rhsList)
     {
         if(size() != rhsList.size())
@@ -558,14 +612,14 @@ void list<Type,Alloc>::unique()
 #ifdef MINI_STL_MEMBER_TEMPLATES
 template <class Type, class Alloc>
 template <class BinaryPredicate>
-void sort(BinaryPredicate pred)
+void list<Type,Alloc>::sort(BinaryPredicate pred)
 {
 
 }
 
 #endif //MINI_STL_MEMBER_TEMPLATES
-
-void sort()
+template <class Type, class Alloc>
+void list<Type,Alloc>::sort()
 {
 
 }
