@@ -24,7 +24,6 @@ public:
     typedef ptrdiff_t         difference_type;
     typedef Alloc             allocator_type;
 protected:
-public:
     typedef simpleAlloc<value_type, Alloc> _M_data_allocator;
     iterator _M_first;
     iterator _M_last;
@@ -63,6 +62,7 @@ public://constructor and destory
         _M_last = uninitialized_copy(rightVec._M_first, rightVec._M_end, _M_first);
         _M_end = _M_last;
     }
+#ifdef MINI_STL_MEMBER_TEMPLATES
     template <class InuputIterator>
         vector(InuputIterator first,
                InuputIterator last)
@@ -72,6 +72,7 @@ public://constructor and destory
         _M_last = uninitialized_copy(first, last, _M_first);
         _M_end = _M_last;
     }
+#endif //MINI_STL_MEMBER_TEMPLATES
     vector& operator=(const vector& rightVec)
     {
         if(this != &rightVec)

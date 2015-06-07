@@ -16,7 +16,7 @@ struct pair
 #ifdef  MINI_STL_MEMBER_TEMPLATES
 template <class U1, class U2>
     pair(const pair<U1, U2>& p) : first(p.first), second(p.second) {}
-#endif
+#endif //MINI_STL_MEMBER_TEMPLATES
 };
 
 template <class T1, class T2>

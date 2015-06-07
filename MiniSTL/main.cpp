@@ -1,29 +1,52 @@
 #define LIB_TEST
 #ifdef LIB_TEST
 
-#define MINI_STL_TEST
+//#define MINI_STL_TEST
 #ifdef MINI_STL_TEST
 #include <iostream>
+#include <string>
 #include "mini_stl_vector.h"
+#include "mini_stl_list.h"
 using namespace Mini_STL;
 using std::cout;
 using std::endl;
+using std::string;
 #else
 #include <vector>
 #include <iostream>
+#include <list>
+#include <string>
 using namespace std;
 #endif
-
-
-
-int main()
+#include <functional>
+#include "Windows.h"
+int main( )
 {
-#ifdef MINI_STL_MEMBER_TEMPLATES
-    cout << "has tt" << endl;
-#else
-    cout << "no tt" << endl;
-#endif
+    list <int> c1;
+    list <int>::iterator c1_Iter;
+    auto gar = [](int l, int r)->bool{return l >r;};
+    c1.push_back( 20 );
+    c1.push_back( 10 );
+    c1.push_back( 30 );
+
+    cout << "Before sorting: c1 =";
+    for ( c1_Iter = c1.begin( ); c1_Iter != c1.end( ); c1_Iter++ )
+       cout << " " << *c1_Iter;
+    cout << endl;
+
+    c1.sort( );
+    cout << "After sorting c1 =";
+    for ( c1_Iter = c1.begin( ); c1_Iter != c1.end( ); c1_Iter++ )
+       cout << " " << *c1_Iter;
+    cout << endl;
+
+    c1.sort( gar );
+    cout << "After sorting with 'greater than' operation, c1 =";
+    for ( c1_Iter = c1.begin( ); c1_Iter != c1.end( ); c1_Iter++ )
+       cout << " " << *c1_Iter;
+    cout << endl;
  }
+
 #else
 #include <iostream>
 #include "mini_stl_iterator.h"
@@ -71,25 +94,21 @@ void ii(random_access_iterator_tag)
 {
     cout << "random_access_iterator_tag" << endl;
 }*/
-#include "memory.h"
-using Mini_STL::default_allocator;
-class TT{};
-template <class T,class Alloc=default_allocator>
-class MYS
-{
-public:
-    template <class ITER>
-    void ii(int c,ITER A,ITER B)
-    {
-        cout<< "iter,b" << endl;
-    }
-};
+#include <iostream>
+#include <vector>
+#include <set>
+#include <time.h>
+#include "Windows.h"
+using namespace std;
 
 int main()
 {
-    char A[10] = {1,2,3,4,5,6,7,8,9,10};
-    MYS<int> mys;
-    mys.ii(10,A,A);
-    return 0;
+    DWORD start,end;
+    start = GetTickCount();
+    set<int> mySet;
+    for(int i=0;i!=1000000;++i)
+        mySet.insert(rand());
+    end = GetTickCount();
+    cout << end - start << endl;
 }
 #endif

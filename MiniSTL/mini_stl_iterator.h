@@ -12,7 +12,18 @@ struct bidirectional_iterator_tag : public forward_iterator_tag {};
 struct random_access_iterator_tag : public bidirectional_iterator_tag {};
 
 
-
+template <class Category, class Type, class Distance = ptrdiff_t,
+          class Pinter = Type*, class Reference = Type&>
+struct my_iterator_base
+{
+    typedef Category                iterator_category;
+    typedef Type                    value_type;
+    typedef ptrdiff_t               difference_type;
+    typedef Type*                   pointer;
+    typedef const Type*             const_pointer;
+    typedef Type&                   reference;
+    typedef const Type&             const_reference;
+};
 #ifdef MINI_STL_CLASS_PARTIAL_SPECIALIZATION
 
 template <class Iterator>

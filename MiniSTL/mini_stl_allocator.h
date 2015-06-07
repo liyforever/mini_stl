@@ -287,13 +287,14 @@ public:
 
     static void deallocate(T* ptr, size_t n)
     {
-        if(!n)
+        if(n)
             Alloc::deallocate(ptr, n * sizeof(T));
     }
 
     static void deallocate(T* ptr)
     {
-        Alloc::deallocate(ptr, sizeof(T));
+        if(ptr)
+            Alloc::deallocate(ptr, sizeof(T));
     }
 };
 
