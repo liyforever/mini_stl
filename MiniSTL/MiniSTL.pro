@@ -16,7 +16,8 @@ HEADERS += \
     mini_stl_algobase.h \
     mini_stl_config.h \
     mini_std_pair.h \
-    mini_stl_list.h
+    mini_stl_list.h \
+    mini_stl_deque.h
 
 OTHER_FILES += \
     info.txt

@@ -38,7 +38,7 @@ protected://aux_function
     }
     void _M_insert_aux(iterator position, const T& val);
     void _M_insert_aux(iterator position);
-public://constructor and destory
+public://constructor and destructor
     explicit vector() : _M_first(0), _M_last(0), _M_end(0){}
     explicit vector(size_type count)
     {

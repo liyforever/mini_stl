@@ -159,7 +159,7 @@ protected://aux_function
         }
     }
 
-public://constructor and destroy
+public://constructor and destructor
     explicit list()
     {
         _M_head = _M_data_allocator::allocate();
