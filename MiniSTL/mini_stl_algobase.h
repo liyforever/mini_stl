@@ -8,19 +8,19 @@
 MINI_STL_BEGIN
 
 template <class Type>
-inline Type& max(Type &left, Type &right)
+inline const Type& max(const Type &left, const Type &right)
 {
     return right < left ? left : right;
 }
 
 template <class Type, class Cmp>
-inline Type& max(Type &left, Type &right, Cmp cp)
+inline const Type& max(const Type &left, const Type &right, Cmp cp)
 {
     return cp(right, left) ? left : right;
 }
 
 template <class Type, class Cmp>
-inline Type& min(Type &left, Type &right, Cmp cp)
+inline Type& min(const Type &left, const Type &right, Cmp cp)
 {
     return cp(left, right) ? left : right;
 }

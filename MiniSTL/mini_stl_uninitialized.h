@@ -154,7 +154,7 @@ template <class ForwardIter, class T, class T1>
 inline void __uninitialized_fill(ForwardIter first,
                                  ForwardIter last, const T& x, T1*)
 {
-    typedef typename type_traits<T1>::is_POD_type Is_POD;
+    typedef typename _type_traits<T1>::is_POD_type Is_POD;
     __uninitialized_fill_aux(first, last, x, Is_POD());
 
 }
