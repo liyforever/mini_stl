@@ -217,11 +217,12 @@ public:
 
   deque(const deque& rhs);
 
-/*#ifdef MINI_STL_MEMBER_TEMPLATES
+#ifdef MINI_STL_MEMBER_TEMPLATES
   template<class InputIterator>
   deque(InputIterator first,
-        InputIterator last);
-#endif //MINI_STL_MEMBER_TEMPLATES*/
+        InputIterator last,
+        typename is_iterator<InputIterator>::ID = Identity());
+#endif //MINI_STL_MEMBER_TEMPLATES
 
 #ifdef MINI_STL_HAS_MOVE
   deque(deque&& rhs)
@@ -350,7 +351,8 @@ public:
      void insert(
         iterator position,
         InputIterator first,
-        InputIterator last
+        InputIterator last,
+        typename is_iterator<InputIterator>::ID = Identity()
      );
 #endif //MINI_STL_MEMBER_TEMPLATES
   iterator erase(iterator position);
@@ -363,7 +365,8 @@ public:
   template<class InputIterator>
      void assign(
         InputIterator first,
-        InputIterator last
+        InputIterator last,
+        typename is_iterator<InputIterator>::ID = Identity()
      );
 #endif //MINI_STL_MEMBER_TEMPLATES
 

@@ -34,4 +34,5 @@
 #   define MINI_STL_UNWIND(action)
 # endif
 
+#define MINI_STL_THROW_RANGE_ERROR(msg) (throw std::out_of_range(msg))
 #endif// MINI_STL_CONFIG_H

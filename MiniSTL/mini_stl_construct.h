@@ -9,11 +9,12 @@ MINI_STL_BEGIN
 template <class T1, class T2>
 inline void construct(T1* p, const T2& value)
 {
-    new (p)T1(value);
+  new (p)T1(value);
 }
 
 template <class T>
-inline void construct(T* p) {
+inline void construct(T* p)
+{
   new (p) T();
 }
 
@@ -21,7 +22,7 @@ inline void construct(T* p) {
 template <class T>
 inline void destroy(T* pointer)
 {
-    pointer->~T();
+  pointer->~T();
 }
 
 //一对迭代器版本
@@ -29,8 +30,8 @@ inline void destroy(T* pointer)
 template <class ForwardIter>
 inline void _destroy_aux(ForwardIter first, ForwardIter last, __false_type)
 {
-    for(; first!=last; ++first)
-        destroy(&*first);
+  for (; first!=last; ++first)
+    destroy(&*first);
 }
 //内置类型,空函数
 template <class ForwardIter>
@@ -40,15 +41,15 @@ inline void _destroy_aux(ForwardIter , ForwardIter , __true_type) {}
 template <class ForwardIter, class T>
 inline void _destroy(ForwardIter first, ForwardIter last, T*)
 {
-    typedef typename _type_traits<T>::has_trivial_destructor trivial_destructor;
-    _destroy_aux(first, last, trivial_destructor());
+  typedef typename _type_traits<T>::has_trivial_destructor trivial_destructor;
+  _destroy_aux(first, last, trivial_destructor());
 }
 
 //上层接口的析构函数,一对迭代器版本
 template <class ForwardIter>
 inline void destroy(ForwardIter first, ForwardIter last)
 {
-    _destroy(first, last, VALUE_TYPE(first));
+  _destroy(first, last, VALUE_TYPE(first));
 }
 
 inline void destroy(char*, char*) {}

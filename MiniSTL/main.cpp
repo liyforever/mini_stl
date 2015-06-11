@@ -5,6 +5,7 @@
 #ifdef MINI_STL_TEST
 #include <iostream>
 #include <string>
+#include "mini_stl_stack.h"
 #include "mini_stl_vector.h"
 #include "mini_stl_list.h"
 #include "mini_stl_deque.h"
@@ -22,95 +23,73 @@ using namespace std;
 #endif
 #include <functional>
 #include "Windows.h"
+
+vector<int> aa()
+{
+  vector<int> ii;
+  ii.push_back(1111);
+  ii.push_back(2222);
+  ii.push_back(3333);
+  cout << 1111111111111111111;
+  cout << ii.size() << endl;
+  return ii;
+}
+
 int main( )
 {
-  deque <int> c1, c2;
-    deque <int>::iterator Iter;
 
-    c1.push_back( 10 );
-    c1.push_back( 20 );
-    c1.push_back( 30 );
-    c2.push_back( 40 );
-    c2.push_back( 50 );
-    c2.push_back( 60 );
+  vector <int> v1;
 
-    cout << "[ c1 = ";
-    for ( Iter = c1.begin( ); Iter != c1.end( ); Iter++ )
-       cout << *Iter << " ";
-    cout << "]" << endl;
+  v1.push_back( 10 );
+  v1.push_back( 20 );
+  v1.push_back( 30 );
 
-    Iter = c1.begin( );
-    //Iter++;
-    c1.insert( Iter, 100 );
-    cout << "[ c1 = ";
-    for ( Iter = c1.begin( ); Iter != c1.end( ); Iter++ )
-       cout << *Iter << " ";
-    cout << "]" << endl;
+  v1.resize( 4,40 );
+  cout << "The size of v1 is " << v1.size( ) << endl;
+  cout << "The value of the last object is " << v1.back( ) << endl;
+
+  v1.resize( 0 );
+  cout << "The size of v1 is now " << v1.size( ) << endl;
+  cout << "The value of the last object is now " << v1.back( ) << endl;
 }
 
 
 #else
 #include <iostream>
-#include "mini_stl_iterator.h"
-#include "memory.h"
-using namespace Mini_STL;
 using std::cout;
 using std::endl;
 using std::string;
-/*template <class T>
-typename _type_traits<T>::is_POD_type
-tt(const T*)
-{
-
-    typedef typename _type_traits<T>::is_POD_type ii;
-    return ii();
-}
-void cc(__true_type)
-{
-    cout << "true_type" << endl;
-}
-void cc(__false_type)
-{
-    cout << "false_type" << endl;
-}
-void ii(input_iterator_tag)
-{
-    cout << "input_iterator_tag" << endl;
-}
-
-void ii(output_iterator_tag)
-{
-    cout << "output_iterator_tag" << endl;
-}
 
 
-void ii(forward_iterator_tag)
+class BB{};
+
+template <class T>
+struct enable_if
 {
-    cout << "forward_iterator_tag" << endl;
+  typedef int value_type;
+};
+
+template<>
+struct enable_if<int>
+{
+
+};
+
+template<class Type>
+void
+aaa(Type val,Type x,typename enable_if<Type>::value_type = 0)
+{
+  cout << "111" << endl;
 }
-void ii(bidirectional_iterator_tag)
+
+void aaa(size_t x,int a)
 {
-    cout << "bidirectional_iterator_tag" << endl;
+  cout << "222222222" << endl;
 }
-void ii(random_access_iterator_tag)
-{
-    cout << "random_access_iterator_tag" << endl;
-}*/
-#include <iostream>
-#include <vector>
-#include <set>
-#include <time.h>
-#include "Windows.h"
-using namespace std;
 
 int main()
 {
-    DWORD start,end;
-    start = GetTickCount();
-    set<int> mySet;
-    for(int i=0;i!=1000000;++i)
-        mySet.insert(rand());
-    end = GetTickCount();
-    cout << end - start << endl;
+  BB b1,b2;
+  aaa(1,1);
 }
 #endif
