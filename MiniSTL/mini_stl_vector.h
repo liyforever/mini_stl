@@ -1,5 +1,5 @@
-#ifndef VECTOR_H
-#define VECTOR_H
+#ifndef MINI_STL_VECTOR_H
+#define MINI_STL_VECTOR_H
 #include "mini_stl_iterator.h"
 #include "memory.h"
 #ifdef MINI_STL_DEBUG
@@ -512,7 +512,6 @@ void vector<Type, Alloc>::_insert_aux(iterator position, const Type& val)
       ++newLast;
       newLast = uninitialized_copy(position, last_, newLast);
     }
-    //rollback
     MINI_STL_UNWIND((destroy(newFirst,newLast);
                     _deallocate(newFirst,newSize);))
     destroy(first_, last_);
@@ -641,7 +640,6 @@ vector<Type, Alloc>::insert(const_iterator position, size_type n, const Type& va
           newLast = uninitialized_fill_n(newLast, n, val);
           newLast = uninitialized_copy((iterator)position, last_, newLast);
         }
-        //rollback
         MINI_STL_UNWIND (
           destroy(newFirst, newLast);
           data_allocator_::deallocate(newFirst, newSize);)
@@ -699,7 +697,6 @@ insert(const_iterator position,
         newLast = uninitialized_copy(first, last, newLast);
         newLast = uninitialized_copy((iterator)position, last_, newLast);
       }
-      //rollback
       MINI_STL_UNWIND((destroy(newFirst,newLast),
                           data_allocator_::deallocate(newFirst, newSize)));
       destroy(first_, last_);
@@ -740,7 +737,6 @@ vector<Type, Alloc>::insert(const_iterator position, Type&& val)
       ++newLast;
       newLast = uninitialized_copy(myIter, last_, newLast);
     }
-    //rollback
     MINI_STL_UNWIND((destroy(newFirst,newLast);
                     _deallocate(newFirst,newSize);))
     destroy(first_, last_);
@@ -756,4 +752,4 @@ vector<Type, Alloc>::insert(const_iterator position, Type&& val)
 #endif // MINI_STL_HAS_MOVE
 
 MINI_STL_END
-#endif // VECTOR_H
+#endif // MINI_STL_VECTOR_H

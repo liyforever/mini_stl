@@ -2,23 +2,25 @@
 #define MINI_STL_LIST_H
 #include "memory.h"
 #include "mini_stl_iterator.h"
+#ifdef MINI_STL_DEBUG
 #include <iostream>
-using std::cout;
+using std::cerr;
 using std::endl;
+#endif
 MINI_STL_BEGIN
 
 struct __list_node_base;
 
 struct __list_node_base
 {
-  __list_node_base* _M_prev;
-  __list_node_base* _M_next;
+  __list_node_base* prev;
+  __list_node_base* next;
 };
 
 template <class Type>
 struct _list_node : public __list_node_base
 {
-  Type _M_data;
+  Type data;
 };
 
 struct __list_iterator_base
@@ -27,29 +29,29 @@ struct __list_iterator_base
   typedef ptrdiff_t                   difference_type;
   typedef bidirectional_iterator_tag  iterator_category;
 
-  __list_node_base* _M_node;
+  __list_node_base* node;
 
   __list_iterator_base() {}
-  __list_iterator_base(__list_node_base* x) : _M_node(x) {}
+  __list_iterator_base(__list_node_base* x) : node(x) {}
 
-  void _M_incr() { _M_node = _M_node->_M_next; }
-  void _M_decr() { _M_node = _M_node->_M_prev; }
+  void incr() { node = node->next; }
+  void decr() { node = node->prev; }
 
   bool operator==(const __list_iterator_base& rhs) const
   {
-    return _M_node == rhs._M_node;
+    return node == rhs.node;
   }
 
   bool operator!=(const __list_iterator_base& rhs) const
   {
-    return _M_node != rhs._M_node;
+    return node != rhs.node;
   }
 };
 
 template <class Type, class Ref, class Ptr>
 struct _list_iterator : public __list_iterator_base
 {
-  typedef _list_iterator<Type,Type*,Type&>             iterator;
+  typedef _list_iterator<Type,Type&,Type*>             iterator;
   typedef _list_iterator<Type,const Type&,const Type*> const_iterator;
   typedef _list_iterator<Type,Ref,Ptr>                 Self;
 
@@ -60,11 +62,11 @@ struct _list_iterator : public __list_iterator_base
 
   _list_iterator() {}
   _list_iterator(node_type* x) : __list_iterator_base(x) {}
-  _list_iterator(const iterator& x) : __list_iterator_base(x._M_node) {}
+  _list_iterator(const iterator& x) : __list_iterator_base(x.node) {}
 
   reference operator*() const
   {
-    return static_cast<node_type*>(_M_node)->_M_data;
+    return static_cast<node_type*>(node)->data;
   }
 
   pointer operator->() const
@@ -74,27 +76,27 @@ struct _list_iterator : public __list_iterator_base
 
   Self& operator++()
   {
-    this->_M_incr();
+    this->incr();
     return *this;
   }
 
   Self operator++(int)
   {
     Self tmp = *this;
-    this->_M_incr();
+    this->incr();
     return tmp;
   }
 
   Self& operator--()
   {
-    this->_M_decr();
+    this->decr();
     return *this;
   }
 
   Self operator--(int)
   {
     Self tmp = *this;
-    this->_M_decr();
+    this->decr();
     return tmp;
   }
 };
@@ -117,129 +119,179 @@ public:
 protected:
   typedef _list_node<Type>    node_type;
   typedef _list_node<Type>*   node_ptr;
-  typedef simpleAlloc<node_type, default_allocator>   _M_data_allocator;
-  node_ptr _M_head;
-  size_type _M_size;
+  typedef simpleAlloc<node_type, default_allocator>   data_allocator_;
+  node_ptr head_;
+  size_type size_;
 public:
-  explicit list()
+  explicit list(const allocator_type&/*Al*/=allocator_type())
   {
-    _M_head = _M_data_allocator::allocate();
-    _M_empty_init();
+    head_ = data_allocator_::allocate();
+    _empty_init();
   }
 
   explicit list(size_type count)
   {
-    _M_head = _M_data_allocator::allocate();
-    _M_empty_init();
+#ifdef MINI_STL_DEBUG
+    _check_range();
+#endif
+    head_ = data_allocator_::allocate();
+    _empty_init();
     insert(begin(), count, Type());
   }
 
-  list(size_type count, const Type& val)
+  list(size_type count, const Type& val,
+       const allocator_type&/*Al*/=allocator_type())
   {
-    _M_head = _M_data_allocator::allocate();
-    _M_empty_init();
+#ifdef MINI_STL_DEBUG
+    _check_range();
+#endif
+    head_ = data_allocator_::allocate();
+    _empty_init();
     insert(begin(), count, val);
   }
 
   list(const list& rhsList)
   {
-    _M_head = _M_data_allocator::allocate();
-    _M_empty_init();
-    _insert(begin(), rhsList.begin(), rhsList.end());
+    head_ = data_allocator_::allocate();
+    _empty_init();
+    insert(begin(), rhsList.begin(), rhsList.end());
   }
 
 #ifdef MINI_STL_MEMBER_TEMPLATES
   template <class InputIterator>
   list(InputIterator first,
        InputIterator last,
+       const allocator_type&/*Al*/=allocator_type(),
        typename is_iterator<InputIterator>::ID = Identity()
-      );
+      )
+  {
+#ifdef MINI_STL_DEBUG
+    _check_range(first, last);
+#endif
+    head_ = data_allocator_::allocate();
+    _empty_init();
+    insert(begin(), first, last);
+  }
+
 #endif
 
 #ifdef MINI_STL_HAS_MOVE
   list(list&& rhsList)
   {
-    _M_head = rhsList._M_head;
-    _M_size = rhsList._M_size;
-    rhsList._M_head = 0;
+    head_ = rhsList.head_;
+    size_ = rhsList.size_;
+    rhsList.head_ = 0;
   }
 
   list& operator=(list&& rhsList)
   {
     clear();
-    _M_data_allocator::deallocate(_M_head);
-    _M_head = rhsList._M_head;
-    _M_size = rhsList._M_size;
-    rhsList._M_head = nullptr;
+    data_allocator_::deallocate(head_);
+    head_ = rhsList.head_;
+    size_ = rhsList.size_;
+    rhsList.head_ = nullptr;
     return *this;
   }
 #endif //MINI_STL_HAS_MOVE
   list& operator=(const list& rhsList)
   {
     if (this != &rhsList)
-      _assign(rhsList.begin(), rhsList.end());
+      assign(rhsList.begin(), rhsList.end());
     return *this;
   }
 
   ~list()
   {
     clear();
-    _M_data_allocator::deallocate(_M_head);
+    data_allocator_::deallocate(head_);
   }
 public:
+  allocator_type get_allocator() const
+  {
+    return allocator_type();
+  }
+
   iterator begin()
   {
-    return (node_ptr)(_M_head->_M_next);
+    return (node_ptr)(head_->next);
   }
 
   const_iterator begin() const
   {
-    return (node_ptr)(_M_head->_M_next);
+    return (node_ptr)(head_->next);
   }
 
   iterator end()
   {
-    return _M_head;
+    return head_;
   }
 
   const_iterator end() const
   {
-    return _M_head;
+    return head_;
   }
 
   const_iterator cbegin() const
   {
-    return (node_ptr)(_M_head->_M_next);
+    return (node_ptr)(head_->next);
   }
 
   const_iterator cend() const
   {
-    return _M_head;
+    return head_;
   }
 
   reference front()
   {
+#ifdef MINI_STL_DEBUG
+    _check_range();
+#endif
     return *begin();
   }
 
   const_reference front() const
   {
+#ifdef MINI_STL_DEBUG
+    _check_range();
+#endif
     return *begin();
   }
 
   reference back()
   {
+#ifdef MINI_STL_DEBUG
+    _check_range();
+#endif
     return *(--end());
   }
 
   const_reference back() const
   {
+#ifdef MINI_STL_DEBUG
+    _check_range();
+#endif
     return *(--end());
+  }
+
+  void pop_back()
+  {
+#ifdef MINI_STL_DEBUG
+    _check_range();
+#endif
+    erase(--end());
+  }
+
+  void pop_front()
+  {
+#ifdef MINI_STL_DEBUG
+    _check_range();
+#endif
+    erase(begin());
   }
 
   size_type size() const
   {
-    return _M_size;
+    return size_;
   }
 
   size_type max_size() const
@@ -249,24 +301,84 @@ public:
 
   bool empty() const
   {
-    return _M_size == 0;
+    return size_ == 0;
+  }
+
+  void resize(size_type newSize)
+  {
+    resize(newSize, Type());
+  }
+
+  void resize(size_type newSize, const Type& val)
+  {
+#ifdef MINI_STL_DEBUG
+    _check_range(newSize);
+#endif
+    if (size()==newSize) {
+      return;
+    }
+    if (size()>newSize) {
+      size_type eraseNum = size() - newSize;
+      for (int i=eraseNum; i>0; --i)
+        erase(--end());
+    } else {
+      size_type insertNum = newSize - size();
+      insert(end(), insertNum, val);
+    }
+  }
+
+  void reverse()
+  {
+    if (size()==0 || size()==1)
+      return;
+    size_type n = size();
+    iterator first = begin();
+    iterator oldFirst;
+    ++first;
+    while(--n) {
+      oldFirst = first;
+      ++first;
+      _transfer(begin(), oldFirst, first);
+    }
+  }
+
+  void swap(list& rhs)
+  {
+    size_type tmp = size_;
+    size_ = rhs.size_;
+    rhs.size_ = tmp;
+    node_ptr tmp_ptr = head_;
+    head_ = rhs.head_;
+    rhs.head_ = tmp_ptr;
+  }
+
+  friend void swap(list& lhs, list& rhs)
+  {
+    lhs.swap(rhs);
   }
 
   void clear();
 
   iterator insert(iterator position, const Type& val)
   {
-    node_ptr tmp = _M_create_node(val);
-    tmp->_M_prev = position._M_node->_M_prev;
-    tmp->_M_next = position._M_node;
-    position._M_node->_M_prev->_M_next = tmp;
-    position._M_node->_M_prev = tmp;
-    ++_M_size;
+#ifdef MINI_STL_DEBUG
+    _check_range(position);
+#endif
+    node_ptr tmp = _create_node(val);
+    tmp->prev = position.node->prev;
+    tmp->next = position.node;
+    position.node->prev->next = tmp;
+    position.node->prev = tmp;
+    ++size_;
     return tmp;
   }
 
   void insert(iterator position, size_type count, const Type &val)
   {
+#ifdef MINI_STL_DEBUG
+    _check_range(position);
+    _check_range(count);
+#endif
     iterator tmp = position;
     for ( ; count; --count)
     {
@@ -282,13 +394,31 @@ public:
               typename is_iterator<InputIterator>::ID = Identity()
       )
   {
+#ifdef MINI_STL_DEBUG
+    _check_range(position);
+    _check_range(first, last);
+#endif
     while(first != end)
       insert(position,*first++);
   }
 #endif
 
 #ifdef MINI_STL_HAS_MOVE
-    //iterator insert(iterator position, const Type&& val);
+  iterator insert(iterator position, const Type&& val)
+  {
+#ifdef MINI_STL_DEBUG
+    _check_range(position);
+#endif
+    node_ptr tmp = data_allocator_::allocate();
+    tmp->data = val;
+    tmp->prev = position.node->prev;
+    tmp->next = position.node;
+    position.node->prev->next = tmp;
+    position.node->prev = tmp;
+    ++size_;
+    return tmp;
+  }
+
 #endif //MINI_STL_HAS_MOVE
 
   iterator erase(iterator position);
@@ -328,41 +458,62 @@ public:
 
   void sort();
 
+  void merge(list& rhs);
+#ifdef MINI_STL_MEMBER_TEMPLATES
+  template<class BinaryPredicate>
+     void merge(
+        list& rhs,
+        BinaryPredicate Comp
+     );
+#endif //MINI_STL_MEMBER_TEMPLATES
   void splice(iterator position, list& rhs)
   {
+#ifdef MINI_STL_DEBUG
+    _check_range(position);
+#endif
     if (this==&rhs || rhs.empty()) {
            //不支持自我splice
       ;
     } else {
-      _M_size += rhs._M_size;
-      rhs._M_size = 0;
-      _M_transfer_aux(position, rhs.begin(), rhs.end());
+      size_ += rhs.size_;
+      rhs.size_ = 0;
+      _transfer(position, rhs.begin(), rhs.end());
     }
   }
 
   void splice(iterator position, list& rhs, iterator i)
   {
+#ifdef MINI_STL_DEBUG
+    _check_range(position);
+    rhs._check_range(i);
+#endif
     iterator j = i;
     ++j;
     if(this==&rhs || position==i || position==j)
       return;
-    --rhs._M_size;
-    ++_M_size;
-    _M_transfer_aux(position, i, j);
+    --rhs.size_;
+    ++size_;
+    _transfer(position, i, j);
   }
 
   void splice(iterator position, list& rhs,
                iterator first, iterator last)
   {
+#ifdef MINI_STL_DEBUG
+    _check_range(position);
+    _check_range(first, last);
+    rhs._check_range(first);
+    rhs._check_range(last);
+#endif
     if (this==&rhs || first!=last) {
       size_type n = 0;
       iterator tmpFirst = first;
       iterator tmpLast = last;
       while (tmpFirst++!=tmpLast)
         ++n;
-      rhs._M_size -= n;
-      this->_M_size += n;
-      _M_transfer_aux(position, first, last);
+      rhs.size_ -= n;
+      this->size_ += n;
+      _transfer(position, first, last);
     }
   }
 
@@ -445,45 +596,79 @@ public:
     return size() >= rhsList.size() ? true : false;
   }
 protected:
-  void _M_empty_init()
+  void _empty_init()
   {
-    _M_head->_M_next = _M_head;
-    _M_head->_M_prev = _M_head;
-    _M_size = 0;
+    head_->next = head_;
+    head_->prev = head_;
+    size_ = 0;
   }
 
-  node_ptr _M_create_node(const Type& val)
+  node_ptr _create_node(const Type& val)
   {
-    node_ptr tmp = _M_data_allocator::allocate(1);
+    node_ptr tmp = data_allocator_::allocate(1);
     MINI_STL_TRY {
-      construct(&tmp->_M_data, val);
+      construct(&tmp->data, val);
     }
-    MINI_STL_UNWIND(_M_data_allocator::deallocate(tmp));
+    MINI_STL_UNWIND(data_allocator_::deallocate(tmp));
     return tmp;
   }
 
-  void _M_destroy_node(node_ptr p)
+  void _destroy_node(node_ptr p)
   {
-    destroy(&p->_M_data);
-    _M_data_allocator::deallocate(p);
+    destroy(&p->data);
+    data_allocator_::deallocate(p);
   }
 
-  void _M_transfer_aux(iterator position, iterator first, iterator last)
+  void _transfer(iterator position, iterator first, iterator last)
   {
     if (position != last) {
-      // Remove [first, last) from its old position.
-      last._M_node->_M_prev->_M_next = position._M_node;
-      first._M_node->_M_prev->_M_next = last._M_node;
-      position._M_node->_M_prev->_M_next = first._M_node;
+      last.node->prev->next = position.node;
+      first.node->prev->next = last.node;
+      position.node->prev->next = first.node;
 
-      // Splice [first, last) into its new position.
-      __list_node_base* tmp = position._M_node->_M_prev;
-      position._M_node->_M_prev = last._M_node->_M_prev;
-      last._M_node->_M_prev = first._M_node->_M_prev;
-      first._M_node->_M_prev = tmp;
+      __list_node_base* tmp = position.node->prev;
+      position.node->prev = last.node->prev;
+      last.node->prev = first.node->prev;
+      first.node->prev = tmp;
+    }
+  }
+#ifdef MINI_STL_DEBUG
+  void _check_range(size_t n, bool)
+  {
+    if (n<0 || n>=max_size()) {
+      cerr << "list:n<0" << endl;
+      MINI_STL_THROW_RANGE_ERROR("list");
     }
   }
 
+  void _check_range(const_iterator position)
+  {
+    difference_type n = DISTANCE(position, begin());
+    if (n<0 || n>==size()) {
+      cerr << "position < begin() || position > end()" << endl;
+      MINI_STL_THROW_RANGE_ERROR("list");
+    }
+  }
+
+  template <class InputIterator>
+  void _check_range(InputIterator first,
+                   InputIterator last)
+  {
+    difference_type n = DISTANCE(first, last);
+    if (n<0) {
+      cerr << "last:InputIterator last - first < 0" << endl;
+      MINI_STL_THROW_RANGE_ERROR("last");
+    }
+  }
+
+  void _check_range()
+  {
+    if (empty()) {
+      cerr << "list:is empty" << endl;
+      MINI_STL_THROW_RANGE_ERROR("list");
+    }
+  }
+#endif //MINI_STL_DEBUG
 };
 
 
@@ -491,13 +676,16 @@ template <class Type, class Alloc>
 typename list<Type,Alloc>::iterator
 list<Type,Alloc>::erase(iterator position)
 {
-  __list_node_base* prev_node = position._M_node->_M_prev;
-  __list_node_base* next_node = position._M_node->_M_next;
-  prev_node->_M_next = next_node;
-  next_node->_M_prev = prev_node;
+#ifdef MINI_STL_DEBUG
+  _check_range(position);
+#endif
+  __list_node_base* prev_node = position.node->prev;
+  __list_node_base* next_node = position.node->next;
+  prev_node->next = next_node;
+  next_node->prev = prev_node;
   destroy(&*position);
-  _M_data_allocator::deallocate((node_ptr)(position._M_node));
-  --_M_size;
+  data_allocator_::deallocate((node_ptr)(position.node));
+  --size_;
   return (node_ptr)(next_node);
 }
 
@@ -505,6 +693,11 @@ template <class Type, class Alloc>
 typename list<Type,Alloc>::iterator
 list<Type,Alloc>::erase(iterator first, iterator last)
 {
+#ifdef MINI_STL_DEBUG
+  _check_range(first, last);
+  _check_range(first);
+  _check_range(last);
+#endif
   for ( ; first!=last; )
     first = erase(first);
   return first;
@@ -513,22 +706,25 @@ list<Type,Alloc>::erase(iterator first, iterator last)
 template <class Type, class Alloc>
 void list<Type,Alloc>::clear()
 {
-  if (!_M_head)
+  if (!head_)
     return;
-  node_ptr cur = (node_ptr)(_M_head->_M_next);
+  node_ptr cur = (node_ptr)(head_->next);
   node_ptr tmp;
-  while (cur != _M_head) {
+  while (cur != head_) {
     tmp = cur;
-    cur = (node_ptr)(tmp->_M_next);
+    cur = (node_ptr)(tmp->next);
     destroy(&tmp);
-    _M_data_allocator::deallocate(tmp);
+    data_allocator_::deallocate(tmp);
   }
-  _M_empty_init();
+  _empty_init();
 }
 
 template <class Type, class Alloc>
 void list<Type,Alloc>::assign(size_type count, const Type& val)
 {
+#ifdef MINI_STL_DEBUG
+  _check_range(count);
+#endif
   iterator i = begin();
   for ( ; i!=end() && count > 0; ++i, --count)
     *i = val;
@@ -547,6 +743,9 @@ void list<Type,Alloc>::assign(
         typename is_iterator<InputIterator>::ID = Identity()
       )
 {
+#ifdef MINI_STL_DEBUG
+  _check_range(first, last);
+#endif
   size_type newSize = 0;
   iterator cur = begin();
   for ( ; cur!=end() && first != last;
@@ -560,7 +759,7 @@ void list<Type,Alloc>::assign(
   } else {
     erase(cur, end());
   }
-  _M_size = newSize;
+  size_ = newSize;
 }
 
 template <class Type, class Alloc>
@@ -621,20 +820,100 @@ void list<Type,Alloc>::unique()
     next = first;
   }
 }
+template <class Type, class Alloc>
+void list<Type,Alloc>::merge(list &rhs)
+{
+  size_ += rhs.size_;
+  rhs.size_ = 0;
+  iterator first1 = this->begin();
+  iterator last1 = this->end();
+  iterator first2 = rhs.begin();
+  iterator last2 = rhs.end();
+
+  while (first1!=last1 && first2!=last2)
+    if (*first2 < *first1) {
+      iterator next = first2;
+      _transfer(first1, first2, ++next);
+      first2 = next;
+    } else {
+      ++first1;
+    }
+  if (first2!=last2)
+    _transfer(first1,first2,last2);
+}
 
 #ifdef MINI_STL_MEMBER_TEMPLATES
 template <class Type, class Alloc>
 template <class BinaryPredicate>
 void list<Type,Alloc>::sort(BinaryPredicate pred)
 {
+  if(size()==0 || size()==1)
+    return;
+  list<Type,Alloc> carry;
+  list<Type,Alloc> counter[20];
+  int fill = 0;
+  while (!empty()) {
+    carry.splice(carry.begin(), *this, begin());
+  int i = 0;
+    while (i<fill && !counter[i].empty()) {
+      counter[i].merge(carry, pred);
+      carry.swap(counter[i++]);
+    }
+    carry.swap(counter[i]);
+    if (i==fill)
+      ++fill;
+  }
+  for (int i=1; i<fill; ++i)
+    counter[i].merge(counter[i-1], pred);
+  swap(counter[fill-1]);
+}
 
+template <class Type, class Alloc>
+template <class BinaryPredicate>
+void list<Type,Alloc>::merge(list &rhs, BinaryPredicate Comp)
+{
+  size_ += rhs.size_;
+  rhs.size_ = 0;
+  iterator first1 = this->begin();
+  iterator last1 = this->end();
+  iterator first2 = rhs.begin();
+  iterator last2 = rhs.end();
+
+  while (first1!=last1 && first2!=last2)
+    if (Comp(*first2,*first1)) {
+      iterator next = first2;
+      _transfer(first1, first2, ++next);
+      first2 = next;
+    } else {
+      ++first1;
+    }
+  if (first2!=last2)
+    _transfer(first1,first2,last2);
 }
 
 #endif //MINI_STL_MEMBER_TEMPLATES
 template <class Type, class Alloc>
 void list<Type,Alloc>::sort()
 {
-
+  if(size()==0 || size()==1)
+    return;
+  list<Type,Alloc> carry;
+  list<Type,Alloc> counter[20];
+  int fill = 0;
+  while (!empty()) {
+    carry.splice(carry.begin(), *this, begin());
+    int i = 0;
+    while (i<fill && !counter[i].empty()) {
+      counter[i].merge(carry);
+      carry.swap(counter[i++]);
+    }
+    carry.swap(counter[i]);
+    if (i==fill)
+      ++fill;
+  }
+  for (int i=1; i<fill; ++i)
+    counter[i].merge(counter[i-1]);
+  swap(counter[fill-1]);
 }
 
 

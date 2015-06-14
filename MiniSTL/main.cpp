@@ -24,36 +24,48 @@ using namespace std;
 #include <functional>
 #include "Windows.h"
 
-vector<int> aa()
+
+deque<int> aa()
 {
-  vector<int> ii;
-  ii.push_back(1111);
-  ii.push_back(2222);
-  ii.push_back(3333);
-  cout << 1111111111111111111;
-  cout << ii.size() << endl;
-  return ii;
+  deque<int> mm;
+  mm.push_back(111);
+  mm.push_back(222);
+  mm.push_back(333);
+  return mm;
 }
 
 int main( )
 {
+  deque <int> c1, c2, c3;
+     deque <int>::iterator c1_Iter;
 
-  vector <int> v1;
+     c1.push_back( 1 );
+     c1.push_back( 2 );
+     c1.push_back( 3 );
+     c2.push_back( 10 );
+     c2.push_back( 20 );
+     c3.push_back( 100 );
 
-  v1.push_back( 10 );
-  v1.push_back( 20 );
-  v1.push_back( 30 );
+     cout << "The original deque c1 is:";
+     for ( c1_Iter = c1.begin( ); c1_Iter != c1.end( ); c1_Iter++ )
+        cout << " " << *c1_Iter;
+     cout << endl;
 
-  v1.resize( 4,40 );
-  cout << "The size of v1 is " << v1.size( ) << endl;
-  cout << "The value of the last object is " << v1.back( ) << endl;
+     c1.swap( c2 );
 
-  v1.resize( 0 );
-  cout << "The size of v1 is now " << v1.size( ) << endl;
-  cout << "The value of the last object is now " << v1.back( ) << endl;
-}
+     cout << "After swapping with c2, deque c1 is:";
+     for ( c1_Iter = c1.begin( ); c1_Iter != c1.end( ); c1_Iter++ )
+        cout << " " << *c1_Iter;
+     cout << endl;
 
+     swap( c1,c3 );
 
+     cout << "After swapping with c3, deque c1 is:";
+     for ( c1_Iter = c1.begin( ); c1_Iter != c1.end( ); c1_Iter++ )
+        cout << " " << *c1_Iter;
+     cout << endl;
+
+  }
 #else
 #include <iostream>
 using std::cout;

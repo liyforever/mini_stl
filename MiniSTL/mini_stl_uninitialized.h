@@ -6,6 +6,9 @@
 #include "mini_stl_type_traits.h"
 #include "mini_stl_construct.h"
 #include "mini_stl_pair.h"
+#include <iostream>
+using std::cout;
+using std::endl;
 MINI_STL_BEGIN
 
 /***************************uninitalized_copy___begin***********************************/
