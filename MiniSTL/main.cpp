@@ -9,6 +9,7 @@
 #include "mini_stl_vector.h"
 #include "mini_stl_list.h"
 #include "mini_stl_deque.h"
+#include "mini_stl_queue.h"
 using namespace Mini_STL;
 using std::cout;
 using std::endl;
@@ -27,6 +28,7 @@ using namespace std;
 
 deque<int> aa()
 {
+
   deque<int> mm;
   mm.push_back(111);
   mm.push_back(222);
@@ -36,34 +38,29 @@ deque<int> aa()
 
 int main( )
 {
-  deque <int> c1, c2, c3;
-     deque <int>::iterator c1_Iter;
+  priority_queue <int> q1, s2;
 
-     c1.push_back( 1 );
-     c1.push_back( 2 );
-     c1.push_back( 3 );
-     c2.push_back( 10 );
-     c2.push_back( 20 );
-     c3.push_back( 100 );
+  q1.push( 10 );
+  q1.push( 20 );
+  q1.push( 30 );
 
-     cout << "The original deque c1 is:";
-     for ( c1_Iter = c1.begin( ); c1_Iter != c1.end( ); c1_Iter++ )
-        cout << " " << *c1_Iter;
-     cout << endl;
+  priority_queue <int>::size_type i, iii;
+  i = q1.size( );
+  cout << "The priority_queue length is " << i << "." << endl;
 
-     c1.swap( c2 );
+  const int& ii = q1.top( );
+  cout << "The element at the top of the priority_queue is "
+       << ii << "." << endl;
 
-     cout << "After swapping with c2, deque c1 is:";
-     for ( c1_Iter = c1.begin( ); c1_Iter != c1.end( ); c1_Iter++ )
-        cout << " " << *c1_Iter;
-     cout << endl;
+  q1.pop( );
 
-     swap( c1,c3 );
+  iii = q1.size( );
+  cout << "After a pop, the priority_queue length is "
+       << iii << "." << endl;
 
-     cout << "After swapping with c3, deque c1 is:";
-     for ( c1_Iter = c1.begin( ); c1_Iter != c1.end( ); c1_Iter++ )
-        cout << " " << *c1_Iter;
-     cout << endl;
+  const int& iv = q1.top( );
+  cout << "After a pop, the element at the top of the "
+       << "priority_queue is " << iv << "." << endl;
 
   }
 #else

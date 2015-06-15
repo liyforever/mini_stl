@@ -3,6 +3,7 @@
 #include "mini_stl_config.h"
 #include "mini_stl_iterator.h"
 #include "mini_stl_type_traits.h"
+#include "mini_stl_function.h"
 #include <string.h>
 #include <wchar.h>
 #include <iostream>
@@ -172,5 +173,185 @@ inline BidirectionalIter copy_backward(RandomAccessIter first,
   return result;
 }
 /************************copy_backward__end**************************/
+
+/************************heap_begin**********************************/
+template <class RandomAccessIterator, class Distance, class Type>
+void _push_heap(RandomAccessIterator first, Distance holeIndex,
+                Distance topIndex, Type val)
+{
+  Distance parent = (holeIndex - 1) / 2;
+  while (holeIndex>topIndex && *(first + parent)<val) {
+    *(first + holeIndex) = *(first + parent);
+    holeIndex = parent;
+    parent = (holeIndex - 1) / 2;
+  }
+  *(first + holeIndex) = val;
+}
+
+template <class RandomAccessIterator, class Distance, class Type>
+inline void push_heap_aux(RandomAccessIterator first, Distance*, Type*)
+{
+  _push_heap(first, Distance((last - first) - 1), Distance(0),
+             T(*(last - 1)));
+}
+
+template <class RandomAccessIterator>
+inline void push_heap(RandomAccessIterator first,
+                      RandomAccessIterator last)
+{
+  push_heap_aux(first, last, DISTANCE_TYPE(first),
+                VALUE_TYPE(first));
+}
+
+template <class RandomAccessIterator>
+inline void pop_heap(RandomAccessIterator first,
+                     RandomAccessIterator last)
+{
+  pop_heap_aux(first, last, VALUE_TYPE(first));
+}
+
+template <class RandomAccessIterator, class Type>
+inline void pop_heap_aux(RandomAccessIterator first,
+                    RandomAccessIterator last,
+                    Type*)
+{
+  _pop_heap(first, last - 1, last - 1, Type(*(last-1)),
+            DISTANCE_TYPE(first));
+}
+
+template <class RandomAccessIterator, class Type,
+          class Distance>
+inline void _pop_heap(RandomAccessIterator first,
+                      RandomAccessIterator last,
+                      RandomAccessIterator result,
+                      Type val, Distance*)
+{
+  *result = *first;
+  _adjust_heap(first, Distance(0), Distance(last - first), val);
+}
+
+template <class RandomAccessIterator, class Distance, class Type>
+void _adjust_heap(RandomAccessIterator first, Distance holeIndex,
+                  Distance len, Type val)
+{
+  Distance topIndex = holeIndex;
+  Distance rChild = 2 * holeIndex + 2;
+  while (rChild<len) {
+    if (*(first+rChild) < *(first+(rChild-1)))
+      --rChild;
+    *(first + holeIndex) = *(first + rChild);
+    holeIndex = rChild;
+    rChild = 2 * (rChild + 1);
+  }
+  if (rChild==len) {
+    *(first + holeIndex) = *(first + (rChild - 1));
+    holeIndex = rChild - 1;
+  }
+  _push_heap(first, holeIndex, topIndex, val);
+}
+
+template <class RandomAccessIterator>
+void sort_heap(RandomAccessIterator first,
+               RandomAccessIterator last
+               )
+{
+  while (last-first>1)
+    pop_heap(first, last--);
+}
+
+
+template <class RandomAccessIterator, class Distance, class Type,
+          class Compare>
+void _push_heap(RandomAccessIterator first, Distance holeIndex,
+                Distance topIndex, Type val,
+                Compare comp)
+{
+  Distance parent = (holeIndex - 1) / 2;
+  while (holeIndex>topIndex &&
+         comp(*(first + parent),val)) {
+    *(first + holeIndex) = *(first + parent);
+    holeIndex = parent;
+    parent = (holeIndex - 1) / 2;
+  }
+  *(first + holeIndex) = val;
+}
+
+template <class RandomAccessIterator, class Distance,
+          class Type, class Compare>
+inline void push_heap_aux(RandomAccessIterator first, Distance*,
+                          Type*, Compare comp)
+{
+  _push_heap(first, Distance((last - first) - 1), Distance(0),
+             Type(*(last - 1)), comp);
+}
+
+template <class RandomAccessIterator, class Compare>
+inline void push_heap(RandomAccessIterator first,
+                      RandomAccessIterator last,
+                      Compare comp)
+{
+  push_heap_aux(first, DISTANCE_TYPE(first),
+                VALUE_TYPE(first), comp);
+}
+
+template <class RandomAccessIterator, class Compare>
+inline void pop_heap(RandomAccessIterator first,
+                     RandomAccessIterator last,
+                     Compare comp)
+{
+  pop_heap_aux(first, last, VALUE_TYPE(first), comp);
+}
+
+template <class RandomAccessIterator, class Type, class Compare>
+inline void pop_heap_aux(RandomAccessIterator first,
+                    RandomAccessIterator last,
+                    Type*, Compare comp)
+{
+  _pop_heap(first, last - 1, last - 1, Type(*(last-1)),
+            DISTANCE_TYPE(first), comp);
+}
+
+template <class RandomAccessIterator, class Type,
+          class Distance, class Compare>
+inline void _pop_heap(RandomAccessIterator first,
+                      RandomAccessIterator last,
+                      RandomAccessIterator result,
+                      Type val, Distance*,
+                      Compare comp)
+{
+  *result = *first;
+  _adjust_heap(first, Distance(0), Distance(last - first), val, comp);
+}
+
+template <class RandomAccessIterator, class Distance, class Type, class Compare>
+void _adjust_heap(RandomAccessIterator first, Distance holeIndex,
+                  Distance len, Type val, Compare comp)
+{
+  Distance topIndex = holeIndex;
+  Distance rChild = 2 * holeIndex + 2;
+  while (rChild<len) {
+    if (comp(*(first+rChild),*(first+(rChild-1))))
+      --rChild;
+    *(first + holeIndex) = *(first + rChild);
+    holeIndex = rChild;
+    rChild = 2 * (rChild + 1);
+  }
+  if (rChild==len) {
+    *(first + holeIndex) = *(first + (rChild - 1));
+    holeIndex = rChild - 1;
+  }
+  _push_heap(first, holeIndex, topIndex, val, comp);
+}
+
+template <class RandomAccessIterator, class Compare>
+void sort_heap(RandomAccessIterator first,
+               RandomAccessIterator last,
+               Compare comp)
+{
+  while (last-first>1)
+    pop_heap(first, last--, comp);
+}
+/************************heap_end**********************************/
+
 MINI_STL_END
 #endif // MINI_STL_ALGOBASE_H
