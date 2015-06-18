@@ -83,7 +83,7 @@ struct greater : public binary_function<Type,Type,bool>
 template <class Type>
 struct less : public binary_function<Type,Type,bool>
 {
-  Type operator()(const Type& lhs, const Type& rhs)
+  bool operator()(const Type& lhs, const Type& rhs)
   {
     return lhs < rhs;
   }
@@ -104,6 +104,15 @@ struct less_equeal : public binary_function<Type,Type,bool>
   Type operator()(const Type& lhs, const Type& rhs)
   {
     return lhs <= rhs;
+  }
+};
+
+template <class Type>
+struct identity : public unary_function<Type,Type>
+{
+  const Type& operator()(const Type& x)
+  {
+    return x;
   }
 };
 
