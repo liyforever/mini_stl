@@ -3,6 +3,7 @@
 
 #define MINI_STL_BEGIN  namespace Mini_STL{
 #define MINI_STL_END    }
+#define _MY_STL         Mini_STL
 
 // Microsoft compiler.
 #ifdef _MSC_VER

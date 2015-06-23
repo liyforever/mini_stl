@@ -1,7 +1,9 @@
 #ifndef MINI_STL___true_type_H
 #define MINI_STL___true_type_H
 #include "mini_stl_config.h"
-
+#include <iostream>
+using std::cout;
+using std::endl;
 MINI_STL_BEGIN
 struct __true_type
 {
@@ -313,5 +315,33 @@ struct is_iterator<long double>
 
 };
 
+#ifdef MINI_STL_HAS_MOVE
+template<class Type>
+struct remove_reference
+{
+  typedef Type type;
+};
+
+template<class Type>
+struct remove_reference<Type&>
+{
+  typedef Type type;
+};
+
+template<class Type>
+struct remove_reference<Type&&>
+{
+  typedef Type type;
+};
+
+template<class Type> inline
+typename remove_reference<Type>::type&&
+  move(Type&& Arg)
+{
+  cout << "move" << endl;
+  return ((typename remove_reference<Type>::type&&)Arg);
+}
+
+#endif //MINI_STL_HAS_MOVE
 MINI_STL_END
 #endif // MINI_STL___true_type_H

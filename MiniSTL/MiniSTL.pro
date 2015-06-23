@@ -21,7 +21,8 @@ HEADERS += \
     mini_stl_queue.h \
     mini_stl_pair.h \
     mini_stl_function.h \
-    mini_stl_tree.h
+    mini_stl_tree.h \
+    mini_stl_set.h
 
 OTHER_FILES += \
     info.txt

@@ -16,13 +16,15 @@ public:
   typedef Type              value_type;
   typedef value_type*       pointer;
   typedef const value_type* const_pointer;
-  typedef value_type*       iterator;
-  typedef const value_type* const_iterator;
   typedef value_type&       reference;
   typedef const value_type& const_reference;
   typedef size_t            size_type;
   typedef ptrdiff_t         difference_type;
   typedef Alloc             allocator_type;
+  typedef value_type*       iterator;
+  typedef const value_type* const_iterator;
+  typedef _MY_STL::reverse_iterator<iterator> reverse_iterator;
+  typedef _MY_STL::reverse_iterator<const_iterator> const_reverse_iterator;
 protected:
   typedef simpleAlloc<value_type, Alloc> data_allocator_;
   iterator first_;
@@ -63,7 +65,6 @@ public:
     last_ = uninitialized_copy(rightVec.first_, rightVec.end_, first_);
     end_ = last_;
   }
-
 #ifdef MINI_STL_MEMBER_TEMPLATES
   template <class InputIterator>
     vector(InputIterator first,
@@ -72,13 +73,15 @@ public:
            typename is_iterator<InputIterator>::ID = Identity()
     )
   {
+#ifdef MINI_STL_DEBUG
+    _check_range(first, last);
+#endif
     difference_type size = last - first;
     first_ = data_allocator_::allocate(size);
     last_ = uninitialized_copy(first, last, first_);
     end_ = last_;
   }
 #endif //MINI_STL_MEMBER_TEMPLATES
-
 #ifdef MINI_STL_HAS_MOVE
   vector(vector&& rightVec)
   {
@@ -148,6 +151,26 @@ public:
     return last_;
   }
 
+  reverse_iterator rbegin()
+  {
+    return reverse_iterator(end());
+  }
+
+  const_reverse_iterator rbegin() const
+  {
+    return const_reverse_iterator(end());
+  }
+
+  reverse_iterator rend()
+  {
+    return reverse_iterator(begin());
+  }
+
+  const_reverse_iterator rend() const
+  {
+    return const_reverse_iterator(begin());
+  }
+
   const_iterator cbegin() const
   {
     return (const_iterator)(first_);
@@ -156,6 +179,16 @@ public:
   const_iterator cend() const
   {
     return (const_iterator)(last_);
+  }
+
+  const_reverse_iterator crbegin() const
+  {
+    return const_reverse_iterator(end());
+  }
+
+  const_reverse_iterator crend() const
+  {
+    return const_reverse_iterator(begin());
   }
 
   pointer data()
@@ -249,11 +282,6 @@ public:
 
   void swap(vector<Type, Alloc> &rightVec);
 
-  friend void swap(vector &leftVec, vector &rightVec)
-  {
-    leftVec.swap(rightVec);
-  }
-
   void push_back(const Type& val);
 
   void pop_back()
@@ -317,7 +345,7 @@ public:
   void assign(size_type n, const Type& val)
   {
 #ifdef MINI_STL_DEBUG
-    _check_range(n);
+    _check_range(n,true);
 #endif
     clear();
     insert(begin(), n, val);
@@ -333,85 +361,6 @@ public:
   size_type max_size() const
   {
     return size_type(-1);
-  }
-
-  bool operator == (const vector& rhsVec)
-  {
-    if (size() != rhsVec.size())
-      return false;
-    iterator lhsIter = this->first_;
-    iterator rhsIter = (iterator)(rhsVec.begin());
-    for ( ; lhsIter!=this->last_; ++lhsIter,++rhsIter)
-    {
-      if (*lhsIter != *rhsIter)
-        return false;
-    }
-    return true;
-  }
-
-  bool operator != (const vector& rhsVec)
-  {
-    if (size() != rhsVec.size())
-      return true;
-    return !(*this == rhsVec);
-  }
-
-  bool operator > (const vector& rhsVec)
-  {
-    iterator lhsIter = this->first_;
-    iterator rhsIter = (iterator)(rhsVec.begin());
-    for ( ; lhsIter!=this->last_ &&
-          rhsIter!=rhsVec.end(); ++lhsIter,++rhsIter)
-    {
-      if (*rhsIter < *lhsIter)
-        return true;
-      else
-        return false;
-    }
-  }
-
-  bool operator <= (const vector& rhsVec)
-  {
-    iterator lhsIter = this->first_;
-    iterator rhsIter = (iterator)(rhsVec.begin());
-    for ( ; lhsIter!=this->last_ &&
-      rhsIter!=rhsVec.end(); ++lhsIter,++rhsIter)
-    {
-      if (*lhsIter < *rhsIter)
-        return true;
-      else if (*rhsIter < *lhsIter)
-        return false;
-    }
-    return size() <= rhsVec.size() ? true : false;
-  }
-
-  bool operator < (const vector& rhsVec)
-  {
-    iterator lhsIter = this->first_;
-    iterator rhsIter = (iterator)(rhsVec.begin());
-    for ( ; lhsIter!=this->last_ &&
-      rhsIter!=rhsVec.end(); ++lhsIter,++rhsIter)
-    {
-      if(*lhsIter < *rhsIter)
-        return true;
-      else if (*rhsIter < *lhsIter)
-        return false;
-    }
-  }
-
-  bool operator >= (const vector& rhsVec)
-  {
-    iterator lhsIter = this->first_;
-    iterator rhsIter = (iterator)(rhsVec.begin());
-    for ( ; lhsIter!=this->last_ &&
-          rhsIter!=rhsVec.end(); ++lhsIter,++rhsIter)
-    {
-      if (*rhsIter < *lhsIter)
-        return true;
-      else if (*lhsIter < *rhsIter)
-        return false;
-    }
-    return size() >= rhsVec.size() ? true : false;
   }
 protected:
   void _fill_init(size_type count, const Type& value);
@@ -434,7 +383,7 @@ protected:
     }
   }
 
-  void _check_range(size_t n, bool)
+  void _check_range(size_t n, bool) const
   {
     if (n<0 || n>=max_size()) {
       cerr << "vector:n<0" << endl;
@@ -442,7 +391,7 @@ protected:
     }
   }
 
-  void _check_range(const_iterator position)
+  void _check_range(const_iterator position) const
   {
     if (position>last_ ||
         position<first_) {
@@ -453,7 +402,7 @@ protected:
 
   template <class InputIterator>
   void _check_range(InputIterator first,
-                   InputIterator last)
+                   InputIterator last) const
   {
     difference_type n = DISTANCE(first, last);
     if (n<0) {
@@ -462,9 +411,9 @@ protected:
     }
   }
 
-  void _check_range()
+  void _check_range() const
   {
-    if (empty()) {
+    if (this->empty()) {
       cerr << "vector:is empty" << endl;
       MINI_STL_THROW_RANGE_ERROR("vector");
     }
@@ -472,8 +421,56 @@ protected:
 #endif //MINI_STL_DEBUG
 };
 
+template <class Type, class Alloc>
+inline bool
+operator==(const vector<Type, Alloc>& lhs, const vector<Type, Alloc>& rhs)
+{
+  return lhs.size() == rhs.size() &&
+         equal(lhs.begin(), lhs.end(), rhs.begin());
+}
 
+template <class Type, class Alloc>
+inline bool
+operator<(const vector<Type, Alloc>& lhs, const vector<Type, Alloc>& rhs)
+{
+  return lexicographical_compare(lhs.begin(), lhs.end(),
+                                 rhs.begin(), rhs.end());
+}
 
+template <class Type, class Alloc>
+inline bool
+operator!=(const vector<Type, Alloc>& lhs, const vector<Type, Alloc>& rhs)
+{
+  return !(lhs == rhs);
+}
+
+template <class Type, class Alloc>
+inline bool
+operator>(const vector<Type, Alloc>& lhs, const vector<Type, Alloc>& rhs)
+{
+  return rhs < lhs;
+}
+
+template <class Type, class Alloc>
+inline bool
+operator<=(const vector<Type, Alloc>& lhs, const vector<Type, Alloc>& rhs)
+{
+  return !(rhs < lhs);
+}
+
+template <class Type, class Alloc>
+inline bool
+operator>=(const vector<Type, Alloc>& lhs, const vector<Type, Alloc>& rhs)
+{
+  return !(lhs < rhs);
+}
+
+template <class Type, class Alloc>
+inline void
+swap(const vector<Type, Alloc>& lhs, const vector<Type, Alloc>& rhs)
+{
+  lhs.swap(rhs);
+}
 
 template <class Type, class Alloc>
 inline typename vector<Type, Alloc>::iterator
@@ -532,21 +529,9 @@ void vector<Type, Alloc>::_insert_aux(iterator position)
 template <class Type, class Alloc>
 void vector<Type, Alloc>::swap(vector<Type, Alloc> &rightVec)
 {
-  if (this == &rightVec)
-    ;
-  else {
-    iterator tempIter = first_;
-    first_ = rightVec.first_;
-    rightVec.first_ = tempIter;
-
-    tempIter = last_;
-    last_ = rightVec.last_;
-    rightVec.last_ = tempIter;
-
-    tempIter = end_;
-    end_ = rightVec.end_;
-    rightVec.end_ = tempIter;
-  }
+  _MY_STL::swap(first_, rightVec.first_);
+  _MY_STL::swap(last_, rightVec.last_);
+  _MY_STL::swap(end_, rightVec.end_);
 }
 
 template <class Type, class Alloc>
@@ -724,7 +709,7 @@ vector<Type, Alloc>::insert(const_iterator position, Type&& val)
     construct(last_, *(last_ - 1));
     ++last_;
     copy_backward((iterator)(myIter), last_ - 2, last_ - 1);
-    *myIter = val;
+    *myIter = _MY_STL::move(val);
   } else {
     const size_type oldSize = size();
     const size_type newSize = oldSize != 0 ? 2 * oldSize : 1;
@@ -733,7 +718,8 @@ vector<Type, Alloc>::insert(const_iterator position, Type&& val)
     iterator newLast = newFirst;
     MINI_STL_TRY {
       newLast = uninitialized_copy(first_, myIter, newFirst);
-      *newLast = val;
+      construct(newLast);
+      *newLast = _MY_STL::move(val);
       ++newLast;
       newLast = uninitialized_copy(myIter, last_, newLast);
     }
