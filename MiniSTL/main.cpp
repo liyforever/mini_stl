@@ -12,12 +12,14 @@
 #include "mini_stl_queue.h"
 #include "mini_stl_set.h"
 #include "mini_stl_tree.h"
+#include "mini_stl_map.h"
 using namespace Mini_STL;
 //using std::cout;
 //using std::endl;
 using std::string;
 #else
 #include <vector>
+#include <map>
 #include <iostream>
 #include <list>
 #include <string>
@@ -28,6 +30,35 @@ using namespace std;
 #endif
 #include <functional>
 #include "Windows.h"
+//#include <unordered_set>
+int main( )
+{
+  map <int, int> m1, m2, m3;
+    int i;
+    typedef pair <int, int> Int_Pair;
+
+    for ( i = 0 ; i < 3 ; i++ )
+    {
+       m1.insert ( Int_Pair ( i, i ) );
+       m2.insert ( Int_Pair ( i, i * i ) );
+       m3.insert ( Int_Pair ( i, i ) );
+    }
+
+    if ( m1 != m2 )
+       cout << "The maps m1 and m2 are not equal." << endl;
+    else
+       cout << "The maps m1 and m2 are equal." << endl;
+
+    if ( m1 != m3 )
+       cout << "The maps m1 and m3 are not equal." << endl;
+    else
+       cout << "The maps m1 and m3 are equal." << endl;
+ }
+#else
+#include <iostream>
+using std::cout;
+using std::endl;
+using std::string;
 /*typedef rb_tree<int,int,identity<int>,less<int> > myRB;
 void show(myRB& bb)
 {
@@ -36,63 +67,6 @@ void show(myRB& bb)
     cout << endl;
     cout << "size:" << bb.size() << endl;
 }*/
-
-int main( )
-{
-
-  vector <int> v1;
-     vector <int>::iterator Iter;
-     v1.push_back( 10 );
-     v1.push_back( 20 );
-     v1.push_back( 30 );
-
-     cout << "v1 =" ;
-     for ( Iter = v1.begin( ) ; Iter != v1.end( ) ; Iter++ )
-        cout << " " << *Iter;
-     cout << endl;
-
-     v1.insert( v1.begin( ) + 1, 40 );
-     cout << "v1 =";
-     for ( Iter = v1.begin( ) ; Iter != v1.end( ) ; Iter++ )
-        cout << " " << *Iter;
-     cout << endl;
-     v1.insert( v1.begin( ) + 2, 4, 50 );
-
-     cout << "v1 =";
-     for ( Iter = v1.begin( ) ; Iter != v1.end( ) ; Iter++ )
-        cout << " " << *Iter;
-     cout << endl;
-
-     v1.insert( v1.begin( )+1, v1.begin( )+2, v1.begin( )+4 );
-     cout << "v1 =";
-     for (Iter = v1.begin( ); Iter != v1.end( ); Iter++ )
-        cout << " " << *Iter;
-     cout << endl;
-
-  // initialize a vector of vectors by moving v1
-     vector < vector <int> > vv1;
-
-     cout << "main move begin------" << endl;
-     vv1.insert( vv1.begin(), move( v1 ) );
-     cout << "zhunbei----------------" << endl;
-     cout << "v1:size------------" << v1.size() << endl;
-     cout << "end-----" << endl;
-
-     //for(auto CC : v1)
-       //cout << CC << "  ";
-     if (v1.empty())
-       cout << "v1 empty" << endl;
-
-        cout << "vv1[0] = size::" << vv1[0].size() << endl;
-        for (auto II =vv1[0].begin();II!=vv1[0].end();++II )
-           cout << " " << *II;
-        cout << endl;
-}
-#else
-#include <iostream>
-using std::cout;
-using std::endl;
-using std::string;
 
 
 class BB{};

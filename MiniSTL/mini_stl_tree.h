@@ -277,6 +277,10 @@ struct rb_tree_iterator : public rb_tree_base_iterator
     return ((node_ptr)(node))->data;
   }
 
+  pointer operator->() const
+  {
+    return &(operator *());
+  }
   Self& operator++()
   {
     incr();
@@ -332,6 +336,8 @@ public:
   typedef Alloc             allocator_type;
   typedef rb_tree_iterator<value_type,reference,pointer>  iterator;
   typedef rb_tree_iterator<value_type,const value_type&,const value_type*> const_iterator;
+  typedef _MY_STL::reverse_iterator<iterator> reverse_iterator;
+  typedef _MY_STL::reverse_iterator<const_iterator> const_reverse_iterator;
 protected:
   typedef void* void_pointer;
   typedef rb_tree_node_base* base_ptr;
@@ -411,6 +417,16 @@ public:
     return leftmost();
   }
 
+  reverse_iterator rbegin()
+  {
+    return reverse_iterator(this->end());
+  }
+
+  const_reverse_iterator rbegin() const
+  {
+    return const_reverse_iterator(this->end());
+  }
+
   iterator end()
   {
     return head_;
@@ -419,6 +435,16 @@ public:
   const_iterator end() const
   {
     return head_;
+  }
+
+  reverse_iterator rend()
+  {
+    return reverse_iterator(this->begin());
+  }
+
+  const_reverse_iterator rend() const
+  {
+    return const_reverse_iterator(this->begin());
   }
 
   bool empty() const
@@ -472,7 +498,7 @@ public:
 
   size_type erase(const key_type& k);
 
-  iterator find(const key_type& key)
+  iterator find(const key_type& k)
   {
     node_ptr y = head_;
     node_ptr x = root();
@@ -541,9 +567,9 @@ public:
 
   void swap(rb_tree& rhs)
   {
-    swap(this->head_, rhs.head_);
-    swap(this->node_count_, rhs.node_count_);
-    swap(this->comp_, rhs.comp_);
+    _MY_STL::swap(this->head_, rhs.head_);
+    _MY_STL::swap(this->node_count_, rhs.node_count_);
+    _MY_STL::swap(this->comp_, rhs.comp_);
   }
 
 protected:

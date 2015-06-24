@@ -161,5 +161,14 @@ struct identity : public unary_function<Type,Type>
   }
 };
 
+template <class Pair>
+struct select1st : public unary_function<Pair, typename Pair::first_type>
+{
+  const typename Pair::first_type& operator()(const Pair& x) const
+  {
+    return x.first;
+  }
+};
+
 MINI_STL_END
 #endif // MINI_STL_FUNCTION_H

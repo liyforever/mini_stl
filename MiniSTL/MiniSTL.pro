@@ -22,7 +22,8 @@ HEADERS += \
     mini_stl_pair.h \
     mini_stl_function.h \
     mini_stl_tree.h \
-    mini_stl_set.h
+    mini_stl_set.h \
+    mini_stl_map.h
 
 OTHER_FILES += \
     info.txt
