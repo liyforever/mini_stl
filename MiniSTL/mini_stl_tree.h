@@ -5,6 +5,7 @@
 #include <iostream>
 using std::cout;
 using std::endl;
+using std::cerr;
 #endif
 
 MINI_STL_BEGIN
@@ -362,7 +363,7 @@ public:
 #ifdef MINI_STL_HAS_MOVE
   rb_tree(rb_tree&& rhs)
   {
-        cout << "rb_tree&& rhs" << endl;
+    cout << "rb_tree&& rhs" << endl;
     this->head_ = rhs.head_;
     this->node_count_ = rhs.node_count_;
     this->comp_ = rhs.comp_;
@@ -373,7 +374,7 @@ public:
 
   rb_tree& operator=(rb_tree&& rhs)
   {
-        cout << "rb_tree=&&" << endl;
+    cout << "rb_tree=&&" << endl;
     if (this!=&rhs) {
       clear();
       this->head_ = rhs.head_;
@@ -530,6 +531,13 @@ public:
     const_iterator j = const_iterator(y);
     return (j == end() || comp_(k, key(j.node))) ?
          end() : j;
+  }
+
+  size_type count(const key_type& k) const
+  {
+    pair<const_iterator,const_iterator> p = this->equal_range(k);
+    difference_type n = DISTANCE(p.first, p.second);
+    return (size_type)(n);
   }
 
   iterator lower_bound(const key_type& k) ;
@@ -751,6 +759,18 @@ public:
             cout << endl;
     }
   }
+#ifdef MINI_STL_DEBUG
+  template <class InputIterator>
+  void _check_range(InputIterator first,
+                    InputIterator last) const
+  {
+    difference_type n = DISTANCE(first, last);
+    if (n<0) {
+      cerr << "rb_tree:InputIterator last - first < 0" << endl;
+      MINI_STL_THROW_RANGE_ERROR("rb_tree");
+    }
+  }
+#endif
 };
 
 template<class Key, class Value, class KeyOfValue,
@@ -842,6 +862,9 @@ rb_tree<Key,Value,KeyOfValue,Compare,Alloc>::
                   typename is_iterator<InputIterator>::ID
       )
 {
+#ifdef MINI_STL_DEBUG
+  _check_range(first, last);
+#endif
   while(first != last)
     insert_equal(*first++);
 }
@@ -856,6 +879,9 @@ rb_tree<Key,Value,KeyOfValue,Compare,Alloc>::
                   typename is_iterator<InputIterator>::ID = Identity()
       )
 {
+#ifdef MINI_STL_DEBUG
+  _check_range(first, last);
+#endif
   while (first != last)
     insert_unique(*first++);
 }
@@ -994,7 +1020,6 @@ void rb_tree<Key,Value,KeyOfValue,Compare,Alloc>::
     _erase_aux(position.node);
   } else
     _erase_aux(position.node);
-  //_Rb_tree_rebalance_for_erase(position.node,head_->parent,head_->left,head_->right);//leftmost(),rightmost());
 }
 
 template<class Key, class Value, class KeyOfValue,

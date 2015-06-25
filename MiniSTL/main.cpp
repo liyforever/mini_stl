@@ -5,6 +5,7 @@
 #ifdef MINI_STL_TEST
 #include <iostream>
 #include <string>
+#include "mini_stl_multiset.h"
 #include "mini_stl_stack.h"
 #include "mini_stl_vector.h"
 #include "mini_stl_list.h"
@@ -33,27 +34,38 @@ using namespace std;
 //#include <unordered_set>
 int main( )
 {
-  map <int, int> m1, m2, m3;
-    int i;
-    typedef pair <int, int> Int_Pair;
+  multiset <int, less<int> > ms1;
+  multiset <int, less<int> >::value_compare vc1 = ms1.value_comp( );
+  bool result1 = vc1( 2, 3 );
+  if( result1 == true )
+  {
+     cout << "vc1( 2,3 ) returns value of true, "
+          << "where vc1 is the function object of ms1."
+          << endl;
+  }
+  else
+  {
+     cout << "vc1( 2,3 ) returns value of false, "
+          << "where vc1 is the function object of ms1."
+          << endl;
+  }
 
-    for ( i = 0 ; i < 3 ; i++ )
-    {
-       m1.insert ( Int_Pair ( i, i ) );
-       m2.insert ( Int_Pair ( i, i * i ) );
-       m3.insert ( Int_Pair ( i, i ) );
-    }
-
-    if ( m1 != m2 )
-       cout << "The maps m1 and m2 are not equal." << endl;
-    else
-       cout << "The maps m1 and m2 are equal." << endl;
-
-    if ( m1 != m3 )
-       cout << "The maps m1 and m3 are not equal." << endl;
-    else
-       cout << "The maps m1 and m3 are equal." << endl;
- }
+  set <int, greater<int> > ms2;
+  set<int, greater<int> >::value_compare vc2 = ms2.value_comp( );
+  bool result2 = vc2( 2, 3 );
+  if( result2 == true )
+  {
+     cout << "vc2( 2,3 ) returns value of true, "
+          << "where vc2 is the function object of ms2."
+          << endl;
+  }
+  else
+  {
+     cout << "vc2( 2,3 ) returns value of false, "
+          << "where vc2 is the function object of ms2."
+          << endl;
+  }
+}
 #else
 #include <iostream>
 using std::cout;
