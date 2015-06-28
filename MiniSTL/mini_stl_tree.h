@@ -360,7 +360,7 @@ public:
   }
 
   rb_tree(const rb_tree& rhs);
-#ifdef MINI_STL_HAS_MOVE
+#ifdef MINI_STL_RVALUE_REFS
   rb_tree(rb_tree&& rhs)
   {
     cout << "rb_tree&& rhs" << endl;
@@ -465,7 +465,7 @@ public:
 
   iterator insert_equal(iterator position, const Value& val);
   iterator insert_equal(const Value& val);
-#ifdef MINI_STL_MEMBER_TEMPLATES
+
   template <class InputIterator>
   void insert_equal(InputIterator first,
                     InputIterator last,
@@ -477,7 +477,7 @@ public:
                      InputIterator last,
                      typename is_iterator<InputIterator>::ID = Identity()
       );
-#endif
+
   pair<typename rb_tree<Key,Value,KeyOfValue,Compare,Alloc>::iterator,
   bool>
   insert_unique(const Value& val);
@@ -851,7 +851,6 @@ rb_tree<Key,Value,KeyOfValue,Compare,Alloc>::insert_equal(const Value& val)
   return _insert_aux(x, y, val);
 }
 
-#ifdef MINI_STL_MEMBER_TEMPLATES
 template<class Key, class Value, class KeyOfValue,
 class Compare, class Alloc>
 template <class InputIterator>
@@ -886,7 +885,6 @@ rb_tree<Key,Value,KeyOfValue,Compare,Alloc>::
     insert_unique(*first++);
 }
 
-#endif
 template<class Key, class Value, class KeyOfValue,
          class Compare, class Alloc>
 pair<typename rb_tree<Key,Value,KeyOfValue,Compare,Alloc>::iterator,bool>

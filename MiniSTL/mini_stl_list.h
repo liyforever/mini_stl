@@ -116,6 +116,8 @@ public:
   typedef Alloc             allocator_type;
   typedef _list_iterator<Type,Type&,Type*>             iterator;
   typedef _list_iterator<Type,const Type&,const Type*> const_iterator;
+  typedef _MY_STL::reverse_iterator<iterator>          reverse_iterator;
+  typedef _MY_STL::reverse_iterator<const_iterator>    const_reverse_iterator;
 protected:
   typedef _list_node<Type>    node_type;
   typedef _list_node<Type>*   node_ptr;
@@ -157,7 +159,7 @@ public:
     insert(begin(), rhsList.begin(), rhsList.end());
   }
 
-#ifdef MINI_STL_MEMBER_TEMPLATES
+
   template <class InputIterator>
   list(InputIterator first,
        InputIterator last,
@@ -173,14 +175,13 @@ public:
     insert(begin(), first, last);
   }
 
-#endif
-
-#ifdef MINI_STL_HAS_MOVE
+#ifdef MINI_STL_RVALUE_REFS
   list(list&& rhsList)
   {
     head_ = rhsList.head_;
     size_ = rhsList.size_;
-    rhsList.head_ = 0;
+    rhsList.size_ = 0;
+    rhsList.head_ = nullptr;
   }
 
   list& operator=(list&& rhsList)
@@ -189,10 +190,11 @@ public:
     data_allocator_::deallocate(head_);
     head_ = rhsList.head_;
     size_ = rhsList.size_;
+    rhsList.size_ = 0;
     rhsList.head_ = nullptr;
     return *this;
   }
-#endif //MINI_STL_HAS_MOVE
+#endif //MINI_STL_RVALUE_REFS
   list& operator=(const list& rhsList)
   {
     if (this != &rhsList)
@@ -221,6 +223,16 @@ public:
     return (node_ptr)(head_->next);
   }
 
+  reverse_iterator rbegin()
+  {
+    return reverse_iterator(end());
+  }
+
+  const_reverse_iterator rbegin() const
+  {
+    return const_reverse_iterator(end());
+  }
+
   iterator end()
   {
     return head_;
@@ -231,14 +243,34 @@ public:
     return head_;
   }
 
+  reverse_iterator rend()
+  {
+    return reverse_iterator(begin());
+  }
+
+  const_reverse_iterator rend() const
+  {
+    return const_reverse_iterator(begin());
+  }
+
   const_iterator cbegin() const
   {
     return (node_ptr)(head_->next);
   }
 
+  const_reverse_iterator crbegin() const
+  {
+    return const_reverse_iterator(cend());
+  }
+
   const_iterator cend() const
   {
     return head_;
+  }
+
+  const_reverse_iterator crend() const
+  {
+    return const_reverse_iterator(cbegin());
   }
 
   reference front()
@@ -344,17 +376,8 @@ public:
 
   void swap(list& rhs)
   {
-    size_type tmp = size_;
-    size_ = rhs.size_;
-    rhs.size_ = tmp;
-    node_ptr tmp_ptr = head_;
-    head_ = rhs.head_;
-    rhs.head_ = tmp_ptr;
-  }
-
-  friend void swap(list& lhs, list& rhs)
-  {
-    lhs.swap(rhs);
+    _MY_STL::swap(this->size_, rhs.size_);
+    _MY_STL::swap(this->head_, rhs.head_);
   }
 
   void clear();
@@ -386,11 +409,10 @@ public:
     }
 }
 
-#ifdef MINI_STL_MEMBER_TEMPLATES
   template <class InputIterator>
   void insert(iterator position,
               InputIterator first,
-              InputIterator end,
+              InputIterator last,
               typename is_iterator<InputIterator>::ID = Identity()
       )
   {
@@ -398,19 +420,19 @@ public:
     _check_range(position);
     _check_range(first, last);
 #endif
-    while(first != end)
+    while(first != last)
       insert(position,*first++);
   }
-#endif
 
-#ifdef MINI_STL_HAS_MOVE
-  iterator insert(iterator position, const Type&& val)
+#ifdef MINI_STL_RVALUE_REFS
+  iterator insert(iterator position, Type&& val)
   {
 #ifdef MINI_STL_DEBUG
     _check_range(position);
 #endif
     node_ptr tmp = data_allocator_::allocate();
-    tmp->data = val;
+    construct(&(tmp->data));
+    tmp->data = _MY_STL::move(val);
     tmp->prev = position.node->prev;
     tmp->next = position.node;
     position.node->prev->next = tmp;
@@ -419,24 +441,40 @@ public:
     return tmp;
   }
 
-#endif //MINI_STL_HAS_MOVE
+#endif //MINI_STL_RVALUE_REFS
 
   iterator erase(iterator position);
   iterator erase(iterator first, iterator last);
 
   void remove(const Type& val);
-#ifdef MINI_STL_MEMBER_TEMPLATES
+
   template <class Predicate>
   void remove_if(Predicate pre);
-#endif //MINI_STL_MEMBER_TEMPLATES
+
+  void push_front(const Type& val)
+  {
+    insert(begin(), val);
+  }
+
+  void push_front(Type&& val)
+  {
+    insert(begin(), _MY_STL::move(val));
+  }
 
   void push_back(const Type& val)
   {
     insert(end(), val);
   }
 
+#ifdef MINI_STL_RVALUE_REFS
+  void push_back(Type&& val)
+  {
+    insert(end(), _MY_STL::move(val));
+  }
+
+#endif
   void assign(size_type count, const Type& val);
-#ifdef MINI_STL_MEMBER_TEMPLATES
+
   template <class InputIterator>
   void assign(
       InputIterator first,
@@ -446,26 +484,25 @@ public:
 
   template<class BinaryPredicate>
   void unique(BinaryPredicate Pred);
-#endif //MINI_STL_MEMBER_TEMPLATES
+
 
   void unique();
 
-#ifdef MINI_STL_MEMBER_TEMPLATES
+
   template <class BinaryPredicate>
   void sort(BinaryPredicate pred);
 
-#endif //MINI_STL_MEMBER_TEMPLATES
 
   void sort();
 
   void merge(list& rhs);
-#ifdef MINI_STL_MEMBER_TEMPLATES
+
   template<class BinaryPredicate>
      void merge(
         list& rhs,
         BinaryPredicate Comp
      );
-#endif //MINI_STL_MEMBER_TEMPLATES
+
   void splice(iterator position, list& rhs)
   {
 #ifdef MINI_STL_DEBUG
@@ -516,85 +553,6 @@ public:
       _transfer(position, first, last);
     }
   }
-
-  bool operator == (const list& rhsList)
-  {
-    if (size() != rhsList.size())
-      return false;
-    iterator lhsIter =  begin();
-    const_iterator rhsIter = rhsList.begin();
-    for ( ; lhsIter!=end(); ++lhsIter,++rhsIter)
-    {
-      if (*lhsIter != *rhsIter)
-        return false;
-    }
-    return true;
-  }
-
-  bool operator != (const list& rhsList)
-  {
-    if (size() != rhsList.size())
-      return true;
-    return !(*this == rhsList);
-  }
-
-  bool operator > (const list& rhsList)
-  {
-    iterator lhsIter = begin();
-    iterator rhsIter = rhsList.begin();
-    for ( ; lhsIter!=this->_M_last &&
-      rhsIter!=rhsList.end(); ++lhsIter,++rhsIter)
-    {
-      if(*rhsIter < *lhsIter)
-        return true;
-      else
-        return false;
-    }
-  }
-
-  bool operator <= (const list& rhsList)
-  {
-    iterator lhsIter = begin();
-    iterator rhsIter = (iterator)(rhsList.begin());
-    for ( ; lhsIter!=this->_M_last &&
-          rhsIter!=rhsList.end(); ++lhsIter,++rhsIter)
-    {
-      if(*lhsIter < *rhsIter)
-        return true;
-      else if(*rhsIter < *lhsIter)
-        return false;
-    }
-    return size() <= rhsList.size() ? true : false;
-  }
-
-  bool operator < (const list& rhsList)
-  {
-    iterator lhsIter = begin();
-    iterator rhsIter = (iterator)(rhsList.begin());
-    for ( ; lhsIter!=this->_M_last &&
-          rhsIter!=rhsList.end(); ++lhsIter,++rhsIter)
-    {
-      if(*lhsIter < *rhsIter)
-        return true;
-      else if(*rhsIter < *lhsIter)
-        return false;
-    }
-  }
-
-  bool operator >= (const list& rhsList)
-  {
-    iterator lhsIter = begin();
-    iterator rhsIter = (iterator)(rhsList.begin());
-    for ( ; lhsIter!=this->_M_last &&
-          rhsIter!=rhsList.end(); ++lhsIter,++rhsIter)
-    {
-      if(*rhsIter < *lhsIter)
-        return true;
-      else if(*lhsIter < *rhsIter)
-        return false;
-    }
-    return size() >= rhsList.size() ? true : false;
-  }
 protected:
   void _empty_init()
   {
@@ -633,7 +591,7 @@ protected:
     }
   }
 #ifdef MINI_STL_DEBUG
-  void _check_range(size_t n, bool)
+  void _check_range(size_t n) const
   {
     if (n<0 || n>=max_size()) {
       cerr << "list:n<0" << endl;
@@ -641,10 +599,10 @@ protected:
     }
   }
 
-  void _check_range(const_iterator position)
+  void _check_range(const_iterator position) const
   {
-    difference_type n = DISTANCE(position, begin());
-    if (n<0 || n>==size()) {
+    difference_type n = DISTANCE(begin(), position);
+    if (n<0 || (size_type)(n)>size()) {
       cerr << "position < begin() || position > end()" << endl;
       MINI_STL_THROW_RANGE_ERROR("list");
     }
@@ -652,7 +610,7 @@ protected:
 
   template <class InputIterator>
   void _check_range(InputIterator first,
-                   InputIterator last)
+                   InputIterator last) const
   {
     difference_type n = DISTANCE(first, last);
     if (n<0) {
@@ -661,7 +619,7 @@ protected:
     }
   }
 
-  void _check_range()
+  void _check_range() const
   {
     if (empty()) {
       cerr << "list:is empty" << endl;
@@ -671,6 +629,57 @@ protected:
 #endif //MINI_STL_DEBUG
 };
 
+
+template <class Type, class Alloc>
+inline bool
+operator==(const list<Type, Alloc>& lhs, const list<Type, Alloc>& rhs)
+{
+  return lhs.size() == rhs.size() &&
+         equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template <class Type, class Alloc>
+inline bool
+operator<(const list<Type, Alloc>& lhs, const list<Type, Alloc>& rhs)
+{
+  return lexicographical_compare(lhs.begin(), lhs.end(),
+                                 rhs.begin(), rhs.end());
+}
+
+template <class Type, class Alloc>
+inline bool
+operator!=(const list<Type, Alloc>& lhs, const list<Type, Alloc>& rhs)
+{
+  return !(lhs == rhs);
+}
+
+template <class Type, class Alloc>
+inline bool
+operator>(const list<Type, Alloc>& lhs, const list<Type, Alloc>& rhs)
+{
+  return rhs < lhs;
+}
+
+template <class Type, class Alloc>
+inline bool
+operator<=(const list<Type, Alloc>& lhs, const list<Type, Alloc>& rhs)
+{
+  return !(rhs < lhs);
+}
+
+template <class Type, class Alloc>
+inline bool
+operator>=(const list<Type, Alloc>& lhs, const list<Type, Alloc>& rhs)
+{
+  return !(lhs < rhs);
+}
+
+template <class Type, class Alloc>
+inline void
+swap(const list<Type, Alloc>& lhs, const list<Type, Alloc>& rhs)
+{
+  lhs.swap(rhs);
+}
 
 template <class Type, class Alloc>
 typename list<Type,Alloc>::iterator
@@ -734,7 +743,6 @@ void list<Type,Alloc>::assign(size_type count, const Type& val)
     erase(i, end());
 }
 
-#ifdef MINI_STL_MEMBER_TEMPLATES
 template <class Type, class Alloc>
 template <class InputIterator>
 void list<Type,Alloc>::assign(
@@ -771,7 +779,6 @@ void list<Type,Alloc>::remove_if(Predicate pre)
       beg = erase(beg);
 }
 
-#endif //MINI_STL_MEMBER_TEMPLATES
 
 template <class Type, class Alloc>
 void list<Type,Alloc>::remove(const Type& val)
@@ -781,7 +788,6 @@ void list<Type,Alloc>::remove(const Type& val)
       beg = erase(beg);
 }
 
-#ifdef MINI_STL_MEMBER_TEMPLATES
 template <class Type, class Alloc>
 template<class BinaryPredicate>
    void list<Type,Alloc>::unique(
@@ -801,8 +807,6 @@ template<class BinaryPredicate>
       next = first;
     }
   }
-
-#endif //MINI_STL_MEMBER_TEMPLATES
 
 template <class Type, class Alloc>
 void list<Type,Alloc>::unique()
@@ -842,7 +846,6 @@ void list<Type,Alloc>::merge(list &rhs)
     _transfer(first1,first2,last2);
 }
 
-#ifdef MINI_STL_MEMBER_TEMPLATES
 template <class Type, class Alloc>
 template <class BinaryPredicate>
 void list<Type,Alloc>::sort(BinaryPredicate pred)
@@ -891,7 +894,6 @@ void list<Type,Alloc>::merge(list &rhs, BinaryPredicate Comp)
     _transfer(first1,first2,last2);
 }
 
-#endif //MINI_STL_MEMBER_TEMPLATES
 template <class Type, class Alloc>
 void list<Type,Alloc>::sort()
 {

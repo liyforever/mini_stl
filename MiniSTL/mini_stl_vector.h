@@ -1,6 +1,5 @@
 #ifndef MINI_STL_VECTOR_H
 #define MINI_STL_VECTOR_H
-#include "mini_stl_iterator.h"
 #include "memory.h"
 #ifdef MINI_STL_DEBUG
 #include <iostream>
@@ -65,7 +64,7 @@ public:
     last_ = uninitialized_copy(rightVec.first_, rightVec.end_, first_);
     end_ = last_;
   }
-#ifdef MINI_STL_MEMBER_TEMPLATES
+
   template <class InputIterator>
     vector(InputIterator first,
            InputIterator last,
@@ -81,8 +80,8 @@ public:
     last_ = uninitialized_copy(first, last, first_);
     end_ = last_;
   }
-#endif //MINI_STL_MEMBER_TEMPLATES
-#ifdef MINI_STL_HAS_MOVE
+
+#ifdef MINI_STL_RVALUE_REFS
   vector(vector&& rightVec)
   {
     this->first_ = rightVec.first_;
@@ -106,7 +105,7 @@ public:
     return *this;
   }
 
-#endif //MINI_STL_HAS_MOVE
+#endif //MINI_STL_RVALUE_REFS
 
   vector& operator=(const vector& rightVec)
   {
@@ -284,6 +283,10 @@ public:
 
   void push_back(const Type& val);
 
+#ifdef MINI_STL_RVALUE_REFS
+  void push_back(Type&& val);
+#endif
+
   void pop_back()
   {
 #ifdef MINI_STL_DEBUG
@@ -317,12 +320,13 @@ public:
   }
 
   void insert(const_iterator position, size_type n, const Type& val);
-  iterator insert(const_iterator position, const Type& val);
-#ifdef MINI_STL_HAS_MOVE
-  iterator insert(const_iterator position, Type&& val);
-#endif // MINI_STL_HAS_MOVE
 
-#ifdef MINI_STL_MEMBER_TEMPLATES
+  iterator insert(const_iterator position, const Type& val);
+
+#ifdef MINI_STL_RVALUE_REFS
+  iterator insert(const_iterator position, Type&& val);
+#endif // MINI_STL_RVALUE_REFS
+
   template<class InputIterator>
   void insert(const_iterator position,
               InputIterator first,
@@ -341,7 +345,7 @@ public:
     clear();
     insert(begin(), first, last);
   }
-#endif // MINI_STL_MEMBER_TEMPLATES*/
+
   void assign(size_type n, const Type& val)
   {
 #ifdef MINI_STL_DEBUG
@@ -545,7 +549,14 @@ vector<Type, Alloc>::push_back(const Type& val)
     _insert_aux(last_, val);
   }
 }
-
+#ifdef MINI_STL_RVALUE_REFS
+template <class Type, class Alloc>
+inline void
+vector<Type, Alloc>::push_back(Type&& val)
+{
+  insert(end(), _MY_STL::move(val));
+}
+#endif
 template <class Type, class Alloc>
 inline void
 vector<Type, Alloc>::resize(size_type newSize, const Type &val)
@@ -650,7 +661,6 @@ vector<Type, Alloc>::insert(const_iterator position, const Type& val)
   return begin() + off;
 }
 
-#ifdef MINI_STL_MEMBER_TEMPLATES
 
 template <class Type, class Alloc>
 template <class InputIterator>
@@ -693,9 +703,7 @@ insert(const_iterator position,
   }
 }
 
-#endif //MINI_STL_MEMBER_TEMPLATES
-
-#ifdef MINI_STL_HAS_MOVE
+#ifdef MINI_STL_RVALUE_REFS
 template <class Type, class Alloc>
 typename vector<Type,Alloc>::iterator
 vector<Type, Alloc>::insert(const_iterator position, Type&& val)
@@ -735,7 +743,7 @@ vector<Type, Alloc>::insert(const_iterator position, Type&& val)
   return first_ + offset;
 }
 
-#endif // MINI_STL_HAS_MOVE
+#endif // MINI_STL_RVALUE_REFS
 
 MINI_STL_END
 #endif // MINI_STL_VECTOR_H

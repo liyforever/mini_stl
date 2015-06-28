@@ -421,59 +421,7 @@ void make_heap_aux(RandomAccessIterator first,
     --parent;
   }
 }
-/*
-template <class RandomAccessIterator, class Compare>
-inline void pop_heap(RandomAccessIterator first,
-              RandomAccessIterator last,
-              Compare comp)
-{
-  _pop_heap_aux(first, last, VALUE_TYPE(first),comp);
-}
 
-template <class RandomAccessIterator, class Type, class Compare>
-inline void _pop_heap_aux(RandomAccessIterator first,
-                          RandomAccessIterator last,
-                          Type*, Compare comp)
-{
-  _pop_heap(first, last-1, last-1, Type(*(last-1)),
-            DISTANCE_TYPE(first), comp);
-}
-
-template <class RandomAccessIterator, class Type,
-          class Distance, class Compare>
-inline void _pop_heap(RandomAccessIterator first,
-                      RandomAccessIterator last,
-                      RandomAccessIterator result,
-                      Type val, Distance*,
-                      Compare comp)
-{
-  *result = *first;
-  _adjust_heap(first, Distance(0), Distance(last-first),
-               val, comp);
-}
-
-template <class RandomAccessIterator, class Distance,
-          class Type, class Compare>
-void _adjust_heap(RandomAccessIterator first, Distance holeIndex,
-                  Distance len, Type val, Compare comp)
-{
-  cout << "_adjust_heap" << endl;
-  cout << "len:" << len<< endl;
-  Distance topIndex = holeIndex;
-  Distance rChild = 2 * holeIndex + 2;
-  while (rChild<len) {
-    if (comp(*(first+rChild),*(first+(rChild-1))))
-      --rChild;
-    *(first + holeIndex) = *(first+(rChild-1));
-    holeIndex = rChild;
-    rChild = 2 * (rChild + 1);
-  }
-  if (rChild==len) {
-    *(first+holeIndex) = *(first+(rChild-1));
-      holeIndex = rChild - 1;
-  }
-  //_push_heap(first, holeIndex, topIndex, val);
-}*/
 
 /************************heap_end**********************************/
 

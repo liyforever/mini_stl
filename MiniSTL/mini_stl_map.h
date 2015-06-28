@@ -54,7 +54,7 @@ public:
 
   map(const map& right)
     : c_(right.c_) {}
-#ifdef MINI_STL_MEMBER_TEMPLATES
+
   template<class InputIterator>
     map(InputIterator first,
         InputIterator last,
@@ -64,8 +64,8 @@ public:
   {
     c_.insert_unique(first, last);
   }
-#endif
-#ifdef MINI_STL_HAS_MOVE
+
+#ifdef MINI_STL_RVALUE_REFS
   map(map&& right)
     : c_(_MY_STL::move(right.c_)) {}
 
@@ -252,7 +252,7 @@ public:
   {
     c_.insert_unique(first, last);
   }
-#ifdef MINI_STL_HAS_MOVE
+#ifdef MINI_STL_RVALUE_REFS
   pair<iterator, bool>
     insert(value_type&& val)
   {

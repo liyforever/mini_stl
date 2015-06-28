@@ -1,71 +1,86 @@
-#ifndef MINI_STL_SET_H
-#define MINI_STL_SET_H
+#ifndef MINI_STL_MULTIMAP_H
+#define MINI_STL_MULTIMAP_H
 #include "mini_stl_tree.h"
 
 MINI_STL_BEGIN
 
 template <class Key,
+          class Type,
           class Compare = less<Key>,
           class Alloc = default_allocator>
-class set
+class multimap
 {
 public:
   typedef Key           key_type;
-  typedef Key           value_type;
+  typedef Type          mapped_type;
+
   typedef Compare       key_compare;
-  typedef Compare       value_compare;
+
+  typedef pair<const Key,Type>  value_type;
 private:
-  typedef rb_tree<key_type,value_type,identity<value_type>,
-                      key_compare, Alloc> RB_tree_type;
+  typedef rb_tree<key_type,value_type,select1st<value_type>,
+                        key_compare, Alloc> RB_tree_type;
   typedef typename RB_tree_type::iterator  RB_iterator;
   RB_tree_type c_;
 public:
-  typedef typename RB_tree_type::const_pointer    pointer;
+  typedef typename RB_tree_type::pointer          pointer;
   typedef typename RB_tree_type::const_pointer    const_pointer;
   typedef typename RB_tree_type::reference        reference;
   typedef typename RB_tree_type::const_reference  const_reference;
-  typedef typename RB_tree_type::const_iterator   iterator;
+  typedef typename RB_tree_type::iterator         iterator;
   typedef typename RB_tree_type::const_iterator   const_iterator;
   typedef typename RB_tree_type::size_type        size_type;
   typedef typename RB_tree_type::difference_type  difference_type;
   typedef typename RB_tree_type::allocator_type   allocator_type;
-  typedef typename RB_tree_type::const_reverse_iterator reverse_iterator;
+  typedef typename RB_tree_type::reverse_iterator       reverse_iterator;
   typedef typename RB_tree_type::const_reverse_iterator const_reverse_iterator;
+  class value_compare
+    : public binary_function<value_type,value_type,bool>
+  {
+    friend class multimap<Key,Type,Compare,Alloc>;
+  protected:
+    Compare comp;
+    value_compare(Compare cmp) : comp(cmp) {}
+  public:
+    bool operator()(const value_type& lhs, const value_type& rhs) const
+    {
+    return comp(lhs.first, rhs.first);
+    }
+  };
 public:
-  explicit set(const Compare& comp = Compare(),
-               const allocator_type&/*Al*/=allocator_type())
+  explicit multimap(const Compare& comp = Compare(),
+                 const allocator_type&/*Al*/=allocator_type())
     : c_(comp) {}
 
-  set(const set& right)
+  multimap(const multimap& right)
     : c_(right.c_) {}
 
   template<class InputIterator>
-    set(InputIterator first,
+    multimap(InputIterator first,
         InputIterator last,
         const Compare& comp = Compare(),
         const allocator_type&/*Al*/=allocator_type())
     : c_(comp)
   {
-    c_.insert_unique(first, last);
+    c_.insert_equal(first, last);
   }
 
 #ifdef MINI_STL_RVALUE_REFS
-  set(set&& right)
-    : c_(move(right.c_)) {}
+  multimap(multimap&& right)
+    : c_(_MY_STL::move(right.c_)) {}
 
-  set& operator=(set&& right)
+  multimap& operator=(multimap&& right)
   {
+    cout << "=multimap&&" << endl;
     c_ = move(right.c_);
     return *this;
   }
-
 #endif
-  set& operator=(const set& right)
+  multimap& operator=(const multimap& right)
   {
     c_ = right.c_;
     return *this;
   }
-
 public:
   allocator_type get_allocator() const
   {
@@ -77,19 +92,39 @@ public:
     return c_.begin();
   }
 
+  const_iterator begin() const
+  {
+    return c_.begin();
+  }
+
   iterator end()
   {
     return c_.end();
   }
 
-  const_reverse_iterator rbegin()
+  const_iterator end() const
   {
     return c_.end();
   }
 
-  const_reverse_iterator rend()
+  reverse_iterator rbegin()
   {
-    return c_.begin();
+    return c_.rbegin();
+  }
+
+  const_reverse_iterator rbegin() const
+  {
+    return c_.rbegin();
+  }
+
+  reverse_iterator rend()
+  {
+    return c_.rend();
+  }
+
+  const_reverse_iterator rend() const
+  {
+    return c_.rend();
   }
 
   const_iterator cbegin() const
@@ -104,12 +139,12 @@ public:
 
   const_reverse_iterator crbegin() const
   {
-    return c_.end();
+    return c_.rbegin();
   }
 
   const_reverse_iterator crend() const
   {
-    return c_.begin();
+    return c_.rend();
   }
 
   void clear()
@@ -122,6 +157,21 @@ public:
     return c_.size();
   }
 
+  Type& at(const Key& k)
+  {
+    return (*((insert(value_type(k,Type()))).first)).second;
+  }
+
+  const Type& at(const Key& k) const
+  {
+    return (*((insert(value_type(k,Type()))).first)).second;
+  }
+
+  Type& operator[](const Key& k)
+  {
+    return (*((insert(value_type(k,Type()))).first)).second;
+  }
+
   size_type count(const key_type& key) const
   {
     return c_.find(key) == c_.end() ? 0 : 1;
@@ -132,7 +182,7 @@ public:
     return c_.empty();
   }
 
-  void swap(set& rhs)
+  void swap(multimap& rhs)
   {
     this->c_.swap(rhs.c_);
   }
@@ -142,9 +192,19 @@ public:
     return c_.max_size();
   }
 
-  iterator lower_bound(const key_type& k) const
+  iterator lower_bound(const key_type& k)
   {
     return c_.lower_bound(k);
+  }
+
+  const_iterator lower_bound(const key_type& k) const
+  {
+    return c_.lower_bound(k);
+  }
+
+  iterator upper_bound(const key_type& k)
+  {
+    return c_.upper_bound(k);
   }
 
   iterator upper_bound(const key_type& k) const
@@ -152,12 +212,22 @@ public:
     return c_.upper_bound(k);
   }
 
-  pair<iterator,iterator> equal_range(const key_type& k) const
+  pair<iterator,iterator> equal_range(const key_type& k)
   {
     return c_.equal_range(k);
   }
 
-  iterator find(const key_type& k) const
+  pair<const_iterator,const_iterator> equal_range(const key_type& k) const
+  {
+    return c_.equal_range(k);
+  }
+
+  iterator find(const key_type& k)
+  {
+    return c_.find(k);
+  }
+
+  const_iterator find(const key_type& k) const
   {
     return c_.find(k);
   }
@@ -173,6 +243,7 @@ public:
     RB_iterator p = c_.insert_unique((RB_iterator&)position, val);
     return p;
   }
+
   template<class InputIterator>
     void insert(
           InputIterator first,
@@ -220,46 +291,46 @@ public:
 
   value_compare value_comp() const
   {
-    return c_.key_comp();
+    return value_compare(c_.key_comp());
   }
 
-  bool operator !=(const set &rhs)
+  bool operator !=(const multimap &rhs)
   {
     return this->c_ != rhs.c_;
   }
 
-  bool operator <(const set &rhs)
+  bool operator <(const multimap &rhs)
   {
     return this->c_ < rhs.c_;
   }
 
-  bool operator <=(const set &rhs)
+  bool operator <=(const multimap &rhs)
   {
     return this->c_ <= rhs.c_;
   }
 
-  bool operator ==(const set &rhs)
+  bool operator ==(const multimap &rhs)
   {
     return this->c_ == rhs.c_;
   }
 
-  bool operator >(const set &rhs)
+  bool operator >(const multimap &rhs)
   {
     return this->c_ > rhs.c_;
   }
 
-  bool operator >=(const set &rhs)
+  bool operator >=(const multimap &rhs)
   {
     return this->c_ >= rhs.c_;
   }
 };
 
-template <class Key,class Compare,class Alloc>
-inline void swap(set<Key,Compare,Alloc>& lhs,
-                 set<Key,Compare,Alloc>& rhs)
+template <class Key,class Type,class Compare,class Alloc>
+inline void swap(multimap<Key,Type,Compare,Alloc>& lhs,
+                 multimap<Key,Type,Compare,Alloc>& rhs)
 {
   lhs.swap(rhs);
 }
 
 MINI_STL_END
-#endif // MINI_STL_SET_H
+#endif // MINI_STL_MULTIMAP_H

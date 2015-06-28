@@ -4,6 +4,7 @@
 #define MINI_STL_BEGIN  namespace Mini_STL{
 #define MINI_STL_END    }
 #define _MY_STL         Mini_STL
+#define MINI_STL_THROW_RANGE_ERROR(msg) (throw std::out_of_range(msg))
 
 // Microsoft compiler.
 #ifdef _MSC_VER
@@ -12,10 +13,8 @@
 #   endif
 #   if _MSC_VER >= 1500
 #       define MINI_STL_CLASS_PARTIAL_SPECIALIZATION
-#       define MINI_STL_MEMBER_TEMPLATES
 #       define MINI_STL_HAS_WCHAR_T
-#       define MINI_STL_HAS_MOVE
-#       define __STL_FUNCTION_TMPL_PARTIAL_ORDER
+#       define MINI_STL_RVALUE_REFS
 #   endif
 #endif
 
@@ -35,5 +34,4 @@
 #   define MINI_STL_UNWIND(action)
 # endif
 
-#define MINI_STL_THROW_RANGE_ERROR(msg) (throw std::out_of_range(msg))
 #endif// MINI_STL_CONFIG_H

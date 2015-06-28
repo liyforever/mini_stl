@@ -107,7 +107,7 @@ public:
   explicit priority_queue(const Compare& cmp)
     : c(), comp(cmp)
   {}
-#ifdef MINI_STL_MEMBER_TEMPLATES
+
   template <class InputIterator>
   priority_queue(InputIterator first,
                  InputIterator last,
@@ -116,7 +116,7 @@ public:
   {
     make_heap(c.begin(), c.end(), comp);
   }
-#endif
+
   bool empty() const
   {
     return c.empty();

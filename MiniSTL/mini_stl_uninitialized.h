@@ -95,7 +95,6 @@ __uninitialized_copy_n(InputIter first, Size count,
       construct(&*cur, *first);
     return pair<InputIter, ForwardIter>(first, cur);
   }
-    //吃掉异常,再抛出
   MINI_STL_UNWIND(destroy(result, cur));
 }
 

@@ -315,7 +315,7 @@ struct is_iterator<long double>
 
 };
 
-#ifdef MINI_STL_HAS_MOVE
+#ifdef MINI_STL_RVALUE_REFS
 template<class Type>
 struct remove_reference
 {
@@ -342,6 +342,6 @@ typename remove_reference<Type>::type&&
   return ((typename remove_reference<Type>::type&&)Arg);
 }
 
-#endif //MINI_STL_HAS_MOVE
+#endif //MINI_STL_RVALUE_REFS
 MINI_STL_END
 #endif // MINI_STL___true_type_H

@@ -225,7 +225,6 @@ public:
     copy(rhs.begin(), rhs.end(), begin());
   }
 
-#ifdef MINI_STL_MEMBER_TEMPLATES
   template<class InputIterator>
   deque(InputIterator first,
         InputIterator last,
@@ -237,9 +236,7 @@ public:
     copy(first, last, begin());
   }
 
-#endif //MINI_STL_MEMBER_TEMPLATES
-
-#ifdef MINI_STL_HAS_MOVE
+#ifdef MINI_STL_RVALUE_REFS
   deque(deque&& rhs)
   {
     firstIter_ = rhs.firstIter_;
@@ -248,7 +245,7 @@ public:
     map_ = rhs.map_;
     rhs.map_ = 0;
   }
-#endif //MINI_STL_HAS_MOVE
+#endif //MINI_STL_RVALUE_REFS
 
   ~deque()
   {
@@ -393,7 +390,6 @@ public:
     _insert_fill_aux(position, count, val);
   }
 
-#ifdef MINI_STL_MEMBER_TEMPLATES
   template<class InputIterator>
      void insert(
         iterator position,
@@ -401,21 +397,21 @@ public:
         InputIterator last,
         typename is_iterator<InputIterator>::ID = Identity()
      );
-#endif //MINI_STL_MEMBER_TEMPLATES
+
   iterator erase(iterator position);
 
   iterator erase(iterator first, iterator last);
   void clear();
 
   void assign(size_type count, const value_type& val);
-#ifdef MINI_STL_MEMBER_TEMPLATES
+
   template<class InputIterator>
      void assign(
         InputIterator first,
         InputIterator last,
         typename is_iterator<InputIterator>::ID = Identity()
      );
-#endif //MINI_STL_MEMBER_TEMPLATES
+
 
   void resize(size_type newSize);
 
@@ -717,7 +713,6 @@ void deque<Type,Alloc,BuffSize>::assign(size_type count, const value_type& val)
   }
 }
 
-#ifdef MINI_STL_MEMBER_TEMPLATES
 template <class Type, class Alloc, size_t BuffSize>
 template<class InputIterator>
 void deque<Type,Alloc,BuffSize>::assign(
@@ -739,7 +734,6 @@ void deque<Type,Alloc,BuffSize>::assign(
     erase(cur, end());
 }
 
-#endif //MINI_STL_MEMBER_TEMPLATES
 template <class Type, class Alloc, size_t BuffSize>
 void deque<Type,Alloc,BuffSize>::_pop_back_aux()
 {
@@ -966,7 +960,6 @@ void deque<Type,Alloc,BuffSize>::_insert_fill_aux(
   }
 }
 
-#ifdef MINI_STL_MEMBER_TEMPLATES
 template <class Type, class Alloc, size_t BuffSize>
 template<class InputIterator>
    void deque<Type,Alloc,BuffSize>::insert(
@@ -1026,7 +1019,6 @@ template<class InputIterator>
   }
 }
 
-#endif //MINI_STL_MEMBER_TEMPLATES
 template <class Type, class Alloc, size_t BuffSize>
 typename deque<Type,Alloc,BuffSize>::iterator
 deque<Type,Alloc,BuffSize>::erase(iterator position)

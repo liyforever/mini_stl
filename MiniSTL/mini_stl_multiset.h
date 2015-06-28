@@ -49,7 +49,7 @@ public:
     c_.insert_equal(first, last);
   }
 
-#ifdef MINI_STL_HAS_MOVE
+#ifdef MINI_STL_RVALUE_REFS
   multiset(multiset&& right)
     : c_(move(right.c_)) {}
 
@@ -180,7 +180,7 @@ public:
   {
     c_.insert_equal(first, last);
   }
-#ifdef MINI_STL_HAS_MOVE
+#ifdef MINI_STL_RVALUE_REFS
   iterator insert(value_type&& val)
   {
     return c_.insert_equal(Mini_STL::move(val));

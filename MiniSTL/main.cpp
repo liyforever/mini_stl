@@ -1,7 +1,7 @@
 #define LIB_TEST
 #ifdef LIB_TEST
 
-#define MINI_STL_TEST
+//#define MINI_STL_TEST
 #ifdef MINI_STL_TEST
 #include <iostream>
 #include <string>
@@ -34,38 +34,36 @@ using namespace std;
 //#include <unordered_set>
 int main( )
 {
-  multiset <int, less<int> > ms1;
-  multiset <int, less<int> >::value_compare vc1 = ms1.value_comp( );
-  bool result1 = vc1( 2, 3 );
-  if( result1 == true )
-  {
-     cout << "vc1( 2,3 ) returns value of true, "
-          << "where vc1 is the function object of ms1."
-          << endl;
-  }
-  else
-  {
-     cout << "vc1( 2,3 ) returns value of false, "
-          << "where vc1 is the function object of ms1."
-          << endl;
+  list <int> c1, c2, c3;
+     list <int>::iterator c1_Iter;
+
+     c1.push_back( 1 );
+     c1.push_back( 2 );
+     c1.push_back( 3 );
+     c2.push_back( 10 );
+     c2.push_back( 20 );
+     c3.push_back( 100 );
+
+     cout << "The original list c1 is:";
+     for ( c1_Iter = c1.begin( ); c1_Iter != c1.end( ); c1_Iter++ )
+        cout << " " << *c1_Iter;
+     cout << endl;
+
+     c1.swap( c2 );
+
+     cout << "After swapping with c2, list c1 is:";
+     for ( c1_Iter = c1.begin( ); c1_Iter != c1.end( ); c1_Iter++ )
+        cout << " " << *c1_Iter;
+     cout << endl;
+
+     swap( c1,c3 );
+
+     cout << "After swapping with c3, list c1 is:";
+     for ( c1_Iter = c1.begin( ); c1_Iter != c1.end( ); c1_Iter++ )
+        cout << " " << *c1_Iter;
+     cout << endl;
   }
 
-  set <int, greater<int> > ms2;
-  set<int, greater<int> >::value_compare vc2 = ms2.value_comp( );
-  bool result2 = vc2( 2, 3 );
-  if( result2 == true )
-  {
-     cout << "vc2( 2,3 ) returns value of true, "
-          << "where vc2 is the function object of ms2."
-          << endl;
-  }
-  else
-  {
-     cout << "vc2( 2,3 ) returns value of false, "
-          << "where vc2 is the function object of ms2."
-          << endl;
-  }
-}
 #else
 #include <iostream>
 using std::cout;
