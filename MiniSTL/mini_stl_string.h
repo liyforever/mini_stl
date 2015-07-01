@@ -27,6 +27,69 @@ private:
   iterator last_;
   iterator end_;
   size_t *use_;
+public:
+  basic_string();
+
+  basic_string(const basic_string& right);
+#ifdef MINI_STL_RVALUE_REFS
+  basic_string(basic_string&& right);
+#endif
+  basic_string(
+      const basic_string& _Right,
+      size_type _Roff,
+      size_type _Count = npos
+  );
+  basic_string(
+      const basic_string& right,
+      size_type _Roff,
+      size_type _Count,
+      const allocator_type& _Al
+  );
+  basic_string(
+      const value_type *_Ptr,
+      size_type _Count
+  );
+  basic_string(
+      const value_type *_Ptr,
+      size_type _Count,
+      const allocator_type& _Al
+  );
+  basic_string(
+      const value_type *_Ptr
+  );
+  basic_string(
+      const value_type *_Ptr,
+      const allocator_type& _Al
+  );
+  basic_string(
+      size_type _Count,
+      value_type _Ch
+  );
+  basic_string(
+      size_type _Count,
+      value_type _Ch,
+      const allocator_type& _Al
+  );
+  template <class InputIterator>
+      basic_string(
+          InputIterator _First,
+          InputIterator _Last
+      );
+  template <class InputIterator>
+      basic_string(
+          InputIterator _First,
+          InputIterator _Last,
+          const allocator_type& _Al
+      );
+  basic_string(
+     const_pointer _First,
+     const_pointer _Last
+  );
+  basic_string(
+     const_iterator _First,
+     const_iterator _Last
+  );
+
 };
 
 MINI_STL_END
