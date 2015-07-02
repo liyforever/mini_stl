@@ -35,61 +35,60 @@ public:
   basic_string(basic_string&& right);
 #endif
   basic_string(
-      const basic_string& _Right,
-      size_type _Roff,
-      size_type _Count = npos
+      const basic_string& right,
+      size_type roff,
+      size_type count = npos
   );
   basic_string(
       const basic_string& right,
-      size_type _Roff,
-      size_type _Count,
-      const allocator_type& _Al
+      size_type roff,
+      size_type count,
+      const allocator_type& Al
   );
   basic_string(
       const value_type *_Ptr,
-      size_type _Count
+      size_type count
   );
   basic_string(
-      const value_type *_Ptr,
-      size_type _Count,
-      const allocator_type& _Al
+      const value_type *ptr,
+      size_type count,
+      const allocator_type& Al
   );
   basic_string(
-      const value_type *_Ptr
+      const value_type *ptr
   );
   basic_string(
-      const value_type *_Ptr,
-      const allocator_type& _Al
+      const value_type *ptr,
+      const allocator_type& Al
   );
   basic_string(
-      size_type _Count,
-      value_type _Ch
+      size_type count,
+      value_type ch
   );
   basic_string(
-      size_type _Count,
-      value_type _Ch,
-      const allocator_type& _Al
+      size_type count,
+      value_type ch,
+      const allocator_type& Al
   );
   template <class InputIterator>
       basic_string(
-          InputIterator _First,
-          InputIterator _Last
+          InputIterator first,
+          InputIterator last
       );
   template <class InputIterator>
       basic_string(
-          InputIterator _First,
-          InputIterator _Last,
-          const allocator_type& _Al
+          InputIterator first,
+          InputIterator last,
+          const allocator_type& Al
       );
   basic_string(
-     const_pointer _First,
-     const_pointer _Last
+     const_pointer first,
+     const_pointer last
   );
   basic_string(
-     const_iterator _First,
-     const_iterator _Last
+     const_iterator first,
+     const_iterator last
   );
-
 };
 
 MINI_STL_END

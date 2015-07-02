@@ -31,38 +31,17 @@ using namespace std;
 #endif
 #include <functional>
 #include "Windows.h"
+#include <map>
 //#include <unordered_set>
 int main( )
 {
-  list <int> c1, c2, c3;
-     list <int>::iterator c1_Iter;
-
-     c1.push_back( 1 );
-     c1.push_back( 2 );
-     c1.push_back( 3 );
-     c2.push_back( 10 );
-     c2.push_back( 20 );
-     c3.push_back( 100 );
-
-     cout << "The original list c1 is:";
-     for ( c1_Iter = c1.begin( ); c1_Iter != c1.end( ); c1_Iter++ )
-        cout << " " << *c1_Iter;
-     cout << endl;
-
-     c1.swap( c2 );
-
-     cout << "After swapping with c2, list c1 is:";
-     for ( c1_Iter = c1.begin( ); c1_Iter != c1.end( ); c1_Iter++ )
-        cout << " " << *c1_Iter;
-     cout << endl;
-
-     swap( c1,c3 );
-
-     cout << "After swapping with c3, list c1 is:";
-     for ( c1_Iter = c1.begin( ); c1_Iter != c1.end( ); c1_Iter++ )
-        cout << " " << *c1_Iter;
-     cout << endl;
-  }
+ map<string,int> aaa;
+ aaa.insert(make_pair("duanchao",11111));
+ aaa.insert(make_pair("minlu",22222));
+ aaa.insert(make_pair("huangbing",33333));
+ auto b = aaa.find("minlu");
+ cout << (*b).second << endl;
+}
 
 #else
 #include <iostream>
