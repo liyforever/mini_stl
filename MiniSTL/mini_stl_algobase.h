@@ -24,13 +24,13 @@ inline const Type& max(const Type &left, const Type &right, Cmp cp)
 }
 
 template <class Type, class Cmp>
-inline Type& min(const Type &left, const Type &right, Cmp cp)
+inline const Type& min(const Type &left, const Type &right, Cmp cp)
 {
   return cp(left, right) ? left : right;
 }
 
 template <class Type>
-inline Type& min(Type &left, Type &right)
+inline const Type& min(const Type &left, const Type &right)
 {
   return left < right ? left : right;
 }

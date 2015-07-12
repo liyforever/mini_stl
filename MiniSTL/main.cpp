@@ -1,10 +1,9 @@
 #define LIB_TEST
 #ifdef LIB_TEST
 
-//#define MINI_STL_TEST
+#define MINI_STL_TEST
 #ifdef MINI_STL_TEST
 #include <iostream>
-#include <string>
 #include "mini_stl_multiset.h"
 #include "mini_stl_stack.h"
 #include "mini_stl_vector.h"
@@ -12,12 +11,13 @@
 #include "mini_stl_deque.h"
 #include "mini_stl_queue.h"
 #include "mini_stl_set.h"
+#include "mini_stl_string.h"
 #include "mini_stl_tree.h"
 #include "mini_stl_map.h"
 using namespace Mini_STL;
-//using std::cout;
-//using std::endl;
-using std::string;
+using std::cout;
+using std::endl;
+
 #else
 #include <vector>
 #include <map>
@@ -35,14 +35,24 @@ using namespace std;
 //#include <unordered_set>
 int main( )
 {
- map<string,int> aaa;
- aaa.insert(make_pair("duanchao",11111));
- aaa.insert(make_pair("minlu",22222));
- aaa.insert(make_pair("huangbing",33333));
- auto b = aaa.find("minlu");
- cout << (*b).second << endl;
+  string s1 = "123456";
+  for(auto ii : s1)
+    cout << ii << endl;
+  string s2 = s1;
+  cout << s1 << "use:" << s1.get_use() << endl;
+  cout << s2 << "use:" << s2.get_use() << endl;
+  {
+    string s3 = s2;
+    cout << s2 << "use:" << s2.get_use() << endl;
+  }
+  cout << s1 << "use:" << s1.get_use() << endl;
+  cout << s2 << "use:" << s2.get_use() << endl;
+  s1.insert(s1.first_+1);
+  for(auto ii : s1)
+    cout << ii << endl;
+  cout << s1 << "use:" << s1.get_use() << endl;
+  cout << s2 << "use:" << s2.get_use() << endl;
 }
-
 #else
 #include <iostream>
 using std::cout;

@@ -27,7 +27,8 @@ HEADERS += \
     mini_stl_multiset.h \
     mini_stl_hashtable.h \
     mini_stl_multimap.h \
-    mini_stl_string.h
+    mini_stl_string.h \
+    mini_stl_chartraits.h
 
 OTHER_FILES += \
     info.txt
