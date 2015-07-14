@@ -128,17 +128,42 @@ public:
 
   basic_string& operator=(value_type Ch)
   {
-    _destroy_block();
-    _init_block(2);
+    clear();
+    insert(begin(), 1, Ch);
     return *this;
   }
 
-  basic_string& operator=(const_pointer Ptr);
+  basic_string& operator=(const_pointer Ptr)
+  {
+    clear();
+    insert(begin, Ptr, Ptr+traits_type::length(Ptr));
+    return *this;
+  }
 
-  basic_string& operator=(const basic_string& Right);
+  basic_string& operator=(const basic_string& Right)
+  {
+    if (this != &Right) {
+      _destroy_block();
+      this->first_ = Right.first_;
+      this->last_ = Right.last_;
+      this->end_ = Right.end_;
+      this->use_ = Right.use_;
+      ++*use_;
+    }
+    return *this;
+  }
 
 #ifdef MINI_STL_RVALUE_REFS
-  basic_string& operator=(basic_string&& Right);
+  basic_string& operator=(basic_string&& Right)
+  {
+    _destroy_block();
+    this->first_ = Right.first_;
+    this->last_ = Right.last_;
+    this->end_ = Right.end_;
+    this->use_ = Right.use_;
+    ++*use_;
+    return *this;
+  }
 #endif
   ~basic_string()
   {
@@ -158,6 +183,7 @@ public:
 
   iterator begin()
   {
+    _detach();
     return first_;
   }
 
@@ -168,6 +194,7 @@ public:
 
   iterator end()
   {
+    _detach();
     return last_;
   }
 
@@ -178,6 +205,7 @@ public:
 
   reverse_iterator rbegin()
   {
+    _detach();
     return reverse_iterator(last_);
   }
 
@@ -188,6 +216,7 @@ public:
 
   reverse_iterator rend()
   {
+    _detach();
     return reverse_iterator(first_);
   }
 
@@ -214,6 +243,28 @@ public:
   const_reverse_iterator crend() const
   {
     return rend();
+  }
+
+  reference at(size_type Off)
+  {
+    _detach();
+    return first_[Off];
+  }
+
+  const_reference at(size_type Off) const
+  {
+    return first_[Off];
+  }
+
+  reference back()
+  {
+    _detach();
+    return *(last_ - 1);
+  }
+
+  const_reference back() const
+  {
+    return *(last_ - 1);
   }
 
   size_type size() const
@@ -289,68 +340,223 @@ public:
         typename is_iterator<InputIterator>::ID = Identity()
       );
 
-
-
-  /*basic_string& assign(const value_type* ptr)
+  basic_string& assign(const value_type* Ptr)
   {
-
+    size_type n = traits_type::length(Ptr);
+    return assign(Ptr, Ptr+n);
   }
 
-  basic_string& assign(const value_type* ptr, size_type count);
+  basic_string& assign(const value_type* Ptr, size_type Count)
+  {
+    return assign(Ptr, Ptr+Count);
+  }
 
-  basic_string& assign(const basic_string& str, size_type off, size_type count);
+  basic_string& assign(const basic_string& Str, size_type Off, size_type Count)
+  {
+    return assign(Str.begin()+Off, Str.begin()+Off+Count);
+  }
 
-  basic_string& assign(const basic_string& str);
+  basic_string& assign(const basic_string& Str)
+  {
+    return assign(Str.begin(), Str.end());
+  }
 
-  basic_string& assign(size_type _Count, value_type ch);
+  basic_string& assign(size_type Count, value_type Ch)
+  {
+    clear();
+    insert(begin(), Count, Ch);
+    return *this;
+  }
 
   template<class InputIterator>
     basic_string& assign(
-            InputIterator _First,
-            InputIterator _Last
-        );
+      InputIterator First,
+      InputIterator Last,
+      typename is_iterator<InputIterator>::ID = Identity()
+    )
+  {
+    clear();
+    insert(begin(),First, Last);
+    return *this;
+  }
 
-  basic_string& assign(const_iterator first, const_iterator last);
+  template<class InputIterator>
+    basic_string& append(
+      InputIterator First,
+      InputIterator Last,
+      typename is_iterator<InputIterator>::ID = Identity()
+    )
+  {
+    return insert(end(), First, Last);
+  }
 
+  basic_string& append(const value_type* Ptr)
+  {
+    return insert(end(), Ptr, Ptr+traits_type::length(Ptr));
+  }
 
-  /*basic_string& append(const_pointer* ptr)
+  basic_string& append(const value_type* Ptr, size_type Count)
+  {
+    return insert(end(), Ptr, Ptr+Count);
+  }
+  basic_string& append(
+        const basic_string& Str,
+        size_type Off,
+        size_type Count
+    )
+  {
+    return insert(end(), Str.begin()+Off, Str.begin()+Off+Count);
+  }
+
+   basic_string& append(const basic_string& Str)
+  {
+    return insert(end(), Str.begin(), Str.end());
+  }
+
+  basic_string& append(size_type Count, value_type Ch)
+  {
+    insert(end(), Count, Ch);
+    return *this;
+  }
+
+  basic_string& erase(size_type Pos = 0, size_type Count = npos)
+  {
+    if (Pos > size())
+      MINI_STL_THROW_RANGE_ERROR("basic_string");
+    erase(first_ + Pos, first_ + Pos + min(Count, size() - Pos));
+    return *this;
+  }
+
+  iterator erase(iterator Position)
+  {
+    return erase(Position, Position + 1);
+  }
+
+  iterator erase(iterator First, iterator Last)
   {
     if (*use_ == 1) {
-      ;
-    else {
-
+      if (First != Last) {
+        traits_type::move(First, Last, (last_ - Last) + 1);//include null
+        const iterator new_last = last_ - (Last - First);
+        destroy(new_last + 1, last + 1);
+        last_ = new_last;
+      }
+      return First;
+    } else {
+      --*use_;
+      iterator old_first = first_;
+      iterator old_last = last_;
+      size_type n1 = First - first_;
+      size_type n2 = last_ - Last;
+      _init_block(n1 + n2 + 1);
+      last_ = uninitialized_copy(old_first, First, first_);
+      last_ = uninitialized_copy(Last, old_last, last_);
+      _make_terinate();
+      return first_ + n1;
     }
   }
 
-  basic_string& append(const value_type* _Ptr, size_type _Count)
+  size_type find(value_type Ch, size_type Off = 0) const
   {
-    ;
+
   }
-  basic_string& append(
-        const basic_string& _Str,
+    size_type find(
+        const value_type* _Ptr,
+        size_type _Off = 0
+    ) const;
+    size_type find(
+        const value_type* _Ptr,
         size_type _Off,
         size_type _Count
-    );
-    basic_string<CharType, Traits, Allocator>& append(
-        const basic_string<CharType, Traits, Allocator>& _Str
-    );
-    basic_string<CharType, Traits, Allocator>& append(
-        size_type _Count,
-        value_type _Ch
-    );
-    template<class InputIterator>
-        basic_string<CharType, Traits, Allocator>& append(
-            InputIterator _First,
-            InputIterator _Last
-        );
-    basic_string<CharType, Traits, Allocator>& append(
-        const_pointer _First,
-        const_pointer _Last
-    );
-    basic_string<CharType, Traits, Allocator>& append(
-        const_iterator _First,
-        const_iterator _Last
-    );*/
+    ) const;
+    size_type find(
+        const basic_string<CharType, Traits, Allocator>& _Str,
+        size_type _Off = 0
+    ) const;
+
+  void clear()
+  {
+    if (*use_ == 1) {
+      if (!empty()) {
+        traits_type::assign(*first_, value_type());
+        destroy(first_+1, last_+1);
+        last_ = first_;
+      }
+    } else {
+      --*use_;
+      _init_block(8);
+    }
+  }
+
+  size_type capacity() const
+  {
+    return end_ - first_ - 1;
+  }
+
+  const value_type *c_str() const
+  {
+    return first_;
+  }
+
+  const value_type *data() const
+  {
+    return first_;
+  }
+  size_type copy(value_type* Ptr, size_type Count, size_type Off = 0) const
+  {\
+    traits_type::copy(Ptr, first_+Off, Count);
+    return Count;
+  }
+
+  int compare(const basic_string& Str) const
+  {
+    return _compare_aux(first_, last_, Str.first_, Str.last_);
+  }
+
+  int compare(size_type Pos1, size_type Num1, const basic_string& Str) const
+  {
+    if (Pos1 > size())
+      MINI_STL_THROW_RANGE_ERROR("basic_string");
+    return _compare_aux(first_ + Pos1,
+                        first_ + Pos1 + min(Num1, size() - Pos1),
+                        Str.first_, Str.last_);
+  }
+
+  int compare(size_type Pos1, size_type Num1,
+                const basic_string& Str,
+                size_type Pos2, size_type Num2) const
+  {
+    if (Pos1 > size() || Pos2 > Str.size())
+      MINI_STL_THROW_RANGE_ERROR("basic_string");
+    return _compare_aux(first_ + Pos1,
+                        first_ + Pos1 + min(Num1, size() - Pos1),
+                        Str.first_ + Pos2,
+                        Str.first_ + Pos2 + min(Num2, size() - Pos2));
+  }
+
+  int compare(const value_type* Ptr) const
+  {
+    return _compare_aux(first_, last_, Ptr, Ptr + traits_type::length(Ptr));
+  }
+
+  int compare(size_type Pos1, size_type Num1, const value_type* Ptr) const
+  {
+    if (Pos1 > size())
+      MINI_STL_THROW_RANGE_ERROR("basic_string");
+    return _compare_aux(first_ + Pos1,
+                        first_ + Pos1 + min(Num1, size() - Pos1),
+                        Ptr, Ptr + traits_type::length(ptr));
+  }
+
+  int compare(size_type Pos1, size_type Num1, const value_type* Ptr,
+                size_type Num2) const
+  {
+    if (__pos1 > size())
+      MINI_STL_THROW_RANGE_ERROR("basic_string");
+    return _compare_aux(first_ + Pos1,
+                        first_ + Pos1 + min(Num1, size() - Pos1),
+                        Ptr, Ptr + Num2);
+  }
 
 protected:
   pointer _allocate(size_t n)
@@ -405,6 +611,28 @@ protected:
     last_ = uninitialized_copy(first, last, first_);
     _make_terinate();
   }
+
+  void _detach()
+  {
+    if (*use_ == 1)
+      return;
+    else {
+      --*use_;
+      iterator old_first = first_;
+      iterator old_last = last_;
+      _init_block(old_last - old_first + 1);
+      insert(begin(), old_first, old_last);
+    }
+  }
+
+  int _compare_aux(const value_type* First1, const value_type* Last1,
+                   const value_type* First2, const value_type* Last2)
+  {
+    const difference_type n1 = Last1 - First1;
+    const difference_type n2 = Last2 - First2;
+    const int cmp = traits_type::compare(First1, First2, min(n1, 2));
+    return cmp != 0 ? cmp : (n1 < n2 ? -1 : (n1 > n2 ? 1 : 0));
+  }
 };
 
 template <class CharType,class Traits,class Alloc>
@@ -422,14 +650,14 @@ void basic_string<CharType,Traits,Alloc>::insert(
   )
 {
   if (*use_ == 1) {
-    if (First != Last) {//范围不空
+    if (First != Last) {
       size_type n = Last - First;
-      if ((size_type)(end_ - last_) >= n) {//还有空间
+      if ((size_type)(end_ - last_) >= n) {
         iterator oldLast = last_;
         copy_backward((iterator)Position, oldLast, oldLast + n);
         copy(First, Last, (iterator)Position);
         last_ += n;
-      } else {//空间不够
+      } else {
         const size_type oldSize = size();
         const size_type newSize = oldSize + max((size_type)oldSize, (size_type)n);
         iterator newFirst = data_allocator_::allocate(newSize);
@@ -475,7 +703,7 @@ basic_string<CharType,Traits,Alloc>::insert(
       copy_backward((iterator)Position, oldLast, oldLast + Count);
       traits_type::assign(Position, Count, Ch);
       last_ += Count;
-    } else {//空间不够
+    } else {
       const size_type oldSize = size();
       const size_type newSize = oldSize + max((size_type)oldSize, (size_type)Count);
       iterator newFirst = data_allocator_::allocate(newSize);
@@ -509,6 +737,18 @@ basic_string<CharType,Traits,Alloc>::insert(
   }
   return *this;
 }
+
+/*template <class CharType,class Traits,class Alloc>
+template<class InputIterator>
+basic_string<CharType,Traits,Alloc>
+basic_string<CharType,Traits,Alloc>::append(
+    InputIterator First,
+    InputIterator Last,
+    typename is_iterator<InputIterator>::ID
+   )
+{
+  clear();
+}*/
 
 template <class CharType,class Traits,class Alloc>
 std::ostream& operator <<(std::ostream& os, const basic_string<CharType,Traits,Alloc>& Str)

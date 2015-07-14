@@ -266,7 +266,6 @@ public:
     RB_iterator p = c_.insert_unique((RB_iterator&)position, Mini_STL::move(val));
     return p;
   }
-
 #endif
   void erase(iterator position)
   {

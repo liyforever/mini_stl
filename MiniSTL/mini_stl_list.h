@@ -594,7 +594,7 @@ protected:
   void _check_range(size_t n) const
   {
     if (n<0 || n>=max_size()) {
-      cerr << "list:n<0" << endl;
+      std::cerr << "list:n<0" << std::endl;
       MINI_STL_THROW_RANGE_ERROR("list");
     }
   }
@@ -603,7 +603,7 @@ protected:
   {
     difference_type n = DISTANCE(begin(), position);
     if (n<0 || (size_type)(n)>size()) {
-      cerr << "position < begin() || position > end()" << endl;
+      std::cerr << "position < begin() || position > end()" << std::endl;
       MINI_STL_THROW_RANGE_ERROR("list");
     }
   }

@@ -17,7 +17,6 @@
 using namespace Mini_STL;
 using std::cout;
 using std::endl;
-
 #else
 #include <vector>
 #include <map>
@@ -35,23 +34,12 @@ using namespace std;
 //#include <unordered_set>
 int main( )
 {
-  string s1 = "123456";
-  for(auto ii : s1)
-    cout << ii << endl;
-  string s2 = s1;
-  cout << s1 << "use:" << s1.get_use() << endl;
-  cout << s2 << "use:" << s2.get_use() << endl;
-  {
-    string s3 = s2;
-    cout << s2 << "use:" << s2.get_use() << endl;
-  }
-  cout << s1 << "use:" << s1.get_use() << endl;
-  cout << s2 << "use:" << s2.get_use() << endl;
-  s1.insert(s1.first_+1);
-  for(auto ii : s1)
-    cout << ii << endl;
-  cout << s1 << "use:" << s1.get_use() << endl;
-  cout << s2 << "use:" << s2.get_use() << endl;
+  string ss = "12345";
+  char array[10];
+  ss.copy(array, 2, 2);
+  cout << ss << endl;
+  string s1(array);
+  cout << array << endl;
 }
 #else
 #include <iostream>
