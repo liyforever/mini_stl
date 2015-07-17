@@ -256,6 +256,17 @@ public:
     return first_[Off];
   }
 
+  reference operator[](size_type Off)
+  {
+    _detach();
+    return first_[Off];
+  }
+
+  const_reference operator[](size_type Off) const
+  {
+    return first_[Off];
+  }
+
   reference back()
   {
     _detach();
@@ -456,6 +467,16 @@ public:
     }
   }
 
+  void pop_back()
+  {
+    erase(--end());
+  }
+
+  void push_back(value_type Ch)
+  {
+    insert(end(), 1, Ch);
+  }
+
   size_type find(value_type Ch, size_type Off = 0) const
   {
 
@@ -508,6 +529,105 @@ public:
     return Count;
   }
 
+  basic_string& replace(size_type Pos1, size_type Num1, const value_type* Ptr)
+  {
+    return replace(begin()+Pos1, begin()+Pos1+Num1, 
+                   Ptr, Ptr+traits_type::length(Ptr));
+  }
+    
+  basic_string& replace(size_type Pos1, size_type Num1, const basic_string& Str)
+  {
+    return replace(begin()+Pos1, begin()+Pos1+Num1,
+                   Str.begin(), Str.end());
+  }
+    
+  basic_string& replace(size_type Pos1, size_type Num1, 
+                        const value_type* Ptr, size_type Num2)
+  {
+    return replace(begin()+Pos1, begin()+Pos1+Num1,
+                   Ptr, Ptr+Num2);
+  }
+    
+  basic_string& replace(size_type Pos1, size_type Num1,
+                        const basic_string& Str,
+                        size_type Pos2, size_type Num2)
+  {
+    return replace(begin()+Pos1, begin()+Pos1+Num1,
+                   Str.begin()+Pos2, Str.begin()+Pos2+Num2);
+  }
+    
+ /* basic_string& replace(
+       size_type Pos1,
+       size_type Num1,
+       size_type Count,
+       value_type Ch
+    )
+  {
+    return replace(begin()+Pos1, begin()+Pos1+Num1,)
+  }*/
+    
+  basic_string& replace(
+       iterator First,
+       iterator Last,
+       const value_type* Ptr
+    )
+  {
+    return replace(First, Last, Ptr, Ptr+traits_type::length(Ptr));
+  }
+    
+  basic_string& replace(
+       iterator First,
+       iterator Last,
+       const basic_string& Str
+    )
+  {
+    return replace(First, Last,
+                   Str.begin(), Str.end());
+  }
+    
+  basic_string& replace(
+       iterator First,
+       iterator Last,
+       const value_type* Ptr,
+       size_type Num2
+    )
+  {
+    return replace(First, Last,
+                   Ptr+Num2, Ptr+traits_type::length(Ptr));
+  }
+    
+  /*basic_string& replace(
+       iterator _First0,
+       iterator _Last0,
+       size_type _Num2,
+       value_type _Ch
+    );*/
+    
+  template<class InputIterator>
+    basic_string& replace(
+      iterator First1,
+      iterator Last1,
+      InputIterator First2,
+      InputIterator Last2,
+      typename is_iterator<InputIterator>::ID = Identity()
+    );
+
+  reference front()
+  {
+    _detach();
+    return *first_;
+  }
+
+  const_reference front() const
+  {
+    return *first_;
+  }
+
+  size_type length( ) const
+  {
+    return size();
+  }
+
   int compare(const basic_string& Str) const
   {
     return _compare_aux(first_, last_, Str.first_, Str.last_);
@@ -556,6 +676,36 @@ public:
     return _compare_aux(first_ + Pos1,
                         first_ + Pos1 + min(Num1, size() - Pos1),
                         Ptr, Ptr + Num2);
+  }
+    
+  void swap(basic_string& Str)
+  {
+    _MY_STL::swap(this->first_, Str.first_);  
+    _MY_STL::swap(this->last_, Str.last_);
+    _MY_STL::swap(this->end_, Str.end_);
+    _MY_STL::swap(this->use_, Str.use_);
+  }
+    
+  basic_string substr(size_type Off = 0, size_type Count = npos) const
+  {
+    return basic_string(begin()+Off, 
+                        begin()+Off + min(Count, size() - Pos));    
+  }
+
+  basic_string& operator+=(value_type Ch)
+  {
+    push_back(Ch);
+    return *this;
+  }
+
+  basic_string& operator+=(const value_type* Ptr)
+  {
+    return insert(last_, Ptr);
+  }
+
+  basic_string& operator+=(const basic_string& Right)
+  {
+    return insert(last_, Right);
   }
 
 protected:
@@ -738,17 +888,294 @@ basic_string<CharType,Traits,Alloc>::insert(
   return *this;
 }
 
-/*template <class CharType,class Traits,class Alloc>
+template <class CharType,class Traits,class Alloc>
 template<class InputIterator>
-basic_string<CharType,Traits,Alloc>
-basic_string<CharType,Traits,Alloc>::append(
-    InputIterator First,
-    InputIterator Last,
+basic_string&
+basic_string<CharType,Traits,Alloc>::replace(
+    iterator First1,
+    iterator Last1,
+    InputIterator First2,
+    InputIterator Last2,
     typename is_iterator<InputIterator>::ID
+    )
+{
+  size_type insert_num = DISTANCE(First2, Last2);
+  size_type replace_num = Last1 - First1;
+  if (*use_ == 1) {
+    if (replace_num >= insert_num) {
+      _MY_STL::copy(First2, Last2, First1);
+      erase(First1+insert_num, Last1);
+    } else {
+      for ( ;First1!=Last1; ++First1,++First2)
+        *First1 = *First2;
+      insert(Last1, First2, Last2);
+    }
+  } else {
+    --*use_;
+    iterator old_first = first_;
+    iterator old_last_ = last_;
+    _init_block(size()-replace_num+insert_num+1);
+    last_ = uninitialized_copy(old_first, First1, first_);
+    last_ = uninitialized_copy(First2, Last2, last_);
+    last_ = uninitialized_copy(Last1, old_last_, last_);
+    _make_terinate();
+  }
+  return *this;
+}
+
+
+template <class CharType,class Traits,class Alloc>
+   void swap(
+      basic_string<CharType,Traits,Alloc>& Left,
+      basic_string<CharType,Traits,Alloc>& Right
    )
 {
-  clear();
-}*/
+  Left.swap(Right);     
+}
+   
+template<class CharType, class Traits, class Allocator>
+   basic_string<CharType, Traits, Allocator> operator+(
+       const basic_string<CharType, Traits, Allocator>& Left,
+       const basic_string<CharType, Traits, Allocator>& Right
+       )
+{
+  typedef basic_string<CharType, Traits, Allocator> Str;
+  Str result(Left);
+  result.append(Right);
+  return result;
+}
+
+template<class CharType, class Traits, class Allocator>
+   basic_string<CharType, Traits, Allocator> operator+(
+       const basic_string<CharType, Traits, Allocator>& Left,
+       const CharType* Right
+       )
+{
+  typedef basic_string<CharType, Traits, Allocator> Str;
+  Str result(Left); 
+  result.append(Right);
+  return result;  
+}
+
+template<class CharType, class Traits, class Allocator>
+   basic_string<CharType, Traits, Allocator> operator+(
+       const basic_string<CharType, Traits, Allocator>& Left,
+       const CharType Right
+       )
+{
+  typedef basic_string<CharType, Traits, Allocator> Str;
+  Str result(Left);  
+  result.push_back(Right);
+  return result;
+}
+
+template<class CharType, class Traits, class Allocator>
+   basic_string<CharType, Traits, Allocator> operator+(
+       const CharType* Left,
+       const basic_string<CharType, Traits, Allocator>& Right
+       )
+{
+  typedef basic_string<CharType, Traits, Allocator> Str;
+  Str result(Left);
+  result.append(Right);
+  return result;
+}
+   
+template<class CharType, class Traits, class Allocator>
+   basic_string<CharType, Traits, Allocator> operator+(
+       const CharType Left,
+       const basic_string<CharType, Traits, Allocator>& Right
+       )
+{
+  typedef basic_string<CharType, Traits, Allocator> Str;
+  Str result(Left);
+  result.append(Right);
+  return result;
+}
+#ifdef MINI_STL_RVALUE_REFS
+template<class CharType, class Traits, class Allocator>
+       basic_string<CharType, Traits, Allocator>&& operator+(
+           const basic_string<CharType, Traits, Allocator>& _Left,
+           const basic_string<CharType, Traits, Allocator>&& _Right
+   );
+   template<class CharType, class Traits, class Allocator>
+      basic_string<CharType, Traits, Allocator>&& operator+(
+         const basic_string<CharType, Traits, Allocator>&& _Left,
+         const basic_string<CharType, Traits, Allocator>& _Right
+   );
+   template<class CharType, class Traits, class Allocator>
+      basic_string<CharType, Traits, Allocator>&& operator+(
+         const basic_string<CharType, Traits, Allocator>&& _Left,
+         const basic_string<CharType, Traits, Allocator>&& _Right
+   );
+   template<class CharType, class Traits, class Allocator>
+      basic_string<CharType, Traits, Allocator>&& operator+(
+         const basic_string<CharType, Traits, Allocator>&& _Left,
+         const CharType *_Right
+   );
+   template<class CharType, class Traits, class Allocator>
+      basic_string<CharType, Traits, Allocator>&& operator+(
+         const basic_string<CharType, Traits, Allocator>&& _Left,
+         CharType _Right
+   );
+   template<class CharType, class Traits, class Allocator>
+      basic_string<CharType, Traits, Allocator>&& operator+(
+         const CharType *_Left,
+         const basic_string<CharType, Traits, Allocator>&& _Right
+   );
+   template<class CharType, class Traits, class Allocator>
+      basic_string<CharType, Traits, Allocator>&& operator+(
+         CharType _Left,
+         const basic_string<CharType, Traits, Allocator>&& _Right
+   );
+#endif
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator==(const basic_string<CharType, Traits, Allocator>& lhs,
+           const basic_string<CharType, Traits, Allocator>& rhs)
+{
+  return lhs.size() == rhs.size() &&
+      Traits::compare(lhs.data(), rhs.data(), lhs.size()) == 0;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator==(const CharType* ptr,
+           const basic_string<CharType, Traits, Allocator>& rhs)
+{
+  size_t n = Traits::length(ptr);
+  return n == rhs.size() && Traits::compare(ptr, rhs.data(), n) == 0;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator==(const basic_string<CharType, Traits, Allocator>& lhs,
+           const CharType* ptr)
+{
+  size_t n = Traits::length(ptr);
+  return lhs.size() == n && Traits::compare(lhs.data(), ptr, n) == 0;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator!=(const basic_string<CharType, Traits, Allocator>& lhs,
+           const basic_string<CharType, Traits, Allocator>& rhs)
+{
+  return !(lhs == rhs);
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator!=(const CharType* ptr,
+           const basic_string<CharType, Traits, Allocator>& rhs)
+{
+  return !(ptr == rhs);
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator!=(const basic_string<CharType, Traits, Allocator>& lhs,
+           const CharType* ptr)
+{
+  return !(lhs == ptr);
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator<(const basic_string<CharType, Traits, Allocator>& lhs,
+          const basic_string<CharType, Traits, Allocator>& rhs)
+{
+  return lhs.compare(rhs) < 0;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator<(const CharType* ptr,
+          const basic_string<CharType, Traits, Allocator>& rhs)
+{
+  return rhs.compare(ptr) > 0;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator<(const basic_string<CharType, Traits, Allocator>& lhs,
+          const CharType* ptr)
+{
+  return lhs.compare(ptr) < 0;
+}
+
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator>(const basic_string<CharType, Traits, Allocator>& lhs,
+          const basic_string<CharType, Traits, Allocator>& rhs)
+{
+  return rhs < lhs;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator>(const CharType* ptr,
+          const basic_string<CharType, Traits, Allocator>& rhs)
+{
+  return ptr < rhs;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator>(const basic_string<CharType, Traits, Allocator>& lhs,
+          const CharType* ptr)
+{
+  return ptr < lhs;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator<=(const basic_string<CharType, Traits, Allocator>& lhs,
+           const basic_string<CharType, Traits, Allocator>& rhs)
+{
+  return !(rhs < lhs);
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator<=(const CharType* ptr,
+           const basic_string<CharType, Traits, Allocator>& rhs)
+{
+  return !(rhs < ptr);
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator<=(const basic_string<CharType, Traits, Allocator>& lhs,
+           const CharType* ptr)
+{
+  return !(ptr < lhs);
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator>=(const basic_string<CharType, Traits, Allocator>& lhs,
+           const basic_string<CharType, Traits, Allocator>& rhs)
+{
+  return !(rhs > lhs);
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator>=(const CharType* ptr,
+           const basic_string<CharType, Traits, Allocator>& rhs)
+{
+  return !(rhs > ptr);
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator>=(const basic_string<CharType, Traits, Allocator>& lhs,
+           const CharType* ptr)
+{
+  return !(ptr > lhs);
+}
 
 template <class CharType,class Traits,class Alloc>
 std::ostream& operator <<(std::ostream& os, const basic_string<CharType,Traits,Alloc>& Str)

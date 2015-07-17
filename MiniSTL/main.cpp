@@ -1,7 +1,7 @@
 #define LIB_TEST
 #ifdef LIB_TEST
 
-#define MINI_STL_TEST
+//#define MINI_STL_TEST
 #ifdef MINI_STL_TEST
 #include <iostream>
 #include "mini_stl_multiset.h"
@@ -35,11 +35,9 @@ using namespace std;
 int main( )
 {
   string ss = "12345";
-  char array[10];
-  ss.copy(array, 2, 2);
+  char a[] = "abcd";
+  ss.replace(2,1,a);
   cout << ss << endl;
-  string s1(array);
-  cout << array << endl;
 }
 #else
 #include <iostream>
