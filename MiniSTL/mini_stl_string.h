@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "mini_stl_chartraits.h"
 #include <iosfwd>
+#include <istream>
 #define protected public
 #define private public
 MINI_STL_BEGIN
@@ -477,7 +478,7 @@ public:
     insert(end(), 1, Ch);
   }
 
-  size_type find(value_type Ch, size_type Off = 0) const
+/*  size_type find(value_type Ch, size_type Off = 0) const
   {
 
   }
@@ -493,7 +494,7 @@ public:
     size_type find(
         const basic_string<CharType, Traits, Allocator>& _Str,
         size_type _Off = 0
-    ) const;
+    ) const;*/
 
   void clear()
   {
@@ -890,7 +891,7 @@ basic_string<CharType,Traits,Alloc>::insert(
 
 template <class CharType,class Traits,class Alloc>
 template<class InputIterator>
-basic_string&
+basic_string<CharType,Traits,Alloc>&
 basic_string<CharType,Traits,Alloc>::replace(
     iterator First1,
     iterator Last1,
@@ -1186,5 +1187,8 @@ std::ostream& operator <<(std::ostream& os, const basic_string<CharType,Traits,A
 
 typedef basic_string<char, char_traits<char>, default_allocator> string;
 typedef basic_string<wchar_t, char_traits<wchar_t>, default_allocator> wstring;
+typedef basic_string<char16_t, char_traits<char16_t>, default_allocator> u16string;
+typedef basic_string<char32_t, char_traits<char32_t>, default_allocator> u32string;
+
 MINI_STL_END
 #endif // MINI_STL_STRING_H

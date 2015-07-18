@@ -1,7 +1,7 @@
 #define LIB_TEST
 #ifdef LIB_TEST
 
-//#define MINI_STL_TEST
+#define MINI_STL_TEST
 #ifdef MINI_STL_TEST
 #include <iostream>
 #include "mini_stl_multiset.h"
@@ -11,12 +11,14 @@
 #include "mini_stl_deque.h"
 #include "mini_stl_queue.h"
 #include "mini_stl_set.h"
-#include "mini_stl_string.h"
+#include "mini_stl_hashtable.h"
+//#include "mini_stl_string.h"
 #include "mini_stl_tree.h"
 #include "mini_stl_map.h"
 using namespace Mini_STL;
 using std::cout;
 using std::endl;
+using std::cin;
 #else
 #include <vector>
 #include <map>
@@ -34,10 +36,11 @@ using namespace std;
 //#include <unordered_set>
 int main( )
 {
-  string ss = "12345";
-  char a[] = "abcd";
-  ss.replace(2,1,a);
-  cout << ss << endl;
+#ifdef _DEBUG
+  cout << "d" << endl;
+#else
+  cout << "no d" << endl;
+#endif
 }
 #else
 #include <iostream>
