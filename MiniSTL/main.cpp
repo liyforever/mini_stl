@@ -30,17 +30,50 @@ using std::cin;
 #include <memory>
 using namespace std;
 #endif
+#include <unordered_set>
 #include <functional>
 #include "Windows.h"
 #include <map>
-//#include <unordered_set>
+
 int main( )
 {
-#ifdef _DEBUG
-  cout << "d" << endl;
-#else
-  cout << "no d" << endl;
-#endif
+  typedef hashtable<int,
+                    int,
+                    hash<int>,
+                    identity<int>,
+                    equal_to<int>,
+                    default_allocator>
+      MyHT;
+  MyHT
+      ht1(50);
+  for (int i=0;i!=10;++i)
+    ht1.insert_equal(10);
+  //if (ht1.begin() == ht1.end())
+    //cout << "===" << endl;
+  //for (auto &cc : ht1.buckets_)
+    //cout << cc.size() << endl;
+  //for(auto ii = ht1.begin();ii!=ht1.end();++ii)
+    //cout << (*ii);
+  //auto TI = ht1.begin();
+  //cout << *TI << endl;
+  for (auto aa = ht1.begin();aa!=ht1.end();++aa)//(int i=0;i!=10;++i,++TI)
+    cout << "myIndex:" << aa.index
+            << "value:" << *aa << endl;
+
+  for (auto aa = ht1.rbegin();aa!=ht1.rend();++aa)
+    cout << "myIndex:" << aa.base().index
+            << "value:" << *aa << endl;
+  //cout << endl;
+  //auto ii = ht1.end();
+  //--ii;
+  //for (; ii!=ht1.begin();--ii)
+    ;//cout << *ii;
+  //for (auto ii = ht1.rbegin();ii!=ht1.rend();++ii)
+    //cout << *ii ;
+  cout << endl;
+  cout << ht1.buckets_.size() << endl;
+  cout << "htSize:" << ht1.size() << endl;
+  return 0;
 }
 #else
 #include <iostream>

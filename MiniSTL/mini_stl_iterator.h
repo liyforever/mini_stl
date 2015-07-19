@@ -247,5 +247,38 @@ DISTANCE(InputIterator first, InputIterator last)
       category;
   return distance_aux(first, last, category());
 }
+
+
+template <class InputIterator, class Distance>
+inline void
+advance_aux(InputIterator &iter, Distance n, forward_iterator_tag)
+{
+  while (n--) ++iter;
+}
+
+template <class InputIterator, class Distance>
+inline void
+advance_aux(InputIterator &iter, Distance n, bidirectional_iterator_tag)
+{
+  if (n >= 0)
+    while (n--) ++iter;
+  else
+    while (n++) --i;
+}
+
+template <class InputIterator, class Distance>
+inline void
+advance_aux(InputIterator &iter, Distance n, random_access_iterator_tag)
+{
+  iter += n;
+}
+
+template <class InputIterator, class Distance>
+inline void
+advance(InputIterator &iter, Distance n)
+{
+  advance_aux(iter, n, ITERATOR_CATEGORY(iter));
+}
+
 MINI_STL_END
 #endif // MINI_STL_ITERATOR_H

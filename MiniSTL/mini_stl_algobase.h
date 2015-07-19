@@ -44,6 +44,31 @@ swap(Type& lhs, Type& rhs)
   rhs = tmp;
 }
 
+template<class InputIterator, class Type>
+InputIterator
+find(InputIterator First,
+     InputIterator Last,
+     const Type& Val)
+{
+  for ( ; First!=Last; ++First)
+    if (*First == Val)
+      return First;
+  return First;
+}
+
+template<class InputIterator, class Type, class Predicate>
+InputIterator
+find(InputIterator First,
+     InputIterator Last,
+     const Type& Val,
+     Predicate Pred)
+{
+  for ( ; First!=Last; ++First)
+    if (Pred(*First,Val))
+      return First;
+  return First;
+}
+
 template <class ForwardIter, class T>
 inline void
 fill(ForwardIter first, ForwardIter last, const T& value)
@@ -476,6 +501,244 @@ lexicographical_compare(InputIterator1 first1, InputIterator1 last1,
       return false;
   }
   return first1 == last1 && first2 != last2;
+}
+
+template <class ForwardIterator, class Type>
+inline ForwardIterator
+lower_bound(ForwardIterator first,
+            ForwardIterator last,
+            const Type& value)
+{
+  return _lower_bound_aux(first, last, value, DISTANCE_TYPE(first),
+                          ITERATOR_CATEGORY(first));
+}
+
+template <class ForwardIterator, class Type, class Compare>
+inline ForwardIterator
+lower_bound(ForwardIterator first,
+            ForwardIterator last,
+            const Type& value,
+            Compare comp)
+{
+  return _lower_bound_aux(first, last, value, DISTANCE_TYPE(first),
+                          ITERATOR_CATEGORY(first), comp);
+}
+
+template <class ForwardIterator, class Type, class Distance>
+ForwardIterator _lower_bound_aux(ForwardIterator first,
+                                 ForwardIterator last,
+                                 const Type& value,
+                                 Distance*,
+                                 forward_iterator_tag)
+{
+  Distance len = DISTANCE(first, last);
+  Distance half;
+  ForwardIterator midIter;
+  while (len > 0){
+    half = len / 2;
+    midIter = first;
+    advance(midIter, half);
+    if (*midIter < value) {
+      first = midIter;
+      ++first;
+      len = len - half - 1;
+    } else
+      len = half;
+  }
+  return first;
+}
+
+template <class ForwardIterator, class Type, class Distance>
+ForwardIterator _lower_bound_aux(ForwardIterator first,
+                                 ForwardIterator last,
+                                 const Type& value,
+                                 Distance*,
+                                 random_access_iterator_tag)
+{
+  Distance len = DISTANCE(first, last);
+  Distance half;
+  ForwardIterator midIter;
+  while (len > 0){
+    half = len / 2;
+    midIter = first;
+    advance(midIter, half);
+    if (*midIter < value) {
+      first = midIter;
+      ++first;
+      len = len - half - 1;
+    } else
+      len = half;
+  }
+  return first;
+}
+
+template <class ForwardIterator, class Type, class Distance, class Compare>
+ForwardIterator _lower_bound_aux(ForwardIterator first,
+                                 ForwardIterator last,
+                                 const Type& value,
+                                 Distance*,
+                                 forward_iterator_tag,
+                                 Compare comp)
+{
+  Distance len = DISTANCE(first, last);
+  Distance half;
+  ForwardIterator midIter;
+  while (len > 0){
+    half = len / 2;
+    midIter = first;
+    advance(midIter, half);
+    if (comp(*midIter, value)) {
+      first = midIter;
+      ++first;
+      len = len - half - 1;
+    } else
+      len = half;
+  }
+  return first;
+}
+
+template <class ForwardIterator, class Type, class Distance, class Compare>
+ForwardIterator _lower_bound_aux(ForwardIterator first,
+                                 ForwardIterator last,
+                                 const Type& value,
+                                 Distance*,
+                                 random_access_iterator_tag,
+                                 Compare comp)
+{
+  Distance len = DISTANCE(first, last);
+  Distance half;
+  ForwardIterator midIter;
+  while (len > 0){
+    half = len / 2;
+    midIter = first;
+    advance(midIter, half);
+    if (comp(*midIter, value)) {
+      first = midIter;
+      ++first;
+      len = len - half - 1;
+    } else
+      len = half;
+  }
+  return first;
+}
+
+template <class ForwardIterator, class Type>
+inline ForwardIterator
+upper_bound(ForwardIterator first,
+            ForwardIterator last,
+            const Type& value)
+{
+  return _upper_bound_aux(first, last, value, DISTANCE_TYPE(first),
+                          ITERATOR_CATEGORY(first));
+}
+
+template <class ForwardIterator, class Type, class Compare>
+inline ForwardIterator
+upper_bound(ForwardIterator first,
+            ForwardIterator last,
+            const Type& value,
+            Compare comp)
+{
+  return _upper_bound_aux(first, last, value, DISTANCE_TYPE(first),
+                          ITERATOR_CATEGORY(first), comp);
+}
+
+template <class ForwardIterator, class Type, class Distance>
+ForwardIterator _upper_bound_aux(ForwardIterator first,
+                                 ForwardIterator last,
+                                 const Type& value,
+                                 Distance*,
+                                 forward_iterator_tag)
+{
+  Distance len = DISTANCE(first, last);
+  Distance half;
+  ForwardIterator midIter;
+  while (len > 0){
+    half = len / 2;
+    midIter = first;
+    advance(midIter, half);
+    if (value < *midIter) {
+      first = midIter;
+      ++first;
+      len = len - half - 1;
+    } else
+      len = half;
+  }
+  return first;
+}
+
+template <class ForwardIterator, class Type, class Distance>
+ForwardIterator _upper_bound_aux(ForwardIterator first,
+                                 ForwardIterator last,
+                                 const Type& value,
+                                 Distance*,
+                                 random_access_iterator_tag)
+{
+  Distance len = DISTANCE(first, last);
+  Distance half;
+  ForwardIterator midIter;
+  while (len > 0){
+    half = len / 2;
+    midIter = first;
+    advance(midIter, half);
+    if (value < *midIter) {
+      first = midIter;
+      ++first;
+      len = len - half - 1;
+    } else
+      len = half;
+  }
+  return first;
+}
+
+template <class ForwardIterator, class Type, class Distance, class Compare>
+ForwardIterator _upper_bound_aux(ForwardIterator first,
+                                 ForwardIterator last,
+                                 const Type& value,
+                                 Distance*,
+                                 forward_iterator_tag,
+                                 Compare comp)
+{
+  Distance len = DISTANCE(first, last);
+  Distance half;
+  ForwardIterator midIter;
+  while (len > 0){
+    half = len / 2;
+    midIter = first;
+    advance(midIter, half);
+    if (comp(value,*midIter)) {
+      first = midIter;
+      ++first;
+      len = len - half - 1;
+    } else
+      len = half;
+  }
+  return first;
+}
+
+template <class ForwardIterator, class Type, class Distance, class Compare>
+ForwardIterator _upper_bound_aux(ForwardIterator first,
+                                 ForwardIterator last,
+                                 const Type& value,
+                                 Distance*,
+                                 random_access_iterator_tag,
+                                 Compare comp)
+{
+  Distance len = DISTANCE(first, last);
+  Distance half;
+  ForwardIterator midIter;
+  while (len > 0){
+    half = len / 2;
+    midIter = first;
+    advance(midIter, half);
+    if (comp(value,*midIter)) {
+      first = midIter;
+      ++first;
+      len = len - half - 1;
+    } else
+      len = half;
+  }
+  return first;
 }
 MINI_STL_END
 #endif // MINI_STL_ALGOBASE_H

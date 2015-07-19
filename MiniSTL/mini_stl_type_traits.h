@@ -341,7 +341,6 @@ typename remove_reference<Type>::type&&
   cout << "move" << endl;
   return ((typename remove_reference<Type>::type&&)Arg);
 }
-
 #endif //MINI_STL_RVALUE_REFS
 MINI_STL_END
 #endif // MINI_STL___true_type_H

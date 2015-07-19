@@ -119,11 +119,17 @@ public:
           typename is_iterator<InputIterator>::ID = Identity()
       )
   {
+#ifdef MINI_STL_DEBUG
+    _check_range(First, Last);
+#endif
     _init_range(First, Last);
   }
 
   basic_string(const_pointer First, const_pointer Last)
   {
+#ifdef MINI_STL_DEBUG
+    _check_range(First, Last);
+#endif
     _init_range(First, Last);
   }
 
@@ -248,34 +254,52 @@ public:
 
   reference at(size_type Off)
   {
+#ifdef MINI_STL_DEBUG
+    _check_range(Off);
+#endif
     _detach();
     return first_[Off];
   }
 
   const_reference at(size_type Off) const
   {
+#ifdef MINI_STL_DEBUG
+    _check_range(Off);
+#endif
     return first_[Off];
   }
 
   reference operator[](size_type Off)
   {
+#ifdef MINI_STL_DEBUG
+    _check_range(Off);
+#endif
     _detach();
     return first_[Off];
   }
 
   const_reference operator[](size_type Off) const
   {
+#ifdef MINI_STL_DEBUG
+    _check_range(Off);
+#endif
     return first_[Off];
   }
 
   reference back()
   {
+#ifdef MINI_STL_DEBUG
+    _check_range();
+#endif
     _detach();
     return *(last_ - 1);
   }
 
   const_reference back() const
   {
+#ifdef MINI_STL_DEBUG
+    _check_range();
+#endif
     return *(last_ - 1);
   }
 
@@ -446,6 +470,11 @@ public:
 
   iterator erase(iterator First, iterator Last)
   {
+#ifdef MINI_STL_DEBUG
+    _check_range(First, Last);
+    _check_range(First);
+    _check_range(Last);
+#endif
     if (*use_ == 1) {
       if (First != Last) {
         traits_type::move(First, Last, (last_ - Last) + 1);//include null
@@ -470,6 +499,9 @@ public:
 
   void pop_back()
   {
+#ifdef MINI_STL_DEBUG
+    _check_range();
+#endif
     erase(--end());
   }
 
@@ -524,8 +556,14 @@ public:
   {
     return first_;
   }
+
   size_type copy(value_type* Ptr, size_type Count, size_type Off = 0) const
   {\
+#ifdef MINI_STL_DEBUG
+    size_type len = traits_type::length(Ptr);
+    if (Off >= len || Off+Count>len)
+      MINI_STL_THROW("basic_string");
+#endif
     traits_type::copy(Ptr, first_+Off, Count);
     return Count;
   }
@@ -615,12 +653,18 @@ public:
 
   reference front()
   {
+#ifdef MINI_STL_DEBUG
+    _check_range();
+#endif
     _detach();
     return *first_;
   }
 
   const_reference front() const
   {
+#ifdef MINI_STL_DEBUG
+    _check_range();
+#endif
     return *first_;
   }
 
@@ -784,6 +828,51 @@ protected:
     const int cmp = traits_type::compare(First1, First2, min(n1, 2));
     return cmp != 0 ? cmp : (n1 < n2 ? -1 : (n1 > n2 ? 1 : 0));
   }
+#ifdef MINI_STL_DEBUG
+  void _check_range(size_t pos) const
+  {
+    if (pos<0 || pos>=size()) {
+      cerr << "basic_string:pos<0 || pos>=size()" << endl;
+      MINI_STL_THROW_RANGE_ERROR("basic_string");
+    }
+  }
+
+  void _check_range(size_t n, bool) const
+  {
+    if (n<0 || n>=max_size()) {
+      cerr << "basic_string:n<0" << endl;
+      MINI_STL_THROW_RANGE_ERROR("basic_string");
+    }
+  }
+
+  void _check_range(const_iterator position) const
+  {
+    if (position>last_ ||
+        position<first_) {
+      cerr << "basic_string:postion>=end() || position < begin()" << endl;
+      MINI_STL_THROW_RANGE_ERROR("basic_string");
+    }
+  }
+
+  template <class InputIterator>
+  void _check_range(InputIterator first,
+                   InputIterator last) const
+  {
+    difference_type n = DISTANCE(first, last);
+    if (n<0) {
+      cerr << "basic_string:InputIterator last - first < 0" << endl;
+      MINI_STL_THROW_RANGE_ERROR("basic_string");
+    }
+  }
+
+  void _check_range() const
+  {
+    if (this->empty()) {
+      cerr << "basic_string:is empty" << endl;
+      MINI_STL_THROW_RANGE_ERROR("basic_string");
+    }
+  }
+#endif //MINI_STL_DEBUG
 };
 
 template <class CharType,class Traits,class Alloc>
@@ -800,6 +889,10 @@ void basic_string<CharType,Traits,Alloc>::insert(
     typename is_iterator<InputIterator>::ID
   )
 {
+#ifdef MINI_STL_DEBUG
+  _check_range(Position);
+  _check_range(First, Last);
+#endif
   if (*use_ == 1) {
     if (First != Last) {
       size_type n = Last - First;
@@ -847,6 +940,9 @@ basic_string<CharType,Traits,Alloc>&
 basic_string<CharType,Traits,Alloc>::insert(
           size_type Off, size_type Count, value_type Ch)
 {
+#ifdef MINI_STL_DEBUG
+  _check_range(Off);
+#endif
   iterator Position = first_ + Off;
   if (*use_ == 1) {
     if ((size_type)(end_ - last_) >= Count) {//还有空间
@@ -900,6 +996,12 @@ basic_string<CharType,Traits,Alloc>::replace(
     typename is_iterator<InputIterator>::ID
     )
 {
+#ifdef MINI_STL_DEBUG
+  _check_range(First1, Last1);
+  _check_range(First1);
+  _check_range(Last1);
+  _check_range(First2, Last2);
+#endif
   size_type insert_num = DISTANCE(First2, Last2);
   size_type replace_num = Last1 - First1;
   if (*use_ == 1) {

@@ -379,7 +379,7 @@ protected:
   void _insert_aux(iterator position);
 
 #ifdef MINI_STL_DEBUG
-  void _check_range(size_t pos)
+  void _check_range(size_t pos) const
   {
     if (pos<0 || pos>=size()) {
       cerr << "vector:pos<0 || pos>=size()" << endl;
@@ -628,7 +628,6 @@ vector<Type, Alloc>::insert(const_iterator position, size_type n, const Type& va
     } else {
         const size_type oldSize = size();
         const size_type newSize = oldSize + max((size_type)oldSize, n);
-
         iterator newFirst = data_allocator_::allocate(newSize);
         iterator newLast = newFirst;
         MINI_STL_TRY {

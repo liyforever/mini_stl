@@ -194,7 +194,7 @@ __uninitialized_fill_n_aux(ForwardIter first, Size n,
 
 template <class ForwardIter, class Size, class T, class T1>
 inline ForwardIter
-__uninitialized_fill_n(ForwardIter first, Size n, const T& x, T1)
+__uninitialized_fill_n(ForwardIter first, Size n, const T& x, T1*)
 {
   typedef typename _type_traits<T1>::is_POD_type Is_POD;
   return __uninitialized_fill_n_aux(first, n, x, Is_POD());
