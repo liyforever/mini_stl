@@ -50,9 +50,8 @@ find(InputIterator First,
      InputIterator Last,
      const Type& Val)
 {
-  for ( ; First!=Last; ++First)
-    if (*First == Val)
-      return First;
+  for ( ; First!=Last && *First!=Val; ++First)
+    {}
   return First;
 }
 
@@ -63,9 +62,9 @@ find(InputIterator First,
      const Type& Val,
      Predicate Pred)
 {
-  for ( ; First!=Last; ++First)
-    if (Pred(*First,Val))
-      return First;
+  for ( ; First!=Last && !Pred(*First,Val);
+        ++First)
+    {}
   return First;
 }
 

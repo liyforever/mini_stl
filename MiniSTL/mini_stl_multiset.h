@@ -22,7 +22,7 @@ private:
 public:
   typedef typename RB_tree_type::const_pointer    pointer;
   typedef typename RB_tree_type::const_pointer    const_pointer;
-  typedef typename RB_tree_type::reference        reference;
+  typedef typename RB_tree_type::const_reference  reference;
   typedef typename RB_tree_type::const_reference  const_reference;
   typedef typename RB_tree_type::const_iterator   iterator;
   typedef typename RB_tree_type::const_iterator   const_iterator;

@@ -29,7 +29,11 @@ HEADERS += \
     mini_stl_multimap.h \
     mini_stl_string.h \
     mini_stl_chartraits.h \
-    mini_stl_hash_fun.h
+    mini_stl_hash_fun.h \
+    mini_stl_unordered_set.h \
+    mini_stl_unordered_multiset.h \
+    mini_stl_unordered_map.h \
+    mini_stl_unordered_multimap.h
 
 OTHER_FILES += \
     info.txt

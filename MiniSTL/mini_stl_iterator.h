@@ -13,7 +13,7 @@ struct random_access_iterator_tag : public bidirectional_iterator_tag {};
 
 
 template <class Category, class Type, class Distance = ptrdiff_t,
-          class Pinter = Type*, class Reference = Type&>
+          class Pointer = Type*, class Reference = Type&>
 struct my_iterator_base
 {
   typedef Category                iterator_category;
@@ -145,6 +145,7 @@ public:
   {
     return *(*this + pos);
   }
+
   pointer operator->() const
   {
     return &(operator*());
