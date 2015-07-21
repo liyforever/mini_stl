@@ -33,7 +33,8 @@ HEADERS += \
     mini_stl_unordered_set.h \
     mini_stl_unordered_multiset.h \
     mini_stl_unordered_map.h \
-    mini_stl_unordered_multimap.h
+    mini_stl_unordered_multimap.h \
+    mini_stl_bitset.h
 
 OTHER_FILES += \
     info.txt

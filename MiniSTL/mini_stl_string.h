@@ -4,10 +4,8 @@
 #include "mini_stl_chartraits.h"
 #include <iosfwd>
 #include <istream>
-#define protected public
-#define private public
-MINI_STL_BEGIN
 
+MINI_STL_BEGIN
 
 template <class CharType,
           class Traits = char_traits<CharType>,
@@ -109,6 +107,7 @@ public:
     _init_block(Count + 1);
     traits_type::assign(first_, Count, Ch);
     last_ = first_ + Count;
+    _make_terinate();
   }
 
   template <class InputIterator>
@@ -435,6 +434,7 @@ public:
   {
     return insert(end(), Ptr, Ptr+Count);
   }
+
   basic_string& append(
         const basic_string& Str,
         size_type Off,
@@ -559,11 +559,11 @@ public:
 
   size_type copy(value_type* Ptr, size_type Count, size_type Off = 0) const
   {\
-#ifdef MINI_STL_DEBUG
+//#ifdef MINI_STL_DEBUG
     size_type len = traits_type::length(Ptr);
     if (Off >= len || Off+Count>len)
-      MINI_STL_THROW("basic_string");
-#endif
+      MINI_STL_THROW_RANGE_ERROR("basic_string");
+//#endif
     traits_type::copy(Ptr, first_+Off, Count);
     return Count;
   }
@@ -898,8 +898,8 @@ void basic_string<CharType,Traits,Alloc>::insert(
       size_type n = Last - First;
       if ((size_type)(end_ - last_) >= n) {
         iterator oldLast = last_;
-        copy_backward((iterator)Position, oldLast, oldLast + n);
-        copy(First, Last, (iterator)Position);
+        _MY_STL::copy_backward((iterator)Position, oldLast, oldLast + n);
+        _MY_STL::copy(First, Last, (iterator)Position);
         last_ += n;
       } else {
         const size_type oldSize = size();
@@ -1283,7 +1283,7 @@ operator>=(const basic_string<CharType, Traits, Allocator>& lhs,
 template <class CharType,class Traits,class Alloc>
 std::ostream& operator <<(std::ostream& os, const basic_string<CharType,Traits,Alloc>& Str)
 {
-  os << Str.first_;
+  os << Str.c_str();
   return os;
 }
 

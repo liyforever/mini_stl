@@ -13,7 +13,7 @@
 #include "mini_stl_queue.h"
 #include "mini_stl_set.h"
 #include "mini_stl_hashtable.h"
-//#include "mini_stl_string.h"
+#include "mini_stl_string.h"
 #include "mini_stl_tree.h"
 #include "mini_stl_map.h"
 using namespace Mini_STL;
@@ -35,30 +35,39 @@ using namespace std;
 #include <functional>
 #include "Windows.h"
 #include <map>
-
+#include <bitset>
+#include "mini_stl_bitset.h"
+#include <memory>
 #define TEST_LIB
-int main( )
+class A{};
+int main()
 {
 #ifdef TEST_LIB
-  std::unordered_multiset<int> us;
-for(int cc=0;cc!=10;++cc) {
-  for (int i=100;i!=0;--i)
-    us.insert(i);
-  for (int i=0;i!=100;++i)
-    us.insert(i);
-  for (int i=0;i!=1000;++i)
-    us.insert(i);
-  }
-  auto p = us.equal_range(10);
-  for (;p.first!=p.second;++p.first)
-    cout << *p.first ;cout << endl;
-  us.erase(10);
-  cout << "erase:" << endl;
-  for (;p.first!=p.second;++p.first)
-    cout << *p.first ;cout << endl;
-  cout << "size" << us.bucket_count() << endl;
+  std::bitset<5> ss;
+  _MY_STL::bitset<5> bb;
+  //ss.to_string
+  //cout << bb << endl;
+  cout << bb.count() << endl;
+  //cout << bb.flip() << endl;
+  cout << "bt Begin" << endl;
+  cout << bb.test(4) << endl;
+  bb.flip(4);
+  cout << "bt End" << endl;
+  cout << bb.test(4) << endl;
+  //cout << bb << endl;
+  cout << "a" << endl;
+  cout << bb.count() << endl;
+  _MY_STL::string result = bb.to_string();
+
+  cout << "result"<< result << endl;
+  //cout << _GET_ARRAY_SIZE(65) << endl;
+  //cout << sizeof(size_t) << endl;
 #else
-  typedef hashtable<int,
+  const char* a= "100101000000000";
+  std::bitset<10> bb(a);
+  cout << bb << endl;
+
+  /*typedef hashtable<int,
                     int,
                     hash<int>,
                     identity<int>,
@@ -79,7 +88,7 @@ for(int cc=0;cc!=10;++cc) {
   for (int i=0;i!=10;++i) {
     cout << ht1.buckets_.size() << endl;
     ht1.insert_equal(54);
-  }
+  }*/
     //}
   //if (ht1.begin() == ht1.end())
     //cout << "===" << endl;
@@ -103,7 +112,7 @@ for(int cc=0;cc!=10;++cc) {
     ;//cout << *ii;
   //for (auto ii = ht1.rbegin();ii!=ht1.rend();++ii)
     //cout << *ii ;
-  cout << endl;
+ /* cout << endl;
   cout << ht1.buckets_.size() << endl;
   cout << "htSize:" << ht1.size() << endl;
   cout << "htCount:" << ht1.count(1) << endl;
@@ -187,11 +196,15 @@ void aaa(size_t x,int a)
 {
   cout << "222222222" << endl;
 }
-
+#include <stdio.h>
+int i=1;
 int main()
 {
-  BB b1,b2;
-  aaa(1,1);
+  int a[]={6,7,8,9,10};
+  int *p = a;
+  ++p;
+  printf("%d,%d",*p,*++p);
+  cout << "\n" << sizeof(int) << endl;
 }/*rb_tree<int,int,identity<int>,less<int> > tree;
   int A[] = {10,7,8,15,5,6,11,13,12};//1,2,3,9,8,7,6,4,5,10,22,22,22,1};
   cout << "main" << endl;
@@ -230,5 +243,5 @@ int main()
   for(auto ii : tree)
     cout << ii << "  ";
   cout << "\nsize:" << tree.size() << endl;*/
-}
+
 #endif
