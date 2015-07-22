@@ -4,9 +4,12 @@
 #define MINI_STL_BEGIN  namespace Mini_STL{
 #define MINI_STL_END    }
 #define _MY_STL         Mini_STL
-#define MINI_STL_THROW_RANGE_ERROR(msg) (throw std::out_of_range(msg))
+//#define MINI_STL_THROW_RANGE_ERROR(msg) (throw std::out_of_range(msg))
+
+#define MINI_STL_THROW_RANGE_ERROR(msg) (throw std::range_error(msg))
 #define MINI_STL_THROW_INVALID_ERROR(msg) (throw std::invalid_argument(msg))
 #define MINI_STL_THROW_OVERFLOW_ERROR(msg)  (throw std::overflow_error(msg))
+#define MINI_STL_THROW_RANGE_OUT_OF_RANGE_ERROR (throw std::out_of_range(msg))
 // Microsoft compiler.
 #ifdef _MSC_VER
 #   ifdef _DEBUG

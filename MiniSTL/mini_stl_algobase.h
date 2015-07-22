@@ -4,6 +4,7 @@
 #include "mini_stl_iterator.h"
 #include "mini_stl_type_traits.h"
 #include "mini_stl_function.h"
+#include "mini_stl_debug.h"
 #include <string.h>
 #include <wchar.h>
 #include <iostream>
@@ -12,80 +13,85 @@ using std::endl;
 MINI_STL_BEGIN
 
 template <class Type>
-inline const Type& max(const Type &left, const Type &right)
+inline const Type& max(const Type &_Left, const Type &_Right)
 {
-  return right < left ? left : right;
+  return _Right < _Left ? _Left : _Right;
 }
 
-template <class Type, class Cmp>
-inline const Type& max(const Type &left, const Type &right, Cmp cp)
+template <class Type, class Compare>
+inline const Type& max(const Type &_Left, const Type &_Right, Compare _Comp)
 {
-  return cp(right, left) ? left : right;
-}
-
-template <class Type, class Cmp>
-inline const Type& min(const Type &left, const Type &right, Cmp cp)
-{
-  return cp(left, right) ? left : right;
+  return _Comp(_Right, _Left) ? _Left : _Right;
 }
 
 template <class Type>
-inline const Type& min(const Type &left, const Type &right)
+inline const Type& min(const Type &_Left, const Type &_Right)
 {
-  return left < right ? left : right;
+  return _Left < _Right ? _Left : _Right;
 }
+
+template <class Type, class Compare>
+inline const Type& min(const Type &_Left, const Type &_Right, Compare _Comp)
+{
+  return _Comp(_Left, _Right) ? _Left : _Right;
+}
+
 
 template <class Type>
 inline void
-swap(Type& lhs, Type& rhs)
+swap(Type& _Left, Type& _Right)
 {
-  Type tmp = lhs;
-  lhs = rhs;
-  rhs = tmp;
+  Type tmp(_Left);
+  _Left = _Right;
+  _Right = tmp;
 }
 
 template<class InputIterator, class Type>
 InputIterator
-find(InputIterator First,
-     InputIterator Last,
-     const Type& Val)
+find(InputIterator _First,
+     InputIterator _Last,
+     const Type& _Val)
 {
-  for ( ; First!=Last && *First!=Val; ++First)
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "find");
+  for ( ; _First!=_Last && *_First!=_Val; ++_First)
     {}
-  return First;
+  return _First;
 }
 
 template<class InputIterator, class Type, class Predicate>
 InputIterator
-find(InputIterator First,
-     InputIterator Last,
-     const Type& Val,
-     Predicate Pred)
+find(InputIterator _First,
+     InputIterator _Last,
+     const Type& _Val,
+     Predicate _Pred)
 {
-  for ( ; First!=Last && !Pred(*First,Val);
-        ++First)
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "find_of_comp");
+  for ( ; _First!=_Last && !_Pred(*_First, _Val);
+        ++_First)
     {}
-  return First;
+  return _First;
 }
 
-template <class ForwardIter, class T>
+template <class ForwardIterator, class Type>
 inline void
-fill(ForwardIter first, ForwardIter last, const T& value)
+fill(ForwardIterator _First, ForwardIterator _Last, const Type& _Val)
 {
-  for( ; first!=last; ++first)
-    *first = value;
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "fill");
+  for(; _First != _Last; ++_First)
+    *_First = _Val;
 }
 
 
-template <class OutputIter, class Size, class T>
-inline OutputIter
-fill_n(OutputIter first, Size n, const T& value)
+template <class OutputIterator, class Size, class Type>
+inline OutputIterator
+fill_n(OutputIterator _First, Size _Count, const Type& _Val)
 {
-  for( ; n>0; --n, ++first)
-    *first = value;
-  return first;
+  MINI_STL_DEBUG_POINTER(_First, "fill_n");
+  for(; _Count > 0; --_Count, ++_First)
+    *_First = _Val;
+  return _First;
 }
-
+/////////////////////////////////////////////////////////////
 template <class RandomAccessIter, class OutputIter, class Distance>
 inline OutputIter
 __copy_d(RandomAccessIter first, RandomAccessIter last,
@@ -161,49 +167,61 @@ struct __copy_dispatch<const T*, T*>
     return __copy_t(first, last, result, t());
   }
 };
-//copy对外接口
-template <class InputIter, class OutputIter>
-inline OutputIter
-copy(InputIter first, InputIter last, OutputIter result)
+
+template <class InputIterator, class OutputIterator>
+inline OutputIterator
+copy(InputIterator _First, InputIterator _Last, OutputIterator _Result)
 {
-  return __copy_dispatch<InputIter, OutputIter>()
-            (first, last, result);
+  return __copy_dispatch<InputIterator, OutputIterator>()
+            (_First, _Last, _Result);
 }
-//char*特化版本
-inline char* copy(const char* first, const char* last, char *result)
+
+inline char* copy(const char *_First, const char *_Last, char *_Result)
 {
-  memmove(result, first, last - first);
-  return result + (last - first);
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "copy");
+  MINI_STL_DEBUG_POINTER(_Result, "copy");
+
+  memmove(_Result, _First, _Last - _First);
+  return _Result + (_Last - _First);
 }
-//wchar_t*特化版
-inline wchar_t* copy(const wchar_t *first, const wchar_t *last, wchar_t *result)
+
+inline wchar_t* copy(const wchar_t *_First, const wchar_t *_Last, wchar_t *_Result)
 {
-  wmemmove(result, first, last - first);
-  return result + (last - first);
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "fill");
+  MINI_STL_DEBUG_POINTER(_Result, "copy");
+
+  wmemmove(_Result, _First, _Last - _First);
+  return _Result + (_Last - _First);
 }
 
 
 /************************copy_backward__begin**************************/
 
 template <class BidirectionalIter1, class BidirectionalIter2>
-inline BidirectionalIter2 copy_backward(BidirectionalIter1 first,
-                                        BidirectionalIter1 last,
-                                        BidirectionalIter2 result)
+inline BidirectionalIter2 copy_backward(BidirectionalIter1 _First,
+                                        BidirectionalIter1 _Last,
+                                        BidirectionalIter2 _Result)
 {
-  while (first != last)
-    *--result = *--last;
-  return result;
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "copy_backward");
+  MINI_STL_DEBUG_POINTER(_Result, "copy_backward");
+
+  while (_First != _Last)
+    *--_Result = *--_Last;
+  return _Result;
 }
 
 template <class RandomAccessIter, class BidirectionalIter, class Distance>
-inline BidirectionalIter copy_backward(RandomAccessIter first,
-                                       RandomAccessIter last,
-                                       BidirectionalIter result,
+inline BidirectionalIter copy_backward(RandomAccessIter _First,
+                                       RandomAccessIter _Last,
+                                       BidirectionalIter _Result,
                                        Distance*)
 {
-  for (Distance n = last - first; n > 0; --n)
-    *--result = *--last;
-  return result;
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "copy_backward");
+  MINI_STL_DEBUG_POINTER(_Result, "copy_backward");
+
+  for (Distance n = _Last - _First; n > 0; --n)
+    *--_Result = *--_Last;
+  return _Result;
 }
 /************************copy_backward__end**************************/
 
@@ -451,11 +469,14 @@ void make_heap_aux(RandomAccessIterator first,
 
 template <class InputIterator1, class InputIterator2>
 inline bool
- equal(InputIterator1 first1, InputIterator1 last1,
-       InputIterator2 first2)
+ equal(InputIterator1 _First1, InputIterator1 _Last1,
+       InputIterator2 _First2)
 {
-  for (; first1!=last1; ++first1,++first2)
-    if (*first1!=*first2)
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "equal");
+  MINI_STL_DEBUG_POINTER(_First2, "equal");
+
+  for (; _First1!=_Last1; ++_First1,++_First2)
+    if (*_First1 != *_First2)
       return false;
   return true;
 }
@@ -463,43 +484,52 @@ inline bool
 template <class InputIterator1, class InputIterator2,
           class BinaryPredicate>
 inline bool
- equal(InputIterator1 first1, InputIterator1 last1,
-       InputIterator2 first2, BinaryPredicate comp)
+ equal(InputIterator1 _First1, InputIterator1 _Last1,
+       InputIterator2 _First2, BinaryPredicate _Comp)
 {
-  for (; first1!=last1; ++first1,++first2)
-    if (!comp(*first1,*first2))
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "equal_of_comp");
+  MINI_STL_DEBUG_POINTER(_First2, "equal_of_comp");
+
+  for (; _First1!=_Last1; ++_First1,++_First2)
+    if (!_Comp(*_First1, *_First2))
       return false;
   return true;
 }
 
 template <class InputIterator1, class InputIterator2>
 inline bool
-lexicographical_compare(InputIterator1 first1, InputIterator1 last1,
-                        InputIterator2 first2, InputIterator2 last2)
+lexicographical_compare(InputIterator1 _First1, InputIterator1 _Last1,
+                        InputIterator2 _First2, InputIterator2 _Last2)
 {
-  for (; first1!=last1 && first2!=last2; ++first1,++first2) {
-    if (*first1<*first2)
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "lexicographical_compare");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First2, _Last2, "lexicographical_compare");
+
+  for (; _First1!=_Last1 && _First2!=_Last2; ++_First1,++_First2) {
+    if (*_First1<*_First2)
       return true;
-    if (*first2<*first1)
+    if (*_First2<*_First1)
       return false;
   }
-  return first1 == last1 && first2 != last2;
+  return _First1 == _Last1 && _First2 != _Last2;
 }
 
 template <class InputIterator1, class InputIterator2,
           class BinaryPredicate>
 inline bool
-lexicographical_compare(InputIterator1 first1, InputIterator1 last1,
-                        InputIterator2 first2, InputIterator2 last2,
-                        BinaryPredicate comp)
+lexicographical_compare(InputIterator1 _First1, InputIterator1 _Last1,
+                        InputIterator2 _First2, InputIterator2 _Last2,
+                        BinaryPredicate _Comp)
 {
-  for (; first1!=last1 && first2!=&&last2; ++first1,++first2) {
-    if (comp(*first1,*first2))
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "lexicographical_compare_of_comp");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First2, _Last2, "lexicographical_compare_of_comp");
+
+  for (; _First1!=_Last1 && _First2!=&&_Last2; ++_First1,++_First2) {
+    if (_Comp(*_First1,*_First2))
       return true;
-    if (comp(*first2,*first1))
+    if (_Comp(*_First2,*_First1))
       return false;
   }
-  return first1 == last1 && first2 != last2;
+  return _First1 == _Last1 && _First2 != _Last2;
 }
 
 template <class ForwardIterator, class Type>
@@ -679,13 +709,17 @@ ForwardIterator _upper_bound_aux(ForwardIterator first,
   while (len > 0){
     half = len / 2;
     midIter = first;
-    advance(midIter, half);
+    midIter += half;
     if (value < *midIter) {
-      first = midIter;
-      ++first;
-      len = len - half - 1;
-    } else
+        cout << "if:" << *midIter << endl;
+      //first = midIter;
+      //++first;
       len = half;
+    } else {
+      cout << "else:" << *midIter << endl;
+      len = len - half - 1;
+      first = midIter;
+    }
   }
   return first;
 }

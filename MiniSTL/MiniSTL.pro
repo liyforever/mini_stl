@@ -34,7 +34,10 @@ HEADERS += \
     mini_stl_unordered_multiset.h \
     mini_stl_unordered_map.h \
     mini_stl_unordered_multimap.h \
-    mini_stl_bitset.h
+    mini_stl_bitset.h \
+    tmp.h \
+    mini_stl_algorithm.h \
+    mini_stl_debug.h
 
 OTHER_FILES += \
     info.txt

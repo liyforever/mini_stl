@@ -29,6 +29,7 @@ using std::cin;
 #include <deque>
 #include <set>
 #include <memory>
+#include <algorithm>
 using namespace std;
 #endif
 #include <unordered_set>
@@ -38,11 +39,19 @@ using namespace std;
 #include <bitset>
 #include "mini_stl_bitset.h"
 #include <memory>
-#define TEST_LIB
+#include <algorithm>
+#include "mini_stl_algorithm.h"
+#include <exception>
+//#define TEST_LIB
 class A{};
+bool twice (int elem1)
+{
+   return elem1==2;
+}
 int main()
 {
 #ifdef TEST_LIB
+
   std::bitset<5> ss;
   _MY_STL::bitset<5> bb;
   //ss.to_string
@@ -63,99 +72,110 @@ int main()
   //cout << _GET_ARRAY_SIZE(65) << endl;
   //cout << sizeof(size_t) << endl;
 #else
-  const char* a= "100101000000000";
-  std::bitset<10> bb(a);
-  cout << bb << endl;
 
-  /*typedef hashtable<int,
-                    int,
-                    hash<int>,
-                    identity<int>,
-                    equal_to<int>,
-                    default_allocator>
-      MyHT;
-  MyHT
-      ht1(50);
-  //for (int cc=0;cc!=10;++cc) {
-  for (int i=0;i!=10;++i) {
-    cout << ht1.buckets_.size() << endl;
-    ht1.insert_equal(i);
+
+  int A[]={1,1,1,4,5};
+  int B[5];
+  try{
+  auto r = _MY_STL::upper_bound(A,A+5,1);
+  cout << "result:"<< *r << endl;
+      //std::
+      //equal_range(A,A+5,1);//count(A,A+5,2);
+  //for(;r.first!=r.second;++r.first)
+    //cout << *r.first;
   }
-  for (int i=0;i!=10;++i) {
-    cout << ht1.buckets_.size() << endl;
-    ht1.insert_equal(i);
+  catch(std::exception & e) {
+    cout << e.what() << endl;
   }
-  for (int i=0;i!=10;++i) {
-    cout << ht1.buckets_.size() << endl;
-    ht1.insert_equal(54);
-  }*/
-    //}
-  //if (ht1.begin() == ht1.end())
-    //cout << "===" << endl;
-  //for (auto &cc : ht1.buckets_)
-    //cout << cc.size() << endl;
-  //for(auto ii = ht1.begin();ii!=ht1.end();++ii)
-    //cout << (*ii);
-  //auto TI = ht1.begin();
-  //cout << *TI << endl;
-  //for (auto aa = ht1.begin();aa!=ht1.end();++aa)//(int i=0;i!=10;++i,++TI)
-    //cout << "myIndex:" << aa.index
-      //      << "value:" << *aa << endl;
-
-  //for (auto aa = ht1.rbegin();aa!=ht1.rend();++aa)
-    //cout << "myIndex:" << aa.base().index
-      //      << "value:" << *aa << endl;
-  //cout << endl;
-  //auto ii = ht1.end();
-  //--ii;
-  //for (; ii!=ht1.begin();--ii)
-    ;//cout << *ii;
-  //for (auto ii = ht1.rbegin();ii!=ht1.rend();++ii)
-    //cout << *ii ;
- /* cout << endl;
-  cout << ht1.buckets_.size() << endl;
-  cout << "htSize:" << ht1.size() << endl;
-  cout << "htCount:" << ht1.count(1) << endl;
-  cout << "rbegin test:" << endl;
-  for (auto rI = ht1.rbegin();rI!=ht1.rend();++rI)
-    cout << *rI << " ";
-  cout <<"\n rbegni end" << endl;
-
-  cout << "begin test:" << endl;
-  for (auto rI = ht1.begin();rI!=ht1.end();++rI)
-    cout << *rI << " ";
-  cout <<"\n begni end" << endl;
-
-  int index = ht1._get_index_for_key(54);
-  for (auto ii: ht1.buckets_[index])
-    cout << ii << " ";
-  cout << "equal_range test:" << endl;
-  //auto fI = ht1.find(54);
-  //cout << *--fI << endl;
-  auto PRI1 = ht1.equal_range(54);
-  auto PRI = PRI1;
-  cout << *PRI1.first << "  "<< *PRI1.second << endl;
-  //for(int cc=0;cc!=10;++cc)
-    //cout << *++PRI1.first << endl;
-  if (PRI1.first==PRI1.second)
-    cout << "xiangdeng =============" << endl;
-  //cout << *PRI1.first << "  "<<*--PRI1.second << endl;
-  for (;PRI.first!=PRI.second;++PRI.first)
-    cout << *PRI.first <<" ";
-  cout << "test endl" << endl;
-  cout << "erase test : "<<endl;
-  /*int eNum = *///ht1.erase(PRI1.first,PRI1.second);
-   //ht1.erase(ht1.find(54));
-   //cout << "begin:"<<*ht1.begin() << endl;
-  //cout << "eNum:" << eNum << endl;
-  /*int in1 = ht1._get_index_for_key(54);
-  for (auto ii: ht1.buckets_[in1])
-    cout << ii << " ";
-  cout << "test end:" << endl;
-  cout << ht1.size() << endl;*/
   return 0;
 #endif
 }
+/*typedef hashtable<int,
+                  int,
+                  hash<int>,
+                  identity<int>,
+                  equal_to<int>,
+                  default_allocator>
+    MyHT;
+MyHT
+    ht1(50);
+//for (int cc=0;cc!=10;++cc) {
+for (int i=0;i!=10;++i) {
+  cout << ht1.buckets_.size() << endl;
+  ht1.insert_equal(i);
+}
+for (int i=0;i!=10;++i) {
+  cout << ht1.buckets_.size() << endl;
+  ht1.insert_equal(i);
+}
+for (int i=0;i!=10;++i) {
+  cout << ht1.buckets_.size() << endl;
+  ht1.insert_equal(54);
+}*/
+  //}
+//if (ht1.begin() == ht1.end())
+  //cout << "===" << endl;
+//for (auto &cc : ht1.buckets_)
+  //cout << cc.size() << endl;
+//for(auto ii = ht1.begin();ii!=ht1.end();++ii)
+  //cout << (*ii);
+//auto TI = ht1.begin();
+//cout << *TI << endl;
+//for (auto aa = ht1.begin();aa!=ht1.end();++aa)//(int i=0;i!=10;++i,++TI)
+  //cout << "myIndex:" << aa.index
+    //      << "value:" << *aa << endl;
+
+//for (auto aa = ht1.rbegin();aa!=ht1.rend();++aa)
+  //cout << "myIndex:" << aa.base().index
+    //      << "value:" << *aa << endl;
+//cout << endl;
+//auto ii = ht1.end();
+//--ii;
+//for (; ii!=ht1.begin();--ii)
+  //cout << *ii;
+//for (auto ii = ht1.rbegin();ii!=ht1.rend();++ii)
+  //cout << *ii ;
+/* cout << endl;
+cout << ht1.buckets_.size() << endl;
+cout << "htSize:" << ht1.size() << endl;
+cout << "htCount:" << ht1.count(1) << endl;
+cout << "rbegin test:" << endl;
+for (auto rI = ht1.rbegin();rI!=ht1.rend();++rI)
+  cout << *rI << " ";
+cout <<"\n rbegni end" << endl;
+
+cout << "begin test:" << endl;
+for (auto rI = ht1.begin();rI!=ht1.end();++rI)
+  cout << *rI << " ";
+cout <<"\n begni end" << endl;
+
+int index = ht1._get_index_for_key(54);
+for (auto ii: ht1.buckets_[index])
+  cout << ii << " ";
+cout << "equal_range test:" << endl;
+//auto fI = ht1.find(54);
+//cout << *--fI << endl;
+auto PRI1 = ht1.equal_range(54);
+auto PRI = PRI1;
+cout << *PRI1.first << "  "<< *PRI1.second << endl;
+//for(int cc=0;cc!=10;++cc)
+  //cout << *++PRI1.first << endl;
+if (PRI1.first==PRI1.second)
+  cout << "xiangdeng =============" << endl;
+//cout << *PRI1.first << "  "<<*--PRI1.second << endl;
+for (;PRI.first!=PRI.second;++PRI.first)
+  cout << *PRI.first <<" ";
+cout << "test endl" << endl;
+cout << "erase test : "<<endl;
+/*int eNum = *///ht1.erase(PRI1.first,PRI1.second);
+ //ht1.erase(ht1.find(54));
+ //cout << "begin:"<<*ht1.begin() << endl;
+//cout << "eNum:" << eNum << endl;
+/*int in1 = ht1._get_index_for_key(54);
+for (auto ii: ht1.buckets_[in1])
+  cout << ii << " ";
+cout << "test end:" << endl;
+cout << ht1.size() << endl;*/
 #else
 #include <iostream>
 using std::cout;

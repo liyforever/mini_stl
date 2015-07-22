@@ -72,6 +72,7 @@ static unsigned char _COUNT_TABLE[256] =
   6, /* 250 */ 7, /* 251 */ 6, /* 252 */ 7, /* 253 */ 7, /* 254 */
   8  /* 255 */
 };
+
 template <size_t Num>
 class bitset
 {
@@ -98,49 +99,43 @@ public:
 
   explicit bitset(const char * _CStr)
   {
-    size_type len = strlen(_CStr);
     _do_reset();
-    if (BIT_NUM >= len) {
-      size_type index_for_bit = 0;
-      size_type index_for_CStr = len - 1;
-      for ( ; index_for_CStr>=0; --index_for_CStr,++index_for_bit)
-        switch (_CStr[index_for_CStr]) {
-          case '0':
-            break;
-          case '1':
-            flip(index_for_bit);
-            break;
-          default:
-            MINI_STL_THROW_INVALID_ERROR("bitset");
-            break;
-          }
-    }
+    cout << "_do_reset" << endl;
+    for (size_t index=0; _CStr[index]!='\0' && index!=BIT_NUM; ++index)
+      switch (_CStr[index]-'0') {
+        case 0:
+          cout << "for0 index:" << index << endl;
+          break;
+        case 1:
+          this->flip(index);
+          cout << "for1 index:" << index << endl;
+          break;
+        default:
+          MINI_STL_THROW_INVALID_ERROR("bitset");
+          break;
+        }
+    cout << "my explicit" << endl;
   }
 
-  /*template<
-    class CharType,
-    class Traits,
-    class Allocator
-  >
+  template<class CharType,class Traits,class Allocator>
     explicit bitset(
-      const basic_string< CharType, Traits, Allocator >& _Str,
-      typename basic_string<
-        CharType, Traits, Allocator >::size_type _Pos = 0
-    );
-  template<
-    class CharType,
-    class Traits,
-    class Allocator
-  >
+        const _MY_STL::basic_string< CharType, Traits, Allocator >& _Str,
+        typename _MY_STL::basic_string<CharType, Traits, Allocator >::size_type _Pos = 0)
+  {
+    _do_reset();
+    _copy_for_Str(_Str, _Pos, _Str.size()-_Pos);
+  }
+
+  template<class CharType,class Traits,class Allocator>
    explicit bitset(
-    const basic_string< CharType, Traits, Allocator >& _Str,
-    typename basic_string<
-      CharType, Traits, Allocator >::size_type _Pos,
-    typename basic_string<
-      CharType, Traits, Allocator >::size_type _Count,
-    CharType _Zero = CharType (’0’),
-    CharType _One  = CharType (’1’)
-  );*/
+      const _MY_STL::basic_string< CharType, Traits, Allocator >& _Str,
+      typename _MY_STL::basic_string<CharType, Traits, Allocator >::size_type _Pos,
+      typename _MY_STL::basic_string<CharType, Traits, Allocator >::size_type _Count)
+  {
+    _do_reset();
+    _copy_for_Str(_Str, _Pos, _Count);
+  }
+
 public:
   bool all() const
   {
@@ -210,7 +205,7 @@ public:
   {
     if (pos >= BIT_NUM)
       MINI_STL_THROW_RANGE_ERROR("bitset");
-    return static_cast<bool>(_get_word(pos) & _get_mask(pos));
+    return bool(_get_word(pos) & _get_mask(pos));
   }
 
   template<class CharType, class Traits, class Alloc>
@@ -219,7 +214,7 @@ public:
     basic_string<CharType, Traits, Alloc> tmp(BIT_NUM, '0');
     for (int i=0; i!=BIT_NUM; ++i)
       if (test(i))
-        tmp[i] = '1';
+        tmp[BIT_NUM-i-1] = '1';
     return tmp;
   }
 
@@ -339,12 +334,42 @@ private:
   {
     return c_[_get_index(pos)];
   }
-
-  void _copy_for_CStr(const char* )
-  {
-
-  }
+  template <class CharType, class Traits, class Allocator>
+  void _copy_for_Str(const _MY_STL::basic_string<CharType,Traits,Allocator>& _Str,
+                     typename _MY_STL::basic_string<CharType,Traits,Allocator>::size_type _Pos,
+                     typename _MY_STL::basic_string<CharType,Traits,Allocator>::size_type _Count);
 };
+
+/*template<
+  class CharType,
+  class Traits,
+  class Allocator
+>
+  explicit bitset(
+    const basic_string< CharType, Traits, Allocator >& _Str,
+    typename basic_string<
+      CharType, Traits, Allocator >::size_type _Pos = 0
+  );*/
+
+template <size_t Num>
+template <class CharType, class Traits, class Allocator>
+void bitset<Num>::
+_copy_for_Str(const _MY_STL::basic_string<CharType,Traits,Allocator>& _Str,
+              typename _MY_STL::basic_string<CharType,Traits,Allocator>::size_type _Pos,
+              typename _MY_STL::basic_string<CharType,Traits,Allocator>::size_type _Count)
+{
+  for (size_t index=0; index!=_Count && index!=BIT_NUM; ++index)
+    switch (_Str[index + _Pos]-'0') {
+      case 0:
+        break;
+      case 1:
+        this->flip(index);
+        break;
+      default:
+        MINI_STL_THROW_INVALID_ERROR("bitset");
+        break;
+      }
+}
 
 template <size_t Num>
 bitset<Num>& bitset<Num>::operator<<=(size_t _Pos)
@@ -370,7 +395,7 @@ bitset<Num>& bitset<Num>::operator<<=(size_t _Pos)
 }
 
 template <size_t Num>
-bitset<Num>& bitset<Num>::operator<<=(size_t _Pos)
+bitset<Num>& bitset<Num>::operator>>=(size_t _Pos)
 {
   if (_Pos >= BIT_NUM) {
     _do_reset();
@@ -414,6 +439,13 @@ bitset<Num> operator^(const bitset<Num>& _Left,
 {
   bitset<Num> result(_Left);
   return result ^= _Right;
+}
+
+template <size_t Num>
+std::ostream& operator <<(std::ostream& os, const bitset<Num>& _Bit)
+{
+  os << _Bit.to_string();
+  return os;
 }
 MINI_STL_END
 #endif // MINI_STL_BITSET_H
