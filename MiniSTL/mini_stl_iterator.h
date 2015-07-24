@@ -150,6 +150,11 @@ public:
   {
     return &(operator*());
   }
+
+  difference_type operator-(const Self& _Right) const
+  {
+    return _Right.base() - this->base();
+  }
 };
 
 template <class Iterator>
@@ -264,7 +269,7 @@ advance_aux(InputIterator &iter, Distance n, bidirectional_iterator_tag)
   if (n >= 0)
     while (n--) ++iter;
   else
-    while (n++) --i;
+    while (n++) --iter;
 }
 
 template <class InputIterator, class Distance>

@@ -33,14 +33,36 @@ template <class Iterator>
 void mini_stl_debug_pointer(Iterator /*_Ptr*/, const char */*_Msg*/)
 {}
 
+template <class Type, class Distance>
+void mini_stl_debug_pointer_for_n(Type *_Ptr, Distance _Len, const char *_Msg)
+{
+  if (_len > 0)
+    mini_stl_debug_pointer(_Ptr, _Len, _Msg);
+}
+
+template <class Type, class Distance>
+void mini_stl_debug_pointer_for_n(const Type *_Ptr, Distance _Len, const char *_Msg)
+{
+  if (_len > 0)
+    mini_stl_debug_pointer(_Ptr, _Len, _Msg);
+}
+
+template <class Iterator, class Distance>
+void mini_stl_debug_pointer_for_n(Iterator /*Ptr*/, Distance /*_Len*/, const char* /*_Msg*/)
+{}
+
 #ifdef MINI_STL_DEBUG
   #define MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, _Msg) \
     mini_stl_debug_range_of_iterator(_First, _Last, _Msg);
   #define MINI_STL_DEBUG_POINTER(_Ptr, _Msg) \
     mini_stl_debug_pointer(_Ptr, _Msg)
+  #define MINI_STL_DEBUG_POINTER_FOR_N(_Ptr, _Len, _Msg) \
+    mini_stl_debug_pointer_for_n(_Ptr, _len, _Msg)
 #else
   #define MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, _Msg)
   #define MINI_STL_DEBUG_POINTER(_Ptr, _Msg)
+  #define MINI_STL_DEBUG_POINTER_FOR_N(_Ptr, _Len, _Msg)
 #endif
+
 MINI_STL_END
 #endif // MINI_STL_DEBUG_H

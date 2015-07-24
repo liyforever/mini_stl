@@ -27,7 +27,7 @@ struct __list_iterator_base
 {
   typedef size_t                      size_type;
   typedef ptrdiff_t                   difference_type;
-  typedef bidirectional_iterator_tag  iterator_category;
+  typedef forward_iterator_tag iterator_category;//bidirectional_iterator_tag  iterator_category;
 
   __list_node_base* node;
 

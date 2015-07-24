@@ -16,7 +16,7 @@
 #include "mini_stl_string.h"
 #include "mini_stl_tree.h"
 #include "mini_stl_map.h"
-using namespace Mini_STL;
+//using namespace Mini_STL;
 using std::cout;
 using std::endl;
 using std::cin;
@@ -42,53 +42,73 @@ using namespace std;
 #include <algorithm>
 #include "mini_stl_algorithm.h"
 #include <exception>
+#include "mini_stl_function.h"
 //#define TEST_LIB
 class A{};
-bool twice (int elem1)
+bool twice (int elem1,int e2)
 {
-   return elem1==2;
+  return elem1== e2;
 }
 int main()
 {
-#ifdef TEST_LIB
-
-  std::bitset<5> ss;
-  _MY_STL::bitset<5> bb;
-  //ss.to_string
-  //cout << bb << endl;
-  cout << bb.count() << endl;
-  //cout << bb.flip() << endl;
-  cout << "bt Begin" << endl;
-  cout << bb.test(4) << endl;
-  bb.flip(4);
-  cout << "bt End" << endl;
-  cout << bb.test(4) << endl;
-  //cout << bb << endl;
-  cout << "a" << endl;
-  cout << bb.count() << endl;
-  _MY_STL::string result = bb.to_string();
-
-  cout << "result"<< result << endl;
-  //cout << _GET_ARRAY_SIZE(65) << endl;
-  //cout << sizeof(size_t) << endl;
-#else
-
-
-  int A[]={1,1,1,4,5};
-  int B[5];
+  int A[]={1,//28
+           2,2,
+           3,3,3,
+           4,4,4,4,
+           5,5,5,5,5,
+           6,6,6,6,6,6,
+           7,7,7,7,7,7,7};
+  int B[] = {2,4,4};
+  int C[6] = {7,6,5,4,5,10};
+  //auto ff = _MY_STL::find_if_not(A,A+6,twice,twice);
+  //cout << "FF:" << *ff << endl;
+  auto IPR = //std::
+      _MY_STL::
+      min_element(C,C+6);
+  int val = 5;
+  cout << "IPR:" << *IPR << endl;
+  //for(auto CC:C)
+    //cout << CC << "  ";
+  cout << endl;
+  _MY_STL::list<int> aa;
+  /*for (int i=1;i!=8;++i)
+    for (int j=0;j<i;++j) {
+        //cout << "i:"<<i <<"j:" << j << endl;
+      aa.push_back(i);
+      }
+  cout << "size of AA:" << aa.size() << endl;*/
+  //try{
+    //auto SS = _MY_STL::find_end(aa.begin(),aa.end(),B,B+3);//,twice);
+  //}//search(A,A+28,B,B+7,_MY_STL::equal_to<int>());
+  /*catch(std::exception& e) {
+    cout << "catch:" << endl;
+      cout << e.what() << endl;
+  }*/
+  /*if (SS!=aa.end())
+  cout << _MY_STL::DISTANCE(aa.begin(),SS) << "  " << *(SS)<< endl;
+  else
+    cout << "no find" << endl;*/
+  /*int B[5];
   try{
-  auto r = _MY_STL::upper_bound(A,A+5,1);
-  cout << "result:"<< *r << endl;
-      //std::
-      //equal_range(A,A+5,1);//count(A,A+5,2);
-  //for(;r.first!=r.second;++r.first)
-    //cout << *r.first;
+    for (val =0;val!=9;++val) {
+      //cout << "val:" <<val<< endl;
+      auto r =  _MY_STL::equal_range(A,A+28,val,twice);
+      cout << "for Array:" ;
+      for (;r.first!=r.second;++r.first)
+        cout << *r.first <<" ";
+      cout << endl;
+      cout << "for list :";
+      auto rr = _MY_STL::equal_range(aa.begin(),aa.end(),val,twice);
+      for (;rr.first!=rr.second;++rr.first)
+        cout << *rr.first <<" ";
+      cout << endl;
+    }
   }
   catch(std::exception & e) {
+    cout << "catch" << endl;
     cout << e.what() << endl;
-  }
+  }*/
   return 0;
-#endif
 }
 /*typedef hashtable<int,
                   int,
