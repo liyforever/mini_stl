@@ -15,19 +15,25 @@ MINI_STL_BEGIN
 template <class Type>
 inline const Type& max(const Type& _Left, const Type& _Right)
 {
-  return _Right < _Left ? _Left : _Right;
+  MINI_STL_DEBUG_LESS(_Right, _Left, "Invalid operator< max");
+  //return _Right < _Left ? _Left : _Right;
+  return MINI_STL_DEBUG_LESS(_Right, _Left,
+                             "Invalid operator< max") ?
+        _Left : _Right;
 }
 
 template <class Type, class Compare>
 inline const Type& max(const Type& _Left, const Type& _Right, Compare _Comp)
 {
   MINI_STL_DEBUG_POINTER(_Comp, "max_of_comp");
+  MINI_STL_DEBUG_COMP(_Comp, _Left, _Right, "Invalid comp max_of_comp");
   return _Comp(_Right, _Left) ? _Left : _Right;
 }
 
 template <class Type>
 inline const Type& min(const Type& _Left, const Type& _Right)
 {
+  MINI_STL_DEBUG_LESS(_Left, _Right, "Invalid operator< min");
   return _Left < _Right ? _Left : _Right;
 }
 
@@ -35,6 +41,7 @@ template <class Type, class Compare>
 inline const Type& min(const Type& _Left, const Type& _Right, Compare _Comp)
 {
   MINI_STL_DEBUG_POINTER(_Comp, "min_of_comp");
+  MINI_STL_DEBUG_COMP(_Comp, _Left, _Right, "Invalid comp min_of_comp");
   return _Comp(_Left, _Right) ? _Left : _Right;
 }
 
@@ -42,9 +49,15 @@ inline const Type& min(const Type& _Left, const Type& _Right, Compare _Comp)
 template <class Type>
 inline void swap(Type& _Left, Type& _Right)
 {
+#ifdef MINI_STL_RVALUE_REFS
+  Type tmp(_MY_STL::move(_Left));
+  _Left = _MY_STL::move(_Right);
+  _Right = _MY_STL::move(tmp);
+#else
   Type tmp(_Left);
   _Left = _Right;
   _Right = tmp;
+#endif
 }
 
 template <class ForwardIterator, class Type>
@@ -91,7 +104,8 @@ equal(InputIterator1 _First1, InputIterator1 _Last1,
   MINI_STL_DEBUG_POINTER_FOR_N(_First2, DISTANCE(_First1, _Last1), "equal_for_comp");
   MINI_STL_DEBUG_POINTER(_Comp, "equal_of_comp");
   for (; _First1!=_Last1; ++_First1,++_First2)
-    if (!_Comp(*_First1, *_First2))
+    if (!MINI_STL_DEBUG_COMP(_Comp, *_First1, *_First2,
+                             "Invalid operator< equal"))//_Comp(*_First1, *_First2))
       return false;
   return true;
 }

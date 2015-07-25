@@ -338,7 +338,6 @@ template<class Type> inline
 typename remove_reference<Type>::type&&
   move(Type&& Arg)
 {
-  cout << "move" << endl;
   return ((typename remove_reference<Type>::type&&)Arg);
 }
 #endif //MINI_STL_RVALUE_REFS

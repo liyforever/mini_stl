@@ -10,6 +10,7 @@
 #define MINI_STL_THROW_INVALID_ERROR(msg) (throw std::invalid_argument(msg))
 #define MINI_STL_THROW_OVERFLOW_ERROR(msg)  (throw std::overflow_error(msg))
 #define MINI_STL_THROW_RANGE_OUT_OF_RANGE_ERROR (throw std::out_of_range(msg))
+#define MINI_STL_THROW_LOGIC_ERROR(msg) (throw std::logic_error(msg))
 // Microsoft compiler.
 #ifdef _MSC_VER
 #   ifdef _DEBUG

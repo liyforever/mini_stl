@@ -312,14 +312,14 @@ find(InputIterator _First,
   return _First;
 }
 
-template<class InputIterator, class Type, class Predicate>
+template<class InputIterator, class Predicate>
 inline InputIterator
-find(InputIterator _First, InputIterator _Last,
-     const Type& _Val, Predicate _Pred)
+find_if(InputIterator _First, InputIterator _Last,
+        Predicate _Pred)
 {
   MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "find_of_comp");
   MINI_STL_DEBUG_POINTER(_Pred, "find_of_comp");
-  for ( ; _First!=_Last && !_Pred(*_First, _Val);
+  for ( ; _First!=_Last && !_Pred(*_First);
          ++_First)
     {}
   return _First;
@@ -782,6 +782,369 @@ min_element(ForwardIterator _First,
         result = _First;
   return result;
 }
+
+template<class InputIterator1, class InputIterator2>
+inline _MY_STL::pair<InputIterator1, InputIterator2>
+mismatch(InputIterator1 _First1,
+         InputIterator1 _Last1,
+         InputIterator2 _First2)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "mismatch");
+  for (; _First1!=_Last1 && _First1 == _First2; ++_First1, ++_First2)
+    {}
+  return _MY_STL::pair<InputIterator1, InputIterator2>
+                      (_First1, _First2);
+}
+
+template<class InputIterator1, class InputIterator2, class BinaryPredicate>
+inline _MY_STL::pair<InputIterator1, InputIterator2>
+mismatch(InputIterator1 _First1,
+         InputIterator1 _Last1,
+         InputIterator2 _First2,
+         BinaryPredicate _Comp)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "mismatch_of_comp");
+  MINI_STL_DEBUG_POINTER(_Comp, "mismatch_of_comp");
+  for (; _First1!=_Last1 && _Comp(_First1, _First2); ++_First1, ++_First2)
+    {}
+  return _MY_STL::pair<InputIterator1, InputIterator2>
+                      (_First1, _First2);
+}
+
+template<class InputIterator, class OutputIterator>
+inline OutputIterator
+move(InputIterator _First,
+     InputIterator _Last,
+     OutputIterator _Dest)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "move");
+  for (; _First != _Last; ++_First,++_Dest)
+    *_Dest = _MY_STL::move(*_First);
+  return _Dest;
+}
+
+template<class BidirectionalIterator1, class BidirectionalIterator2>
+inline BidirectionalIterator2
+move_backward(BidirectionalIterator1 _First,
+              BidirectionalIterator1 _Last,
+              BidirectionalIterator2 _Dest)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "move_backward");
+}
+
+template<class BidirectionalIterator>
+bool next_permutation(BidirectionalIterator _First,
+                      BidirectionalIterator _Last)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "next_permutation");
+  BidirectionalIterator next = _Last;
+  if (_First == _Last || --next == _First)
+    return false;
+  BidirectionalIterator next_next;
+  for (;;) {
+    next_next = next;
+    --next;
+    if (*next < *next_next) {
+      BidirectionalIterator FGN = _Last;
+      //FGN = first_greate_next
+      while(!(*next < *--FGN))
+        {}
+      _MY_STL::iter_swap(FGN, next);
+      _MY_STL::reverse(next_next, _Last);
+      return true;
+    }
+    if (next == _First) {
+      _MY_STL::reverse(_First, _Last);
+      return false;
+    }
+  }
+}
+
+template<class BidirectionalIterator, class BinaryPredicate>
+bool next_permutation(BidirectionalIterator _First,
+                      BidirectionalIterator _Last,
+                      BinaryPredicate _Comp)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "next_permutation_of_comp");
+  MINI_STL_DEBUG_POINTER(_Comp, "next_permutation_of_comp");
+  BidirectionalIterator next = _Last;
+  if (_First == _Last || --next == _First)
+    return false;
+  BidirectionalIterator next_next;
+  for (;;) {
+    next_next = next;
+    --next;
+    if (_Comp(*next,*next_next)) {
+      BidirectionalIterator FGN = _Last;
+      //FGN = first_greate_next
+      while(!_Comp(*next, *--FGN))
+        {}
+      _MY_STL::iter_swap(FGN, next);
+      _MY_STL::reverse(next_next, _Last);
+      return true;
+    }
+    if (next == _First) {
+      _MY_STL::reverse(_First, _Last);
+      return false;
+    }
+  }
+}
+
+template<class InputIterator, class Predicate>
+inline bool
+none_of(InputIterator _First,
+        InputIterator _Last,
+        Predicate _Comp)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "none_of");
+  MINI_STL_DEBUG_POINTER(_Comp, "none_of");
+  for (; _First!=_Last; ++_First)
+    if (_Comp(*_First))
+      return false;
+  return true;
+}
+
+template<class RandomAccessIterator>
+void nth_element(RandomAccessIterator _First,
+                 RandomAccessIterator _Nth,
+                 RandomAccessIterator _Last)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Nth, "nth_element");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "nth_element");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Nth, _Last, "nth_element");
+}
+
+template<class RandomAccessIterator, class BinaryPredicate>
+void nth_element(RandomAccessIterator _First,
+                 RandomAccessIterator _Nth,
+                 RandomAccessIterator _Last,
+                 BinaryPredicate _Comp)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Nth, "nth_element_of_comp");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "nth_element_of_comp");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Nth, _Last, "nth_element_of_comp");
+  MINI_STL_DEBUG_POINTER(_Comp, "nth_element_of_comp");
+}
+
+template<class BidirectionalIterator>
+bool prev_permutation(BidirectionalIterator _First,
+                      BidirectionalIterator _Last)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "prev_permutation");
+  BidirectionalIterator next = _Last;
+  if (_First == _Last || --next == _Last)
+    return false;
+  BidirectionalIterator next_next;
+  for (;;) {
+    next_next = next;
+    --next;
+    if (*next_next < *next) {
+      BidirectionalIterator FGN = _Last;
+      //FGN = first_greate_next
+      while(!(*--FGN < *next))
+        {}
+      _MY_STL::iter_swap(FGN, next);
+      _MY_STL::reverse(next_next, _Last);
+      return true;
+    }
+    if (next == _First) {
+      _MY_STL::reverse(_First, _Last);
+      return false;
+    }
+  }
+}
+
+template<class BidirectionalIterator, class BinaryPredicate>
+bool prev_permutation(BidirectionalIterator _First,
+                      BidirectionalIterator _Last,
+                      BinaryPredicate _Comp)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "prev_permutation_of_comp");
+  MINI_STL_DEBUG_POINTER(_Comp, "prev_permutation_of_comp");
+  BidirectionalIterator next = _Last;
+  if (_First == _Last || --next == _Last)
+    return false;
+  BidirectionalIterator next_next;
+  for (;;) {
+    next_next = next;
+    --next;
+    if (_Comp(*next_next, *next)) {
+      BidirectionalIterator FGN = _Last;
+      //FGN = first_greate_next
+      while(!_Comp(*--FGN, *next))
+        {}
+      _MY_STL::iter_swap(FGN, next);
+      _MY_STL::reverse(next_next, _Last);
+      return true;
+    }
+    if (next == _First) {
+      _MY_STL::reverse(_First, _Last);
+      return false;
+    }
+  }
+}
+template<class BidirectionalIterator>
+inline void
+_reverse_aux(BidirectionalIterator _First,
+             BidirectionalIterator _Last,
+             bidirectional_iterator_tag)
+{
+  for (;_First!=_Last && _First!= --_Last; ++_First)
+    _MY_STL::iter_swap(_First, _Last);
+}
+
+template<class BidirectionalIterator>
+inline void
+reverse(BidirectionalIterator _First,
+        BidirectionalIterator _Last)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "reverse");
+  _reverse_aux(_First, _Last, ITERATOR_CATEGORY(_First));
+}
+
+template<class BidirectionalIterator, class OutputIterator>
+inline void
+_reverse_copy_aux(BidirectionalIterator _First,
+             BidirectionalIterator _Last,
+             OutputIterator _Result,
+             bidirectional_iterator_tag)
+{
+  while (_First != _Last) {
+    --_Last;
+    *_Result++ = _Last;
+  }
+  return _Result;
+}
+
+template<class BidirectionalIterator, class OutputIterator>
+inline OutputIterator
+reverse_copy(BidirectionalIterator _First, BidirectionalIterator _Last,
+             OutputIterator _Result)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "reverse_copy");
+  return _reverse_copy_aux(_First, _Last,
+                           _Result,
+                           ITERATOR_CATEGORY(_First));
+}
+
+template<class InputIterator, class OutputIterator, class Type>
+inline OutputIterator
+remove_copy(InputIterator _First, InputIterator _Last,
+            OutputIterator _Result, const Type& _Val)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "remove_copy");
+  for (; _First!=_Last; ++_First)
+    if (*_First != _Val)
+      *_Result++ = *_First;
+  return _Result;
+}
+
+template<class InputIterator, class OutputIterator, class Predicate>
+inline OutputIterator
+remove_copy_if(InputIterator _First, InputIterator _Last,
+               OutputIterator _Result, Predicate _Pred)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "remove_copy_if");
+  MINI_STL_DEBUG_POINTER(_Pred, "remove_copy_if");
+  for (; _First!=_Last; ++_First)
+    if (!_Pred(*_First))
+      *_Result++ = *_First;
+  return _Result;
+}
+
+template<class ForwardIterator, class Type>
+inline ForwardIterator
+remove(ForwardIterator _First,
+       ForwardIterator _Last,
+       const Type& _Val)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "remove");
+  _First = _MY_STL::find(_First, _Last, _Val);
+  if (_First == _Last)
+    return _First;
+  ForwardIterator result = _First;
+  for (++_First; _First!=_Last; ++_First)
+    if (*_First != _Val)
+#ifdef MINI_STL_RVALUE_REFS
+      *result++ = _MY_STL::move(*_First);
+#else
+      *result++ = *_First;
+#endif
+  return result;
+}
+
+template<class ForwardIterator, class Predicate>
+inline ForwardIterator
+remove_if(ForwardIterator _First,
+          ForwardIterator _Last,
+          Predicate _Pred)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "remove_if");
+  MINI_STL_DEBUG_POINTER(_Pred, "remove_if");
+  _First = _MY_STL::find_if(_First, _Last, _Pred);
+  if (_First == _Last)
+    return _First;
+  ForwardIterator result = _First;
+  for (++_First; _First!=_Last; ++_First)
+    if (!_Pred(*_First))
+#ifdef MINI_STL_RVALUE_REFS
+      *result++ = _MY_STL::move(*_First);
+#else
+      *result++ = *_First;
+#endif
+  return result;
+}
+
+template<class ForwardIterator, class Type>
+inline void
+replace(ForwardIterator _First, ForwardIterator _Last,
+        const Type& _OldVal, const Type& _NewVal)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "replace");
+  for (; _First != _Last; ++_First)
+    if (*_First == _OldVal)
+      *_First = _NewVal;
+}
+
+template<class ForwardIterator, class Predicate, class Type>
+inline void
+replace_if(ForwardIterator _First, ForwardIterator _Last,
+           Predicate _Pred, const Type& _Val)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "replace_if");
+  MINI_STL_DEBUG_POINTER(_Pred, "replace_if");
+  for (; _First != _Last; ++_First)
+    if (_Pred(*_First))
+      *_First = _Val;
+}
+
+template<class InputIterator, class OutputIterator, class Type>
+inline OutputIterator
+replace_copy(InputIterator _First, InputIterator _Last,
+             OutputIterator _Result,
+             const Type& _OldVal,
+             const Type& _NewVal)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "replace_copy");
+  for (; _First != _Last; ++_First)
+    *_Result++ = *_First == _OldVal ? _NewVal : *_First;
+  return _Result;
+}
+
+template<class InputIterator, class OutputIterator, class Predicate, class Type>
+inline OutputIterator
+replace_copy_if(InputIterator _First, InputIterator _Last,
+                OutputIterator _Result,
+                Predicate _Pred,
+                const Type& _Val)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "replace_copy");
+  MINI_STL_DEBUG_POINTER(_Pred, "replace_copy_if");
+  for (; _First != _Last; ++_First)
+    *_Result++ = _Pred(*_First) ? _Val : *_First;
+  return _Result;
+}
+
 template<class ForwardIterator1, class ForwardIterator2,
          class Distance1, class Distance2>
 ForwardIterator1

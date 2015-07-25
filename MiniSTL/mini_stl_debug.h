@@ -16,32 +16,42 @@ void mini_stl_debug_range_of_iterator(
 }
 
 template <class Type>
-void mini_stl_debug_pointer(Type *_Ptr, const char *_Msg)
+inline void
+mini_stl_debug_pointer(Type *_Ptr,
+                       const char *_Msg)
 {
   if (_Ptr == 0)
     MINI_STL_THROW_INVALID_ERROR(_Msg);
 }
 
 template <class Type>
-void mini_stl_debug_pointer(const Type *_Ptr, const char *_Msg)
+inline void
+mini_stl_debug_pointer(const Type *_Ptr,
+                       const char *_Msg)
 {
   if (_Ptr == 0)
     MINI_STL_THROW_INVALID_ERROR(_Msg);
 }
 
 template <class Iterator>
-void mini_stl_debug_pointer(Iterator /*_Ptr*/, const char */*_Msg*/)
+void mini_stl_debug_pointer(Iterator /*_Ptr*/, const char * /*_Msg*/)
 {}
 
 template <class Type, class Distance>
-void mini_stl_debug_pointer_for_n(Type *_Ptr, Distance _Len, const char *_Msg)
+inline void
+mini_stl_debug_pointer_for_n(Type *_Ptr,
+                             Distance _Len,
+                             const char *_Msg)
 {
   if (_len > 0)
     mini_stl_debug_pointer(_Ptr, _Len, _Msg);
 }
 
 template <class Type, class Distance>
-void mini_stl_debug_pointer_for_n(const Type *_Ptr, Distance _Len, const char *_Msg)
+inline void
+mini_stl_debug_pointer_for_n(const Type *_Ptr,
+                             Distance _Len,
+                             const char *_Msg)
 {
   if (_len > 0)
     mini_stl_debug_pointer(_Ptr, _Len, _Msg);
@@ -51,6 +61,29 @@ template <class Iterator, class Distance>
 void mini_stl_debug_pointer_for_n(Iterator /*Ptr*/, Distance /*_Len*/, const char* /*_Msg*/)
 {}
 
+template <class Type, class BinaryPredicate>
+inline bool
+mini_stl_debug_comp(BinaryPredicate _Comp,
+                    const Type& _Left,
+                    const Type& _Right,
+                    const char* _Msg)
+{
+  if (_Comp(_Left, _Right) && _Comp(_Right, _Left))
+    MINI_STL_THROW_LOGIC_ERROR(_Msg);
+  return _Comp(_Left, _Right);
+}
+
+template <class Type>
+inline bool
+mini_stl_debug_less(const Type& _Left,
+                    const Type& _Rihgt,
+                    const char* _Msg)
+{
+  if (_Left < _Rihgt && _Rihgt < _Left)
+    MINI_STL_THROW_LOGIC_ERROR(_Msg);
+  return _Left < _Rihgt;
+}
+
 #ifdef MINI_STL_DEBUG
   #define MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, _Msg) \
     mini_stl_debug_range_of_iterator(_First, _Last, _Msg);
@@ -58,10 +91,18 @@ void mini_stl_debug_pointer_for_n(Iterator /*Ptr*/, Distance /*_Len*/, const cha
     mini_stl_debug_pointer(_Ptr, _Msg)
   #define MINI_STL_DEBUG_POINTER_FOR_N(_Ptr, _Len, _Msg) \
     mini_stl_debug_pointer_for_n(_Ptr, _len, _Msg)
+  #define MINI_STL_DEBUG_COMP(_Comp, _Left, _Right, _Msg) \
+    mini_stl_debug_comp(_Comp, _Left, _Right, _Msg)
+  #define MINI_STL_DEBUG_LESS(_Left, _Right, _Msg) \
+    mini_stl_debug_less(_Left, _Right, _Msg)
 #else
   #define MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, _Msg)
   #define MINI_STL_DEBUG_POINTER(_Ptr, _Msg)
   #define MINI_STL_DEBUG_POINTER_FOR_N(_Ptr, _Len, _Msg)
+  #define MINI_STL_DEBUG_COMP(_Comp, _Left, _Right, _Msg) \
+    _Comp((_Left), (_Right))
+  #define MINI_STL_DEBUG_LESS(_Left, _Right, _Msg) \
+    ((_Left) < (_Right))
 #endif
 
 MINI_STL_END

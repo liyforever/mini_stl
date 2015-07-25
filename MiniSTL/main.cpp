@@ -34,7 +34,6 @@ using namespace std;
 #endif
 #include <unordered_set>
 #include <functional>
-#include "Windows.h"
 #include <map>
 #include <bitset>
 #include "mini_stl_bitset.h"
@@ -44,13 +43,22 @@ using namespace std;
 #include <exception>
 #include "mini_stl_function.h"
 //#define TEST_LIB
+void TT(int msg,int m1, int m2) {cout << "TT" << msg<<endl;}
+#define TESTBBB(msg, m1, m2) TT(msg, m1, m2)
 class A{};
-bool twice (int elem1,int e2)
+bool twice (int elem1)
 {
-  return elem1== e2;
+  return elem1== 5;
 }
+
+bool pa(int a,int b)
+{
+  return true;
+}
+
 int main()
 {
+  std::reverse_copy
   int A[]={1,//28
            2,2,
            3,3,3,
@@ -59,18 +67,28 @@ int main()
            6,6,6,6,6,6,
            7,7,7,7,7,7,7};
   int B[] = {2,4,4};
-  int C[6] = {7,6,5,4,5,10};
+  int D[] = {2,4,5};
+  int C[4] = {1,2,3,4};
+  int C1[9] = {1,2,3,4,9,8,2,5,4};
   //auto ff = _MY_STL::find_if_not(A,A+6,twice,twice);
   //cout << "FF:" << *ff << endl;
-  auto IPR = //std::
-      _MY_STL::
-      min_element(C,C+6);
+  for (int i=0;i!=3;++i)
+  std::next_permutation(C,C+4);//,twice);
+  //cout << "bool:" << bo << endl;
+  for (int i=0;i!=2;++i)
+  _MY_STL::prev_permutation(C,C+4);
+  for (auto III : C)
+    cout << III << "  ";
+  cout << endl;
   int val = 5;
-  cout << "IPR:" << *IPR << endl;
+  //if (IPR.first!=B+3 && IPR.second!=D+3)
+  //out << "IPR:" << *(IPR.first)<<"  " << *(IPR.second) << endl;
+  //else
+    //cout << "== == "<< endl;
   //for(auto CC:C)
     //cout << CC << "  ";
-  cout << endl;
-  _MY_STL::list<int> aa;
+  //cout << endl;
+  //_MY_STL::list<int> aa;
   /*for (int i=1;i!=8;++i)
     for (int j=0;j<i;++j) {
         //cout << "i:"<<i <<"j:" << j << endl;
