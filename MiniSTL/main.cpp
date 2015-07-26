@@ -1,10 +1,10 @@
 #define LIB_TEST
 #ifdef LIB_TEST
-
 #define MINI_STL_TEST
 #ifdef MINI_STL_TEST
 #include <iostream>
 #include <utility>
+#include "mini_stl_debug.h"
 #include "mini_stl_multiset.h"
 #include "mini_stl_stack.h"
 #include "mini_stl_vector.h"
@@ -41,6 +41,7 @@ using namespace std;
 #include <algorithm>
 #include "mini_stl_algorithm.h"
 #include <exception>
+#include <time.h>
 #include "mini_stl_function.h"
 //#define TEST_LIB
 void TT(int msg,int m1, int m2) {cout << "TT" << msg<<endl;}
@@ -53,12 +54,38 @@ bool twice (int elem1)
 
 bool pa(int a,int b)
 {
-  return true;
+  return a<b;
 }
 
 int main()
 {
-  std::reverse_copy
+  int u1[5] = {1,1,2,2,3,};
+  int u2[6] = {1,2,4,4,4,6};
+  int result[20];
+  int result1[20];
+  int SO[10] = {3,15,20,20,20,20,20,10,5,22};
+      //{3,15,20,21,16,20,16,10,5,22};
+  //srand(time(NULL));
+  //for (int cishu=0;cishu!=1000;++cishu) {
+        int index=0;
+  //for (int i=1;i!=11;++i,++index)
+    //SO[index] = rand()%30;
+  //for (auto ci : SO)
+    //cout << ci <<" ";
+  cout << "\n\n\n\n" << endl;
+    auto bb = _MY_STL::_partition(SO,SO+10);
+    //MINI_STL_DEBUG_RANGE_OF_ITERATOR(SO,SO+10,"mm");
+    //MINI_STL_DEBUG_ORDER(SO,SO+50,"TEST");
+    cout << "UPP:" << *bb.first <<"  "<< *bb.second << endl;
+    cout << "pari f - F:" << bb.first - SO << " pair.second - F:" << bb.second - SO<< endl;
+    for (auto ci : SO)
+      cout << ci <<" ";
+
+  /*catch (std::exception& e) {
+    cout << "exception:";
+    cout << e.what() << endl;
+  }*/
+
   int A[]={1,//28
            2,2,
            3,3,3,
@@ -70,9 +97,11 @@ int main()
   int D[] = {2,4,5};
   int C[4] = {1,2,3,4};
   int C1[9] = {1,2,3,4,9,8,2,5,4};
+
+  cout << endl;
   //auto ff = _MY_STL::find_if_not(A,A+6,twice,twice);
   //cout << "FF:" << *ff << endl;
-  for (int i=0;i!=3;++i)
+  /*for (int i=0;i!=3;++i)
   std::next_permutation(C,C+4);//,twice);
   //cout << "bool:" << bo << endl;
   for (int i=0;i!=2;++i)
@@ -80,7 +109,7 @@ int main()
   for (auto III : C)
     cout << III << "  ";
   cout << endl;
-  int val = 5;
+  int val = 5;*/
   //if (IPR.first!=B+3 && IPR.second!=D+3)
   //out << "IPR:" << *(IPR.first)<<"  " << *(IPR.second) << endl;
   //else

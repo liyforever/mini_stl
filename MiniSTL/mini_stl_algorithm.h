@@ -1145,6 +1145,76 @@ replace_copy_if(InputIterator _First, InputIterator _Last,
   return _Result;
 }
 
+/*template<class ForwardIterator, class Distance>
+inline void
+_rotate_aux(ForwardIterator _First,
+            ForwardIterator _Middle,
+            ForwardIterator _Last,
+            Distance*,
+            forward_iterator_tag)
+{
+}
+
+template<class BidirectionIterator, class Distance>
+inline void
+_rotate_aux(BidirectionIterator _First,
+            BidirectionIterator _Middle,
+            BidirectionIterator _Last,
+            Distance*,
+            bidirectional_iterator_tag)
+{
+  _MY_STL::reverse(_First, _Middle);
+  _MY_STL::reverse(_Middle, _Last);
+  _MY_STL::reverse(_First, _Last);
+}
+
+template<class RandomAccessIterator, class Distance>
+inline void
+_rotate_aux(RandomAccessIterator _First,
+            RandomAccessIterator _Middle,
+            RandomAccessIterator _Last,
+            Distance*,
+            random_access_iterator_tag)
+{
+}
+
+template<class ForwardIterator, class Distance>
+inline void
+_rotate_aux(ForwardIterator _First,
+            ForwardIterator _Middle,
+            ForwardIterator _Last,
+            Distance*,
+            forward_iterator_tag)
+{
+}
+
+template<class ForwardIterator>
+inline void
+rotate(ForwardIterator _First,
+       ForwardIterator _Middle,
+       ForwardIterator _Last)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Middle, "rotate");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Middle, _Last, "rotate");
+  _rotate_aux(_First, _Middle, _Last,
+              DISTANCE_TYPE(_First),
+              ITERATOR_CATEGORY(_First));
+}*/
+
+template<class ForwardIterator, class OutputIterator>
+inline OutputIterator
+rotate_copy(ForwardIterator _First,
+            ForwardIterator _Middle,
+            ForwardIterator _Last,
+            OutputIterator _Result)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Middle, "rotate_copy");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Middle, _Last, "rotate_copy");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First, _Last), "rotate_copy");
+  _Result = _MY_STL::copy(_Middle, _Last, _Result);
+  return _MY_STL::copy(_First, _Middle, _Result);
+}
+
 template<class ForwardIterator1, class ForwardIterator2,
          class Distance1, class Distance2>
 ForwardIterator1
@@ -1287,6 +1357,405 @@ search_n(ForwardIterator _First, ForwardIterator _Last,
     _First = _MY_STL::find(cur, _Last, _Val);
   }
   return _Last;
+}
+
+template<class InputIterator1, class InputIterator2, class OutputIterator>
+OutputIterator
+set_intersection(InputIterator1 _First1, InputIterator1 _Last1,
+                 InputIterator2 _First2, InputIterator2 _Last2,
+                 OutputIterator _Result)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "set_intersection");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First2, _Last2, "set_intersection");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First1, _Last1), "set_intersection");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First2, _Last2), "set_intersection");
+  MINI_STL_DEBUG_ORDER(_First1, _Last1, "invalid order in set_intersection");
+  MINI_STL_DEBUG_ORDER(_First2, _Last2, "invalid order in set_intersection");
+  while (_First1!=_Last1 && _First2!=_Last2) {
+    if (*_First1 < *_First2) {
+      ++_First1;
+    } else if (*_First2 < *_First1) {
+      ++_First2;
+    } else {
+      *_Result++ = *_First1;
+      ++_First1;
+      ++_First2;
+    }
+  }
+  return _Result;
+}
+
+template<class InputIterator1, class InputIterator2, class OutputIterator, class BinaryPredicate>
+OutputIterator
+set_intersection(InputIterator1 _First1, InputIterator1 _Last1,
+                 InputIterator2 _First2, InputIterator2 _Last2,
+                 OutputIterator _Result,
+                 BinaryPredicate _Comp)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "set_intersection_of_comp");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First2, _Last2, "set_intersection_of_comp");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First1, _Last1), "set_intersection_of_comp");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First2, _Last2), "set_intersection_of_comp");
+  MINI_STL_DEBUG_POINTER(_Comp, "set_intersection_of_comp");
+  MINI_STL_DBUEG_ORDER_COMP(_First1, _Last1, _Comp, "invalid order in set_intersection_of_comp");
+  MINI_STL_DBUEG_ORDER_COMP(_First2, _Last2, _Comp, "invalid order in set_intersection_of_comp");
+  while (_First1!=_Last1 && _First2!=_Last2) {
+    if (_Comp(*_First1, *_First2)) {
+      ++_First1;
+    } else if (_Comp(*_First2, *_First1)) {
+      ++_First2;
+    } else {
+      *_Result++ = *_First1;
+      ++_First1;
+      ++_First2;
+    }
+  }
+  return _Result;
+}
+
+template<class InputIterator1, class InputIterator2, class OutputIterator>
+OutputIterator
+set_symmetric_difference(InputIterator1 _First1, InputIterator1 _Last1,
+                         InputIterator2 _First2, InputIterator2 _Last2,
+                         OutputIterator _Result)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "set_symmetric_difference");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First2, _Last2, "set_symmetric_difference");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First1, _Last1), "set_symmetric_difference");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First2, _Last2), "set_symmetric_difference");
+  MINI_STL_DEBUG_ORDER(_First1, _Last1, "invalid order in set_symmetric_difference");
+  MINI_STL_DEBUG_ORDER(_First2, _Last2, "invalid order in set_symmetric_difference");
+  while (_First1!=_Last1 && _First2!=_Last2) {
+    if (*_First1 < *_First2) {
+      *_Result = *_First1;
+      ++_First1;
+    } else if (*_First2 < *_First1) {
+      *_Result++ = *_First2;
+      ++_First2;
+    } else {
+      ++_First1;
+      ++_First2;
+    }
+  }
+  _Result =  _MY_STL::copy(_First1, _Last, _Result);
+  return _MY_STL::copy(_First2, _Last2, _Result);
+}
+
+template<class InputIterator1, class InputIterator2, class OutputIterator, class BinaryPredicate>
+OutputIterator
+set_symmetric_difference(InputIterator1 _First1, InputIterator1 _Last1,
+                         InputIterator2 _First2, InputIterator2 _Last2,
+                         OutputIterator _Result,
+                         BinaryPredicate _Comp)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "set_symmetric_difference_of_comp");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First2, _Last2, "set_symmetric_difference_of_comp");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First1, _Last1), "set_symmetric_difference_of_comp");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First2, _Last2), "set_symmetric_difference_of_comp");
+  MINI_STL_DEBUG_POINTER(_Comp, "set_symmetric_difference_of_comp");
+  MINI_STL_DBUEG_ORDER_COMP(_First1, _Last1, _Comp, "invalid order in set_symmetric_difference_of_comp");
+  MINI_STL_DBUEG_ORDER_COMP(_First2, _Last2, _Comp, "invalid order in set_symmetric_difference_of_comp");
+  while (_First1!=_Last1 && _First2!=_Last2) {
+    if (_Comp(*_First1, *_First2)) {
+      *_Result = *_First1;
+      ++_First1;
+    } else if (_Comp(*_First2, *_First1)  ) {
+      *_Result++ = *_First2;
+      ++_First2;
+    } else {
+      ++_First1;
+      ++_First2;
+    }
+  }
+  _Result =  _MY_STL::copy(_First1, _Last, _Result);
+  return _MY_STL::copy(_First2, _Last2, _Result);
+}
+
+template<class InputIterator1, class InputIterator2, class OutputIterator>
+OutputIterator
+set_difference(InputIterator1 _First1, InputIterator1 _Last1,
+               InputIterator2 _First2, InputIterator2 _Last2,
+               OutputIterator _Result)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "set_difference");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First2, _Last2, "set_difference");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First1, _Last1), "set_difference");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First2, _Last2), "set_difference");
+  MINI_STL_DEBUG_ORDER(_First1, _Last1, "invalid order in set_difference");
+  MINI_STL_DEBUG_ORDER(_First2, _Last2, "invalid order in set_difference");
+  while (_First1!=_Last1 && _First2!=_Last2) {
+    if (*_First1 < *_First2) {
+      *_Result = *_First1;
+      ++_First1;
+    } else if (*_First2 < *_First1) {
+      ++_First2;
+    } else {
+      ++_First1;
+      ++_First2;
+    }
+  }
+  return _MY_STL::copy(_First1, _Last, _Result);
+}
+
+template<class InputIterator1, class InputIterator2, class OutputIterator, class BinaryPredicate>
+OutputIterator
+set_difference(InputIterator1 _First1, InputIterator1 _Last1,
+               InputIterator2 _First2, InputIterator2 _Last2,
+               OutputIterator _Result,
+               BinaryPredicate _Comp)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "set_difference_of_comp");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First2, _Last2, "set_difference_of_comp");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First1, _Last1), "set_difference_of_comp");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First2, _Last2), "set_difference_of_comp");
+  MINI_STL_DEBUG_POINTER(_Comp, "set_difference_of_comp");
+  MINI_STL_DBUEG_ORDER_COMP(_First1, _Last1, _Comp, "invalid order in set_difference_of_comp");
+  MINI_STL_DBUEG_ORDER_COMP(_First2, _Last2, _Comp, "invalid order in set_difference_of_comp");
+  while (_First1!=_Last1 && _First2!=_Last2) {
+    if (_Comp(*_First1, *_First2)) {
+      *_Result = *_First1;
+      ++_First1;
+    } else if (_Comp(*_First2, *_First1)) {
+      ++_First2;
+    } else {
+      ++_First1;
+      ++_First2;
+    }
+  }
+  return _MY_STL::copy(_First1, _Last, _Result);
+}
+
+
+template<class InputIterator1, class InputIterator2, class OutputIterator>
+OutputIterator
+set_union(InputIterator1 _First1, InputIterator1 _Last1,
+          InputIterator2 _First2, InputIterator2 _Last2,
+          OutputIterator _Result)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "set_union");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First2, _Last2, "set_union");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First1, _Last1), "set_union");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First2, _Last2), "set_union");
+  MINI_STL_DEBUG_ORDER(_First1, _Last1, "invalid order in set_union");
+  MINI_STL_DEBUG_ORDER(_First2, _Last2, "invalid order in set_union");
+  while (_First1!=_Last1 && _First2!=_Last2) {
+    if (*_First1 < *_First2) {
+      *_Result++ = *_First1;
+      ++_First1;
+    } else if (*_First2 < *_First1) {
+      *_Result++ = *_First2;
+      ++_First2;
+    } else {
+      *_Result++ = *_First1;
+      ++_First1;
+      ++_First2;
+    }
+  }
+  _Result = _MY_STL::copy(_First1, _Last1, _Result);
+  return _MY_STL::copy(_First2, _Last2, _Result);
+}
+
+template<class InputIterator1, class InputIterator2, class OutputIterator, class BinaryPredicate>
+OutputIterator
+set_union(InputIterator1 _First1, InputIterator1 _Last1,
+          InputIterator2 _First2, InputIterator2 _Last2,
+          OutputIterator _Result,
+          BinaryPredicate _Comp)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "set_union_of_comp");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First2, _Last2, "set_union_of_comp");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First1, _Last1), "set_union_of_comp");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Result, DISTANCE(_First2, _Last2), "set_union_of_comp");
+  MINI_STL_DEBUG_POINTER(_Comp, "set_union_of_comp");
+  MINI_STL_DBUEG_ORDER_COMP(_First1, _Last1, _Comp, "invalid order in set_union_of_comp");
+  MINI_STL_DBUEG_ORDER_COMP(_First2, _Last2, _Comp, "invalid order in set_union_of_comp");
+  while (_First1!=_Last1 && _First2!=_Last2) {
+    if (_Comp(*_First1, *_First2)) {
+      *_Result++ = *_First1;
+      ++_First1;
+    } else if (_Comp(*_First2, *_First1)) {
+      *_Result++ = *_First2;
+      ++_First2;
+    } else {
+      *_Result++ = *_First1;
+      ++_First1;
+      ++_First2;
+    }
+  }
+  _Result = _MY_STL::copy(_First1, _Last1, _Result);
+  return _MY_STL::copy(_First2, _Last2, _Result);
+}
+
+template<class BidirectionalIterator, class Type>
+void
+_insert_sort_aux(BidirectionalIterator _First,
+                 BidirectionalIterator _Last,
+                 Type*)
+{
+#ifdef MINI_STL_RVALUE_REFS
+  if (_First != _Last) {
+    for (BidirectionalIterator next = _First;
+         ++next != _Last; ) {
+      BidirectionalIterator next1 = next;
+      Type val = _MY_STL::move(*next);
+      if (*next < *_First) {
+        _MY_STL::copy_backward(_First, next, ++next1);
+        *_First = _MY_STL::move(val);
+      } else {
+        for (BidirectionalIterator prev = next1;
+             val <*--prev; next1 = prev)
+          *next1 = _MY_STL::move(*prev);
+        *next1 = _MY_STL::move(val);
+      }
+    }
+  }
+#else
+  if (_First != _Last) {
+    for (BidirectionalIterator next = _First;
+         ++next != _Last; ) {
+      BidirectionalIterator next1 = next;
+      Type val = *next;
+      if (*next < *_First) {
+        _MY_STL::copy_backward(_First, next, ++next1);
+        *_First = val;
+      } else {
+        for (BidirectionalIterator prev = next1;
+             val <*--prev; next1 = prev)
+          *next1 = *prev;
+        *next1 = val;
+      }
+    }
+  }
+#endif
+}
+
+template<class BidirectionalIterator>
+inline void
+_insert_sort(BidirectionalIterator _First,
+             BidirectionalIterator _Last)
+{
+  _insert_sort_aux(_First, _Last, VALUE_TYPE(_First));
+}
+
+template<class RandomAccessIterator>
+void inline
+_Med3(RandomAccessIterator _First,
+      RandomAccessIterator _Middle,
+      RandomAccessIterator _Last)
+{
+  if (*_Middle < *_First)
+    _MY_STL::iter_swap(_Middle, _First);
+  if (*_Last < *_Middle) {
+    _MY_STL::iter_swap(_Middle, _Last);
+    if (*_Middle < *_First)
+      _MY_STL::iter_swap(_Middle, _First);
+  }
+}
+
+template<class RandomAccessIterator>
+_MY_STL::pair<RandomAccessIterator, RandomAccessIterator>
+_partition(RandomAccessIterator _First,
+           RandomAccessIterator _Last)
+{
+
+  RandomAccessIterator middle = _First + (_Last - _First) / 2;
+  _Med3(_First, middle, _Last-1);
+  RandomAccessIterator pFirst = middle;
+  RandomAccessIterator pLast = middle + 1;
+  //return pair first = pFirst, return pair second = plast
+
+  while (_First < pFirst
+         &&!(*pFirst < *(pFirst-1))
+         &&!(*(pFirst-1) < *pFirst))
+    --pFirst;
+
+  while (pLast < _Last
+         &&!(*pFirst < *pLast)
+         &&!(*pLast < *pFirst))
+    ++pLast;
+  //[pFirst,pLast) has same elem
+cout << "pFirst:" <<*pFirst<< " pLast:" << *pLast  << endl;
+cout << "PF - F:" << pFirst - _First << "  PL - F:" <<pLast - _First << endl;
+  RandomAccessIterator lFirst = pLast;
+  RandomAccessIterator lLast = pFirst;
+  //loop first, loop last
+
+  for (;;) {
+    for (; lFirst < _Last; ++lFirst)
+      if (*pFirst < *lFirst)
+        ;
+      else if (*lFirst < *pFirst)
+        break;
+      else
+        _MY_STL::iter_swap(pLast++, lFirst);
+
+    for (; _First < lLast; --lLast)
+      if (*(lLast-1) < *pFirst)
+        ;
+      else if (*pFirst < *(lLast-1))
+        break;
+      else
+        _MY_STL::iter_swap(--pFirst, lLast-1);
+
+    if (lFirst==_Last && _First==lLast)
+      return pair<RandomAccessIterator,RandomAccessIterator>
+          (pFirst, pLast);
+    if (_First == lLast) {
+      if (pLast != lFirst)
+        _MY_STL::iter_swap(pFirst, pLast);
+      ++pLast;
+      _MY_STL::iter_swap(pFirst++, lFirst++);
+    } else if (lFirst == _Last) {
+      if (--lLast != --pFirst)
+        _MY_STL::iter_swap(lLast, pFirst);
+      _MY_STL::iter_swap(pFirst, --pLast);
+    } else
+      _MY_STL::iter_swap(lFirst++, lLast--);
+  }
+}
+
+template<class RandomAccessIterator, class Distance>
+inline void
+_sort_aux(RandomAccessIterator _First,
+          RandomAccessIterator _Last,
+          Distance*)
+{
+
+}
+
+template<class RandomAccessIterator>
+inline void
+sort(RandomAccessIterator _First,
+     RandomAccessIterator _Last)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "sort");
+
+}
+
+template<class RandomAccessIterator, class BinaryPredicate>
+inline void
+_Med3(RandomAccessIterator _First,
+      RandomAccessIterator _Middle,
+      RandomAccessIterator _Last,
+      BinaryPredicate _Comp)
+{
+  if (_Comp(*_Middle,*_First))
+    _MY_STL::iter_swap(_Middle, _First);
+  if (_Comp(*_Last, *_Middle)) {
+    _MY_STL::iter_swap(_Middle, _Last);
+    if (_Comp(*_Middle, *_First))
+      _MY_STL::iter_swap(_Middle, _First);
+  }
+}
+
+template<class RandomAccessIterator, class BinaryPredicate>
+inline void
+sort(RandomAccessIterator _First,
+     RandomAccessIterator _Last,
+     BinaryPredicate _Comp)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "sort_of_comp");
+  MINI_STL_DEBUG_POINTER(_Comp, "sort_of_comp");
 }
 
 MINI_STL_END
