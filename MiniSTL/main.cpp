@@ -42,50 +42,126 @@ using namespace std;
 #include "mini_stl_algorithm.h"
 #include <exception>
 #include <time.h>
+#include "Windows.h"
+#include <cmath>
+#include <vector>
 #include "mini_stl_function.h"
 //#define TEST_LIB
 void TT(int msg,int m1, int m2) {cout << "TT" << msg<<endl;}
 #define TESTBBB(msg, m1, m2) TT(msg, m1, m2)
 class A{};
-bool twice (int elem1)
+bool twice (int elem1,int e2)
 {
-  return elem1== 5;
+  return elem1 < e2;
 }
 
-bool pa(int a,int b)
+int pa(const void* a,const void* b)
 {
-  return a<b;
+  return *(int*)a<*(int*)b;
+}
+
+bool mod_lesser ( int elem1, int elem2 ) {
+   if (elem1 < 0)
+      elem1 = - elem1;
+   if (elem2 < 0)
+      elem2 = - elem2;
+   return elem1 < elem2;
 }
 
 int main()
 {
-  int u1[5] = {1,1,2,2,3,};
-  int u2[6] = {1,2,4,4,4,6};
+  //cout << _MY_STL::__lg(8) << endl;
+  int u1[10] = {1,1,1,1,2,2,4,5,6,7};
+  int u3[10];
+  int u2[6] = {72,6,0,4,3,9};
   int result[20];
   int result1[20];
-  int SO[10] = {3,15,20,20,20,20,20,10,5,22};
+  char SO[1000000];
+  int M1[10];
+  int M2[10];
+  int M3[10];
+  int RE[50];
+  //int SO1[200000];
+  int off;
+  try {
+  for (int loop=0;loop!=1000;++loop) {
+  for (int i=0;i!=10;++i)
+    M3[i]=M2[i] = M1[i] = i;//rand()%100;
+  off = rand()%10;
+  std::rotate(M1,M1+off,M1+10);
+  _MY_STL::rotate(M2,M2+off,M2+10);
+    if (_MY_STL::equal(M1,M1+10,M2)==false)
+      MINI_STL_THROW_RANGE_ERROR("cuowu");
+    }
+  }
+  catch(std::exception& e)
+  {
+    cout << "yichang:" << e.what() << endl;
+    cout << "offset:" << off << endl;
+    cout << "M3:" << endl;
+    for (auto ii : M3)
+      cout << ii << " ";
+    cout << endl;
+    cout << "MI:" << endl;
+    for (auto ii : M1)
+      cout << ii << " ";
+    cout << endl;
+    cout << "M2:" << endl;
+    for (auto ii : M2)
+      cout << ii << " ";
+    cout << endl;
+  }
+
+  //auto r = _MY_STL::partition_point(M1,M1+20,twice);
+  //if (r!=u2+6)
+  //cout << *r << endl;
+  //else
+    //cout <<"NO" <<  endl;
+
+  //cout << *PR.first << "  " <<*PR.second << endl;
       //{3,15,20,21,16,20,16,10,5,22};
-  //srand(time(NULL));
-  //for (int cishu=0;cishu!=1000;++cishu) {
-        int index=0;
-  //for (int i=1;i!=11;++i,++index)
-    //SO[index] = rand()%30;
-  //for (auto ci : SO)
-    //cout << ci <<" ";
-  cout << "\n\n\n\n" << endl;
-    auto bb = _MY_STL::_partition(SO,SO+10);
-    //MINI_STL_DEBUG_RANGE_OF_ITERATOR(SO,SO+10,"mm");
-    //MINI_STL_DEBUG_ORDER(SO,SO+50,"TEST");
-    cout << "UPP:" << *bb.first <<"  "<< *bb.second << endl;
-    cout << "pari f - F:" << bb.first - SO << " pair.second - F:" << bb.second - SO<< endl;
-    for (auto ci : SO)
-      cout << ci <<" ";
+  /*srand(time(NULL));
+  try {
+  for (size_t cishu=0;cishu!=100000;++cishu) {
+    for (size_t i=0;i!=20;++i) {
+      M1[i] = rand()%5000;
+      //SO1[i] =  SO[i];
+      }
+    for (size_t i=0;i!=30;++i) {
+      M2[i] = rand()%5000;
+      //SO1[i] =  SO[i];
+      }
+    _MY_STL::sort(M1,M1+20,mod_lesser);
+    _MY_STL::sort(M2,M2+30,mod_lesser);
+    MINI_STL_DEBUG_ORDER_COMP(M1,M1+20,mod_lesser,"m1");
+    MINI_STL_DEBUG_ORDER_COMP(M2,M2+30,mod_lesser,"m2");
+    _MY_STL::merge(M1,M1+20,M2,M2+30,RE,mod_lesser);
+    MINI_STL_DEBUG_ORDER_COMP(RE,RE+50,mod_lesser,"RE");
+  //cout << "\n\n\n\n" << endl;
+    //t1 = GetTickCount();
+    //std::sort(SO,SO+1000000,twice);
+    //qsort(SO,1000000,sizeof(char),pa);
+    //cout << "my_stl:" << GetTickCount() - t1<< endl;
+    //t2 = GetTickCount();
+    //std::sort(SO1,SO1+200000);
+    //cout << "pj_stl:" << GetTickCount() - t2 << endl;
+    //auto pa = _MY_STL::sort(SO,SO+10);
+    //cout << *pa.first << "  " << *pa.second << endl;
+   //for (auto t : SO)
+     // cout << t << " ";
+    //cout << endl;
+   //MINI_STL_DEBUG_ORDER_COMP(SO,SO+1000000,twice,"TEST");
+    //}
+
+  }
+  }*/
+
 
   /*catch (std::exception& e) {
     cout << "exception:";
     cout << e.what() << endl;
   }*/
-
+  cout << "test end" << endl;
   int A[]={1,//28
            2,2,
            3,3,3,
@@ -99,6 +175,7 @@ int main()
   int C1[9] = {1,2,3,4,9,8,2,5,4};
 
   cout << endl;
+  getchar();
   //auto ff = _MY_STL::find_if_not(A,A+6,twice,twice);
   //cout << "FF:" << *ff << endl;
   /*for (int i=0;i!=3;++i)
@@ -283,16 +360,65 @@ void aaa(size_t x,int a)
 {
   cout << "222222222" << endl;
 }
+#include "memory.h"
 #include <stdio.h>
+using namespace Mini_STL;
 int i=1;
+template<class _Ty1,
+	class _Ty2> inline
+	void _Construct(_Ty1 *_Ptr, _Ty2&& _Val)
+	{	// construct object at _Ptr with value _Val
+	void *_Vptr = _Ptr;
+	::new (_Vptr) _Ty1(_MY_STL::move(_Val));
+	}
+
+class TC
+{
+public:
+  TC() { cout <<"TC()" << endl;}
+  TC(const TC& r)
+  {
+    cout << "TC(const TC& r)" << endl;
+  }
+
+  TC(TC&& r)
+  {
+    cout << "TC(TC&& r)" << endl;
+  }
+
+  TC& operator=(const TC& r)
+  {
+    cout << "operator=(const TC& r)" << endl;
+    return *this;
+  }
+
+  TC& operator=(TC&& r)
+  {
+    cout << "operator=(const TC&& r)" << endl;
+    return *this;
+  }
+private:
+  int a,b,c;
+};
+
+
+
+
 int main()
 {
-  int a[]={6,7,8,9,10};
-  int *p = a;
-  ++p;
-  printf("%d,%d",*p,*++p);
-  cout << "\n" << sizeof(int) << endl;
-}/*rb_tree<int,int,identity<int>,less<int> > tree;
+  TC A[9] ;//= {0,1,2,3,4,5,6,7,8};
+  auto a = ::copy_backward(A+2, A+7,A+9);
+ // for (auto i : A)
+   // cout << i << ' ';
+  cout << a - A << endl;
+  cout << endl;
+}/* TC A;
+  typedef _MY_STL::simpleAlloc<TC,_MY_STL::default_allocator> myAlloc;
+  cout << "test begin--------------" << endl;
+   TC* ptr = myAlloc::allocate(1);
+   _Construct(ptr, _MY_STL::move(A));
+   cout << "test endl--------------" << endl;
+rb_tree<int,int,identity<int>,less<int> > tree;
   int A[] = {10,7,8,15,5,6,11,13,12};//1,2,3,9,8,7,6,4,5,10,22,22,22,1};
   cout << "main" << endl;
   tree.insert_equal(A,A+sizeof(A)/sizeof(int));//4);

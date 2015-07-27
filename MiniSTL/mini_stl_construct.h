@@ -9,15 +9,21 @@ MINI_STL_BEGIN
 template <class T1, class T2>
 inline void construct(T1* p, const T2& value)
 {
-  new (p)T1(value);
+  ::new (p)T1(value);
 }
 
 template <class T>
 inline void construct(T* p)
 {
-  new (p) T();
+  ::new (p) T();
 }
 
+template <class Type1, class Type2>
+inline void construct(Type1* p, Type2&& _Val)
+{
+  cout << "move C" << endl;
+  ::new (p) _MY_STL::move(_Val);
+}
 //true_type的destroy版本调用析构函数
 template <class T>
 inline void destroy(T* pointer)

@@ -443,6 +443,7 @@ __copy(RandomAccessIter first, RandomAccessIter last,
 {
   return __copy_d(first, last, result, DISTANCE_TYPE(first));
 }
+
 template <class InputIter, class OutputIter>
 struct __copy_dispatch
 {
@@ -502,31 +503,74 @@ inline wchar_t* copy(const wchar_t *_First, const wchar_t *_Last, wchar_t *_Resu
 
 /************************copy_backward__begin**************************/
 
-template <class BidirectionalIter1, class BidirectionalIter2>
-inline BidirectionalIter2 copy_backward(BidirectionalIter1 _First,
-                                        BidirectionalIter1 _Last,
-                                        BidirectionalIter2 _Result)
+template<class BidirectionalIterator1, class BidirectionalIterator2>
+inline BidirectionalIterator2
+_copy_backward_impl(BidirectionalIterator1 _First,
+                    BidirectionalIterator1 _Last,
+                    BidirectionalIterator2 _DestEnd,
+                    __true_type,
+                    bidirectional_iterator_tag,
+                    bidirectional_iterator_tag)
 {
-  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "copy_backward");
-  MINI_STL_DEBUG_POINTER(_Result, "copy_backward");
-
   while (_First != _Last)
-    *--_Result = *--_Last;
-  return _Result;
+    *--_DestEnd = *--_Last;
+  return _DestEnd;
 }
 
-template <class RandomAccessIter, class BidirectionalIter, class Distance>
-inline BidirectionalIter copy_backward(RandomAccessIter _First,
-                                       RandomAccessIter _Last,
-                                       BidirectionalIter _Result,
-                                       Distance*)
+template<class BidirectionalIterator1, class BidirectionalIterator2>
+inline BidirectionalIterator2
+_copy_backward_impl(BidirectionalIterator1 _First,
+                    BidirectionalIterator1 _Last,
+                    BidirectionalIterator2 _DestEnd,
+                    __false_type,
+                    bidirectional_iterator_tag,
+                    bidirectional_iterator_tag)
+{
+  while (_First != _Last)
+    *--_DestEnd = *--_Last;
+  return _DestEnd;
+}
+
+template<class BidirectionalIterator1, class BidirectionalIterator2>
+inline BidirectionalIterator2
+_copy_backward_impl(BidirectionalIterator1 _First,
+                    BidirectionalIterator1 _Last,
+                    BidirectionalIterator2 _DestEnd,
+                    __true_type,
+                    native_pointer_iterator_tag,
+                    native_pointer_iterator_tag)
+{
+  ptrdiff_t count = _Last - _First;
+  memmove(_DestEnd-count, _First, count*sizeof(*_First));
+  return _DestEnd - count;
+}
+
+template<class BidirectionalIterator1, class BidirectionalIterator2,
+         class Type>
+inline BidirectionalIterator2
+_copy_backward_dispatch(BidirectionalIterator1 _First,
+                        BidirectionalIterator1 _Last,
+                        BidirectionalIterator2 _DestEnd,
+                        Type*)
+{
+  return _copy_backward_impl(_First, _Last,
+                             _DestEnd,
+                             _type_traits<Type>::has_trivial_assignment_operator(),
+                             ITERATOR_CATEGORY(_First),
+                             ITERATOR_CATEGORY(_DestEnd));
+}
+
+template<class BidirectionalIterator1, class BidirectionalIterator2>
+inline BidirectionalIterator2
+copy_backward(BidirectionalIterator1 _First,
+              BidirectionalIterator1 _Last,
+              BidirectionalIterator2 _DestEnd)
 {
   MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "copy_backward");
-  MINI_STL_DEBUG_POINTER(_Result, "copy_backward");
-
-  for (Distance n = _Last - _First; n > 0; --n)
-    *--_Result = *--_Last;
-  return _Result;
+  MINI_STL_DEBUG_POINTER_FOR_N(_DestEnd, DISTANCE(_First, _Last), "copy_backward");
+  return _copy_backward_dispatch(_First, _Last,
+                                 _DestEnd,
+                                 VALUE_TYPE(_First));
 }
 /************************copy_backward__end**************************/
 
@@ -769,14 +813,6 @@ void make_heap_aux(RandomAccessIterator first,
   }
 }
 
-
 /************************heap_end**********************************/
-
-
-
-
-
-
-
 MINI_STL_END
 #endif // MINI_STL_ALGOBASE_H

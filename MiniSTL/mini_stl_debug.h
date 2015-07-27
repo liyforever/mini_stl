@@ -126,7 +126,7 @@ MINI_STL_END
     Mini_STL::mini_stl_debug_less(_Left, _Right, _Msg)
   #define MINI_STL_DEBUG_ORDER(_First, _Last, _Msg) \
     Mini_STL::mini_stl_debug_order(_First, _Last, _Msg);
-  #define MINI_STL_DBUEG_ORDER_COMP(_First, _Last, _Comp, _Msg) \
+  #define MINI_STL_DEBUG_ORDER_COMP(_First, _Last, _Comp, _Msg) \
     Mini_STL::mini_stl_debug_order_comp(_First, _Last, _Comp, _Msg)
 #else
   #define MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, _Msg)
@@ -137,7 +137,7 @@ MINI_STL_END
   #define MINI_STL_DEBUG_LESS(_Left, _Right, _Msg) \
     ((_Left) < (_Right))
   #define MINI_STL_DEBUG_ORDER(_First, _Last, _Msg)
-  #define MINI_STL_DBUEG_ORDER_COMP(_First, _Last, _Comp, _Msg)
+  #define MINI_STL_DEBUG_ORDER_COMP(_First, _Last, _Comp, _Msg)
 #endif
 
 //

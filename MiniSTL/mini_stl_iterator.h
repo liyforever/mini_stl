@@ -10,7 +10,7 @@ struct output_iterator_tag {};
 struct forward_iterator_tag : public input_iterator_tag {};
 struct bidirectional_iterator_tag : public forward_iterator_tag {};
 struct random_access_iterator_tag : public bidirectional_iterator_tag {};
-
+struct native_pointer_iterator_tag : public random_access_iterator_tag {};
 
 template <class Category, class Type, class Distance = ptrdiff_t,
           class Pointer = Type*, class Reference = Type&>
@@ -39,7 +39,8 @@ struct iterator_traits
 template <class Type>
 struct iterator_traits<Type*>
 {
-  typedef random_access_iterator_tag iterator_category;
+  //typedef random_access_iterator_tag iterator_category;
+  typedef native_pointer_iterator_tag iterator_category;
   typedef Type                       value_type;
   typedef ptrdiff_t                  difference_type;
   typedef Type*                      pointer;
@@ -49,7 +50,8 @@ struct iterator_traits<Type*>
 template <class Type>
 struct iterator_traits<const Type*>
 {
-  typedef random_access_iterator_tag iterator_category;
+  //typedef random_access_iterator_tag iterator_category;
+  typedef native_pointer_iterator_tag iterator_category;
   typedef Type                       value_type;
   typedef ptrdiff_t                  difference_type;
   typedef const Type*                pointer;
