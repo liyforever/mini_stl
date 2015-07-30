@@ -1,16 +1,12 @@
 #ifndef MINI_STL_DEQUE_H
 #define MINI_STL_DEQUE_H
-#include "memory.h"
-#ifdef MINI_STL_DEBUG
-#include <iostream>
-using std::cerr;
-using std::endl;
-#endif
+#include "mini_stl_memory.h"
+
 MINI_STL_BEGIN
 
-inline size_t __deque_buf_size(size_t n, size_t sz)
+inline size_t __deque_buf_size(size_t _Num, size_t _Size)
 {
-  return n != 0? n : (sz < 512 ? size_t(512 / sz) : size_t(1));
+  return _Num != 0 ? _Num : (_Size < 512 ? size_t(512 / _Size) : size_t(1));
 }
 
 template <class Type, class Ref, class Ptr, size_t BuffSize>
@@ -27,23 +23,33 @@ struct DequeIterator
   typedef Type**              map_pointer;
   typedef DequeIterator       Self;
 
-  DequeIterator():
-      cur(0),first(0),last(0),map_node(0) {}
+  DequeIterator()
+    : cur(0),first(0),
+      last(0),map_node(0)
+  {}
 
-  DequeIterator(pointer x, map_pointer map_ptr)
+  DequeIterator(pointer _Ptr, map_pointer _Map_ptr)
   {
-    cur = x;
-    first = *map_ptr;
-    last = *map_ptr + buffer_size();
-    map_node = map_ptr;
+    this->cur = _Ptr;
+    this->first = *_Map_ptr;
+    this-> last = *_Map_ptr + buffer_size();
+    this->map_node = _Map_ptr;
   }
 
-  DequeIterator(const iterator& x)
+  DequeIterator(const iterator& _Right)
   {
-    cur = x.cur;
-    first = x.first;
-    last = x.last;
-    map_node = x.map_node;
+    this->cur = _Right.cur;
+    this->first = _Right.first;
+    this->last = _Right.last;
+    this->map_node = _Right.map_node;
+  }
+
+  void reset()
+  {
+    this->cur = 0;
+    this->first = 0;
+    this->last = 0;
+    this->map_node = 0;
   }
 
   static size_t buffer_size()
@@ -51,11 +57,11 @@ struct DequeIterator
     return __deque_buf_size(BuffSize, sizeof(Type));
   }
 
-  void set_node(map_pointer new_node)
+  void set_node(map_pointer _New_node)
   {
-    map_node = new_node;
-    first = *new_node;
-    last = *new_node + buffer_size();
+    this->map_node = _New_node;
+    this->first = *_New_node;
+    this->last = *_New_node + buffer_size();
   }
 
   reference operator*() const
@@ -65,13 +71,15 @@ struct DequeIterator
 
   pointer operator->() const
   {
-    return cur;
+    return &*cur;
   }
 
-  difference_type operator-(const Self& x) const
+  difference_type operator-(const Self& _Right) const
   {
-    return difference_type(buffer_size()) * (map_node - x.map_node - 1)
-                           + (cur - first) + (x.last - x.cur);
+    if (!map_node)
+      return 0;
+    return difference_type(buffer_size()) * (map_node - _Right.map_node - 1)
+                           + (cur - first) + (_Right.last - _Right.cur);
   }
 
   Self& operator++()
@@ -108,13 +116,13 @@ struct DequeIterator
     return tmp;
   }
 
-  Self& operator+=(difference_type n)
+  Self& operator+=(difference_type _Num)
   {
-    //需要移动的距离
-    difference_type offset = n + (cur - first);
-    //如果移动范围在本缓冲区
-    if(offset>=0 && offset<difference_type(buffer_size())) {
-      cur += n;
+    difference_type offset = _Num + (cur - first);
+
+    if (offset>=0 && offset<difference_type(buffer_size())) {
+        //offset on buffer
+      cur += _Num;
     } else {
         difference_type map_node_offset =
             offset > 0 ? offset / difference_type(buffer_size())
@@ -125,47 +133,47 @@ struct DequeIterator
     return *this;
   }
 
-  Self operator+(difference_type n) const
+  Self operator+(difference_type _Num) const
   {
     Self tmp = *this;
-    return tmp += n;
+    return tmp += _Num;
   }
 
-  Self& operator-=(difference_type n)
+  Self& operator-=(difference_type _Num)
   {
-    return *this += -n;
+    return *this += -_Num;
   }
 
-  Self operator-(difference_type n) const
+  Self operator-(difference_type _Num) const
   {
     Self tmp = *this;
-    return tmp -= n;
+    return tmp -= _Num;
   }
 
-  reference operator[](difference_type pos) const
+  reference operator[](difference_type _Pos) const
   {
-    return *(*this + pos);
+    return *(*this + _Pos);
   }
 
-  bool operator==(const Self& x) const
+  bool operator==(const Self& _Right) const
   {
-    return cur == x.cur;
+    return cur == _Right.cur;
   }
 
-  bool operator!=(const Self& x) const
+  bool operator!=(const Self& _Right) const
   {
-    return cur != x.cur;
+    return cur != _Right.cur;
   }
 
-  bool operator<(const Self& x) const
+  bool operator<(const Self& _Right) const
   {
-    return (map_node == x.map_node) ?
-          (cur < x.cur) : (map_node < x.map_node);
+    return (map_node == _Right.map_node) ?
+          (cur < _Right.cur) : (map_node < _Right.map_node);
   }
 
-  bool operator>(const Self& x) const
+  bool operator>(const Self& _Right) const
   {
-    return x < *this;
+    return _Right < *this;
   }
 
   pointer cur;
@@ -174,7 +182,9 @@ struct DequeIterator
   map_pointer map_node;
 };
 
-template <class Type, class Alloc = default_allocator, size_t BuffSize = 0>
+template <class Type,
+          class Alloc = _MY_STL::default_allocator,
+          size_t BuffSize = 0>
 class deque
 {
 public:
@@ -194,67 +204,101 @@ protected:
   typedef Type**    map_pointer;
   typedef simpleAlloc<value_type,Alloc> data_allocator_;
   typedef simpleAlloc<pointer,Alloc> map_allocator_;
-  iterator firstIter_;
-  iterator lastIter_;
-  map_pointer map_;
-  size_type map_size_;
+  iterator MyfirstIter_;
+  iterator MylastIter_;
+  map_pointer Mymap_;
+  size_type Mymap_size_;
   enum {k_init_map_size = 8,
         k_add_map_node = 1};
 public:
-  explicit deque(const allocator_type&/*Al*/=allocator_type()) :
-    firstIter_(),lastIter_(),map_(0),map_size_(0)
+  deque(const allocator_type&/*Al*/=allocator_type()) :
+    MyfirstIter_(),MylastIter_(),Mymap_(0),Mymap_size_(0)
   {
     _init_map(0);
   }
 
-  explicit deque(size_type n) :
-    firstIter_(),lastIter_(),map_(0),map_size_(0)
+  explicit deque(size_type _Count) :
+    MyfirstIter_(),MylastIter_(),Mymap_(0),Mymap_size_(0)
   {
-    _fill_init_aux(n, Type());
+    _fill_init_aux(_Count, Type());
   }
 
-  deque(size_type n, const Type& val,
+  deque(size_type _Count, const Type& _Val,
         const allocator_type&/*Al*/=allocator_type()) :
-    firstIter_(),lastIter_(),map_(0),map_size_(0)
+    MyfirstIter_(),MylastIter_(),Mymap_(0),Mymap_size_(0)
   {
-    _fill_init_aux(n, val);
+    _fill_init_aux(_Count, _Val);
   }
 
-  deque(const deque& rhs)
+  deque(const deque& _Right)
   {
-    size_type n = rhs.size();
+    size_type n = _Right.size();
     _init_map(n);
-    copy(rhs.begin(), rhs.end(), begin());
+    _MY_STL::uninitialized_copy(_Right.begin(), _Right.end(), begin());
   }
 
   template<class InputIterator>
-  deque(InputIterator first,
-        InputIterator last,
+  deque(InputIterator _First,
+        InputIterator _Last,
         const allocator_type&/*Al*/=allocator_type(),
         typename is_iterator<InputIterator>::ID = Identity())
   {
-    difference_type n = DISTANCE(first, last);
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "deque deque()");
+    difference_type n = DISTANCE(_First, _Last);
     _init_map(n);
-    copy(first, last, begin());
+    _MY_STL::uninitialized_copy(_First, _Last, begin());
   }
 
 #ifdef MINI_STL_RVALUE_REFS
-  deque(deque&& rhs)
+  deque(deque&& _Right)
   {
-    firstIter_ = rhs.firstIter_;
-    lastIter_ = rhs.lastIter_;
-    map_size_ = rhs.map_size_;
-    map_ = rhs.map_;
-    rhs.map_ = 0;
+    MyfirstIter_ = _Right.MyfirstIter_;
+    MylastIter_ = _Right.MylastIter_;
+    Mymap_size_ = _Right.Mymap_size_;
+    Mymap_ = _Right.Mymap_;
+    _Right.MyfirstIter_.reset();
+    _Right.MylastIter_.reset();
+    _Right.Mymap_ = 0;
   }
+
+  deque& operator=(deque&& _Right)
+  {
+    if (this != &_Right) {
+      _MY_STL::swap(this->MyfirstIter_, _Right.MyfirstIter_);
+      _MY_STL::swap(this->MylastIter_, _Right.MylastIter_);
+      _MY_STL::swap(this->Mymap_, _Right.Mymap_);
+      _MY_STL::swap(this->Mymap_, _Right.Mymap_);
+    }
+    return *this;
+  }
+
 #endif //MINI_STL_RVALUE_REFS
+  deque& operator=(const deque& _Right)
+  {
+    if (this !=& _Right) {
+      if (size() >= _Right.size()) {
+        clear();
+        MylastIter_ = _MY_STL::copy(_Right.begin(),
+                                    _Right.end(),
+                                    begin());
+      } else {
+        _destroy_node(MyfirstIter_.map_node, MylastIter_.map_node);
+        _deallocate_map(Mymap_, Mymap_size_);
+        _init_map(_Right.size());
+        _MY_STL::uninitialized_copy(_Right.begin(),
+                                    _Right.end(),
+                                    begin());
+      }
+    }
+    return *this;
+  }
 
   ~deque()
   {
-    if(map_)
+    if(Mymap_)
     {
-      _destroy_node(firstIter_.map_node, lastIter_.map_node);
-      _deallocate_map(map_, map_size_);
+      _destroy_node(MyfirstIter_.map_node, MylastIter_.map_node);
+      _deallocate_map(Mymap_, Mymap_size_);
     }
   }
 
@@ -266,12 +310,12 @@ public:
 
   iterator begin()
   {
-    return firstIter_;
+    return MyfirstIter_;
   }
 
   const_iterator begin() const
   {
-    return firstIter_;
+    return MyfirstIter_;
   }
 
   reverse_iterator rbegin()
@@ -286,12 +330,12 @@ public:
 
   iterator end()
   {
-    return lastIter_;
+    return MylastIter_;
   }
 
   const_iterator end() const
   {
-    return lastIter_;
+    return MylastIter_;
   }
 
   reverse_iterator rend()
@@ -306,7 +350,7 @@ public:
 
   const_iterator cbegin() const
   {
-    return firstIter_;
+    return MyfirstIter_;
   }
 
   const_reverse_iterator crbegin() const
@@ -316,7 +360,7 @@ public:
 
   const_iterator cend() const
   {
-    return lastIter_;
+    return MylastIter_;
   }
 
   const_reverse_iterator crend() const
@@ -326,66 +370,50 @@ public:
 
   reference front()
   {
-#ifdef MINI_STL_DEBUG
-  _check_range();
-#endif
-    return *firstIter_;
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(), "deque front");
+    return *MyfirstIter_;
   }
 
   const_reference front() const
   {
-#ifdef MINI_STL_DEBUG
-  _check_range();
-#endif
-    return *firstIter_;
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(), "deque front");
+    return *MyfirstIter_;
   }
 
   reference back()
   {
-#ifdef MINI_STL_DEBUG
-  _check_range();
-#endif
-    return *(lastIter_ - 1);
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(), "deque back");
+    return *(MylastIter_ - 1);
   }
 
   const_reference back() const
   {
-#ifdef MINI_STL_DEBUG
-  _check_range();
-#endif
-    return *(lastIter_ - 1);
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(), "deque back");
+    return *(MylastIter_ - 1);
   }
 
-  reference operator[](size_type pos)
+  reference operator[](size_type _Pos)
   {
-#ifdef MINI_STL_DEBUG
-  _check_range(pos);
-#endif
-    return firstIter_[difference_type(pos)];
+    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos, "deque operator[]");
+    return MyfirstIter_[difference_type(_Pos)];
   }
 
-  const_reference operator [](size_type pos) const
+  const_reference operator [](size_type _Pos) const
   {
-#ifdef MINI_STL_DEBUG
-  _check_range(pos);
-#endif
-    return firstIter_[difference_type(pos)];
+    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos, "deque operator[]");
+    return MyfirstIter_[difference_type(_Pos)];
   }
 
-  reference at(size_type pos)
+  reference at(size_type _Pos)
   {
-#ifdef MINI_STL_DEBUG
-  _check_range(pos);
-#endif
-    return firstIter_[difference_type(pos)];
+    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos, "deque at");
+    return MyfirstIter_[difference_type(_Pos)];
   }
 
-  const_reference at(size_type pos) const
+  const_reference at(size_type _Pos) const
   {
-#ifdef MINI_STL_DEBUG
-  _check_range(pos);
-#endif
-    return firstIter_[difference_type(pos)];
+    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos, "deque at");
+    return MyfirstIter_[difference_type(_Pos)];
   }
 
   size_type max_size() const
@@ -395,323 +423,256 @@ public:
 
   size_type size() const
   {
-    return lastIter_ - firstIter_;
+    return MylastIter_ - MyfirstIter_;
   }
 
   bool empty() const
   {
-    return lastIter_ == firstIter_;
+    return MylastIter_ == MyfirstIter_;
   }
 
-  void push_back(const value_type& val);
+  void push_back(const value_type& _Val);
 
-  void push_front(const value_type& val);
-
+  void push_front(const value_type& _Val);
+#ifdef MINI_STL_RVALUE_REFS
+  void push_back(value_type&& _Val);
+  void push_front(value_type&& _Val);
+#endif
   void pop_back();
 
   void pop_front();
 
-  iterator insert(iterator position, const value_type& val);
-
-  void insert(
-     iterator position,
-     size_type count,
-     const value_type& val
-  )
+  iterator insert(iterator _Position, const value_type& _Val);
+#ifdef MINI_STL_RVALUE_REFS
+  iterator insert(iterator _Position, value_type&& _Val);
+#endif
+  void insert(iterator _Position, size_type _Count,
+              const value_type& _Val)
   {
-    _insert_fill_aux(position, count, val);
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->begin(), _Position, "deque insert");
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Position, this->end(), "deque insert");
+    _insert_fill_aux(_Position, _Count, _Val);
   }
 
   template<class InputIterator>
-     void insert(
-        iterator position,
-        InputIterator first,
-        InputIterator last,
-        typename is_iterator<InputIterator>::ID = Identity()
-     );
+  void insert(iterator _Position,
+              InputIterator _First,
+              InputIterator _Last,
+              typename is_iterator<InputIterator>::ID
+              = Identity());
 
-  iterator erase(iterator position);
+  iterator erase(iterator _Position);
 
-  iterator erase(iterator first, iterator last);
+  iterator erase(iterator _First, iterator _Last);
   void clear();
 
-  void assign(size_type count, const value_type& val);
+  void assign(size_type _Count, const value_type& _Val);
 
   template<class InputIterator>
-     void assign(
-        InputIterator first,
-        InputIterator last,
-        typename is_iterator<InputIterator>::ID = Identity()
-     );
+  void assign(InputIterator _First,
+              InputIterator _Last,
+              typename is_iterator<InputIterator>::ID
+              = Identity());
 
 
-  void resize(size_type newSize);
+  void resize(size_type _NewSize);
 
-  void resize(size_type newSize, const Type& val);
+  void resize(size_type _NewSize, const Type& _Val);
 
-  void swap(deque& rhs)
+  void swap(deque& _Right)
   {
-    if (this==&rhs)
+    if (this == &_Right)
       return;
-    iterator tmp = firstIter_;
-    firstIter_ = rhs.firstIter_;
-    rhs.firstIter_ = tmp;
-
-    tmp = lastIter_;
-    lastIter_ = rhs.lastIter_;
-    rhs.lastIter_ = tmp;
-
-    map_pointer tt = map_;
-    map_ = rhs.map_;
-    rhs.map_ = tt;
-
-    size_type num = map_size_;
-    map_size_ = rhs.map_size_;
-    rhs.map_size_ = num;
+    _MY_STL::swap(this->MyfirstIter_, _Right.MyfirstIter_);
+    _MY_STL::swap(this->MylastIter_, _Right.MylastIter_);
+    _MY_STL::swap(this->Mymap_, _Right.Mymap_);
+    _MY_STL::swap(this->Mymap_size_, _Right.Mymap_size_);
   }
-
-  friend void swap(deque& lhs, deque& rhs)
-  {
-    lhs.swap(rhs);
-  }
-
-  bool operator!=(const deque& rhs);
-
-  bool operator<(const deque& rhs);
-
-  bool operator<=(const deque& rhs);
-
-  bool operator==(const deque& rhs);
-
-  bool operator>(const deque& rhs);
-
-  bool operator>=(const deque& rhs);
 protected:
   pointer _allocate_node()
   {
     return data_allocator_::allocate(_buffer_size());
   }
 
-  void _deallocate_node(pointer p)
+  void _deallocate_node(pointer _Ptr)
   {
-      data_allocator_::deallocate(p, _buffer_size());
+      data_allocator_::deallocate(_Ptr, _buffer_size());
   }
 
-  map_pointer _allocate_map(size_t n)
+  map_pointer _allocate_map(size_t _Count)
   {
-    return map_allocator_::allocate(n);
+    return map_allocator_::allocate(_Count);
   }
 
-  void _deallocate_map(map_pointer p, size_t n)
+  void _deallocate_map(map_pointer _Ptr, size_t _Count)
   {
-    map_allocator_::deallocate(p, n);
+    map_allocator_::deallocate(_Ptr, _Count);
   }
 
-  void _create_node(map_pointer first, map_pointer last)
+  void _create_node(map_pointer _First, map_pointer _Last)
   {
     map_pointer cur;
     MINI_STL_TRY {
-      for(cur=first; cur!=last; ++cur)
+      for (cur = _First; cur != _Last; ++cur)
         *cur = _allocate_node();
     }
-    MINI_STL_UNWIND(_destroy_node(first, cur));
+    MINI_STL_UNWIND(_destroy_node(_First, cur));
   }
 
-  void _destroy_node(map_pointer first, map_pointer last)
+  void _destroy_node(map_pointer _First, map_pointer _Last)
   {
-    for( ;first!=last;++first)
-      _deallocate_node(*first);
+    for ( ;_First != _Last; ++_First)
+      _deallocate_node(*_First);
   }
 
-  void _fill_init_aux(size_type n, const Type& val);
+  void _fill_init_aux(size_type _Count, const Type& _Val);
 
-  void _init_map(size_type n);
+  void _init_map(size_type _Count);
 
   size_t _buffer_size()
   {
     return __deque_buf_size(BuffSize, sizeof(Type));
   }
 
-  void _push_back_aux(const value_type& val);
+  void _push_back_aux(const value_type& _Val);
 
-  void _push_front_aux(const value_type& val);
+  void _push_front_aux(const value_type& _Val);
+#ifdef MINI_STL_RVALUE_REFS
+  void _push_back_aux(value_type&& _Val);
 
-  void _reserve_map_at_front(size_type nodes_add_num=1);
+  void _push_front_aux(value_type&& _Val);
+#endif
+  void _reserve_map_at_front(size_type _Nodes_add_num=1);
 
-  void _reserve_map_at_back(size_type nodes_add_num=1);
+  void _reserve_map_at_back(size_type _Nodes_add_num=1);
 
-  void _reallocate_map(size_type nodes_add_num,bool frontOrBack);
+  void _reallocate_map(size_type _Nodes_add_num,bool _FrontOrBack);
 
-  void _new_elem_at_front(size_type newElem);
+  void _new_elem_at_front(size_type _NewElem);
 
-  void _new_elem_at_back(size_type newElem);
+  void _new_elem_at_back(size_type _NewElem);
 
-  iterator _reserve_elem_at_front(size_type n)
+  iterator _reserve_elem_at_front(size_type _Count)
   {
-    size_type freeNum = firstIter_.cur - firstIter_.first;
-    if (n > freeNum)
-      _new_elem_at_front(n - freeNum);
-    return firstIter_ - difference_type(n);
+    size_type freeNum = MyfirstIter_.cur - MyfirstIter_.first;
+    if (_Count > freeNum)
+      _new_elem_at_front(_Count - freeNum);
+    return MyfirstIter_ - difference_type(_Count);
   }
 
-  iterator _reserve_elem_at_back(size_type n)
+  iterator _reserve_elem_at_back(size_type _Count)
   {
-    size_type freeNum = (lastIter_.last - lastIter_.cur) - 1;
-    if (n > freeNum)
-      _new_elem_at_back(n - freeNum);
-    return lastIter_ + difference_type(n);
+    size_type freeNum = (MylastIter_.last - MylastIter_.cur) - 1;
+    if (_Count > freeNum)
+      _new_elem_at_back(_Count - freeNum);
+    return MylastIter_ + difference_type(_Count);
   }
 
   void _pop_back_aux();
 
   void _pop_front_aux();
 
-  iterator _insert_aux(iterator position, const value_type& val);
+  iterator _insert_aux(iterator _Position, const value_type& _Val);
+#ifdef MINI_STL_RVALUE_REFS
+  iterator _insert_aux(iterator _Position, value_type&& _Val);
+#endif
+  void _insert_fill_aux(iterator _Position, size_type _Count, const Type& _Val);
 
-  void _insert_fill_aux(iterator position, size_type n, const Type& val);
-
-  void _insert_aux(iterator position, size_type n, const value_type& val);
-#ifdef MINI_STL_DEBUG
-  void _check_range(size_t pos)
-  {
-    if (pos<0 || pos>=size()) {
-      cerr << "deque:pos<0 || pos>=size()" << endl;
-      MINI_STL_THROW_RANGE_ERROR("deque");
-    }
-  }
-
-  void _check_range(size_t n, bool)
-  {
-    if (n<0 || n>=max_size()) {
-      cerr << "deque:n<0" << endl;
-      MINI_STL_THROW_RANGE_ERROR("deque");
-    }
-  }
-
-  void _check_range(const_iterator position)
-  {
-    if (position>last_ ||
-        position<first_) {
-      cerr << "deque:postion>=end() || position < begin()" << endl;
-      MINI_STL_THROW_RANGE_ERROR("deque");
-    }
-  }
-
-  template <class InputIterator>
-  void _check_range(InputIterator first,
-                   InputIterator last)
-  {
-    difference_type n = DISTANCE(first, last);
-    if (n<0) {
-      cerr << "deque:InputIterator last - first < 0" << endl;
-      MINI_STL_THROW_RANGE_ERROR("deque");
-    }
-  }
-
-  void _check_range()
-  {
-    if (empty()) {
-      cerr << "deque:is empty" << endl;
-      MINI_STL_THROW_RANGE_ERROR("deque");
-    }
-  }
-#endif //MINI_STL_DEBUG
+  void _insert_aux(iterator _Position, size_type _Count, const value_type& _Val);
 };
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::_init_map(size_type n)
+void deque<Type,Alloc,BuffSize>::_init_map(size_type _Count)
 {
-  size_type mapNodeSize = n / _buffer_size() + 1;
-  map_size_ = k_init_map_size > mapNodeSize +  2 ? k_init_map_size :
+  size_type mapNodeSize = _Count / _buffer_size() + 1;
+  Mymap_size_ = k_init_map_size > mapNodeSize +  2 ? k_init_map_size :
                                                    mapNodeSize + 2;
   //max(k_init_map_size, (mapNodeSize + 2));
-  map_ = _allocate_map(map_size_);
-  //使first last保持在中间
-  map_pointer newFirst = map_ + (map_size_ - mapNodeSize) / 2;
+  Mymap_ = _allocate_map(Mymap_size_);
+  //adjuest first last in middle
+  map_pointer newFirst = Mymap_ + (Mymap_size_ - mapNodeSize) / 2;
   map_pointer newLast = newFirst + mapNodeSize - 1;
   MINI_STL_TRY{
     _create_node(newFirst, newLast + 1);
   }
-  MINI_STL_UNWIND((_deallocate_map(newFirst,map_size_),
-                    map_ = 0, map_size_ = 0));
-  //调整迭代器
-  firstIter_.set_node(newFirst);
-  lastIter_.set_node(newLast);
-  firstIter_.cur = firstIter_.first;
-  lastIter_.cur = lastIter_.first + n % _buffer_size();
+  MINI_STL_UNWIND((_deallocate_map(newFirst,Mymap_size_),
+                    Mymap_ = 0, Mymap_size_ = 0));
+  //adjust iterator
+  MyfirstIter_.set_node(newFirst);
+  MylastIter_.set_node(newLast);
+  MyfirstIter_.cur = MyfirstIter_.first;
+  MylastIter_.cur = MylastIter_.first + _Count % _buffer_size();
 }
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::_fill_init_aux(size_type n, const Type &val)
+void deque<Type,Alloc,BuffSize>::_fill_init_aux(size_type _Count, const Type& _Val)
 {
-  _init_map(n);
+  _init_map(_Count);
   map_pointer cur;
   MINI_STL_TRY {
-    for(cur=firstIter_.map_node; cur<lastIter_.map_node; ++cur)
-      uninitialized_fill(*cur, *cur + _buffer_size(), val);
-      uninitialized_fill(lastIter_.first, lastIter_.cur, val);
+    for(cur = MyfirstIter_.map_node; cur < MylastIter_.map_node; ++cur)
+      _MY_STL::uninitialized_fill(*cur, *cur + _buffer_size(), _Val);
+      _MY_STL::uninitialized_fill(MylastIter_.first, MylastIter_.cur, _Val);
     }
-  MINI_STL_UNWIND(destroy(firstIter_,iterator(*cur, cur)));
+  MINI_STL_UNWIND(_MY_STL::destroy(MyfirstIter_,iterator(*cur, cur)));
 }
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::_push_front_aux(const value_type& val)
+void deque<Type,Alloc,BuffSize>::_push_front_aux(const value_type& _Val)
 {
   _reserve_map_at_front();
-  *(firstIter_.map_node - 1) = _allocate_node();
+  *(MyfirstIter_.map_node - 1) = _allocate_node();
   MINI_STL_TRY {
-    firstIter_.set_node(firstIter_.map_node - 1);
-    firstIter_.cur = firstIter_.last - 1;
-    construct(firstIter_.cur, val);
+    MyfirstIter_.set_node(MyfirstIter_.map_node - 1);
+    MyfirstIter_.cur = MyfirstIter_.last - 1;
+    _MY_STL::construct(MyfirstIter_.cur, _Val);
   }
-  MINI_STL_UNWIND(firstIter_.set_node(firstIter_.map_node + 1);
-      firstIter_.cur = firstIter_.first;
-      _deallocate_node(*(firstIter_.map_node - 1));)
+  MINI_STL_UNWIND(MyfirstIter_.set_node(MyfirstIter_.map_node + 1);
+      MyfirstIter_.cur = MyfirstIter_.first;
+      _deallocate_node(*(MyfirstIter_.map_node - 1));)
 }
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::_push_back_aux(const value_type& val)
+void deque<Type,Alloc,BuffSize>::_push_back_aux(const value_type& _Val)
 {
   _reserve_map_at_back();
-  *(lastIter_.map_node + 1) = _allocate_node();
+  *(MylastIter_.map_node + 1) = _allocate_node();
   MINI_STL_TRY {
-    construct(lastIter_.cur, val);
-    lastIter_.set_node(lastIter_.map_node + 1);
-    lastIter_.cur = lastIter_.first;
+    _MY_STL::construct(MylastIter_.cur, _Val);
+    MylastIter_.set_node(MylastIter_.map_node + 1);
+    MylastIter_.cur = MylastIter_.first;
   }
-  MINI_STL_UNWIND(_deallocate_node(*(lastIter_.map_node + 1));)
+  MINI_STL_UNWIND(_deallocate_node(*(MylastIter_.map_node + 1));)
 }
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::push_back(const value_type& val)
+void deque<Type,Alloc,BuffSize>::push_back(const value_type& _Val)
 {
-  if (lastIter_.cur != lastIter_.last - 1) {
-      construct(lastIter_.cur, val);
-      ++lastIter_.cur;
+  if (MylastIter_.cur != MylastIter_.last - 1) {
+      _MY_STL::construct(MylastIter_.cur, _Val);
+      ++MylastIter_.cur;
   } else {
-    _push_back_aux(val);
+    _push_back_aux(_Val);
   }
 }
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::push_front(const value_type& val)
+void deque<Type,Alloc,BuffSize>::push_front(const value_type& _Val)
 {
-  if (firstIter_.cur != firstIter_.first) {
-      construct(firstIter_.cur - 1, val);
-      --firstIter_.cur;
+  if (MyfirstIter_.cur != MyfirstIter_.first) {
+      _MY_STL::construct(MyfirstIter_.cur - 1, _Val);
+      --MyfirstIter_.cur;
   } else {
-      _push_front_aux(val);
+      _push_front_aux(_Val);
   }
 }
 
 template <class Type, class Alloc, size_t BuffSize>
 void deque<Type,Alloc,BuffSize>::pop_back()
 {
-#ifdef MINI_STL_DEBUG
-  _check_range();
-#endif
-  if (lastIter_.cur!=lastIter_.first)
-    destroy(--lastIter_.cur);
+  MINI_STL_DEBUG_CHECK_SIZE(this->size(), "deque pop_back");
+  if (MylastIter_.cur != MylastIter_.first)
+    _MY_STL::destroy(--MylastIter_.cur);
   else
     _pop_back_aux();
 }
@@ -719,49 +680,40 @@ void deque<Type,Alloc,BuffSize>::pop_back()
 template <class Type, class Alloc, size_t BuffSize>
 void deque<Type,Alloc,BuffSize>::pop_front()
 {
-#ifdef MINI_STL_DEBUG
-  _check_range();
-#endif
-  if (firstIter_.cur!=firstIter_.last-1) {
-    destroy(firstIter_.cur);
-    ++firstIter_.cur;
+  MINI_STL_DEBUG_CHECK_SIZE(this->size(), "deque pop_front");
+  if (MyfirstIter_.cur != MyfirstIter_.last-1) {
+    _MY_STL::destroy(MyfirstIter_.cur);
+    ++MyfirstIter_.cur;
   } else {
     _pop_front_aux();
   }
 }
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::assign(size_type count, const value_type& val)
+void deque<Type,Alloc,BuffSize>::assign(size_type _Count, const value_type& _Val)
 {
-#ifdef MINI_STL_DEBUG
-  _check_range(count,true);
-#endif
-  if (count > size()) {
-    fill(begin(), end(), val);
-    insert(end(), count - size(), val);
+  if (_Count > size()) {
+    fill(begin(), end(), _Val);
+    insert(end(), _Count - size(), _Val);
   } else {
-    erase(begin()+count, end());
-    fill(begin(), end(), val);
+    erase(begin() + _Count, end());
+    fill(begin(), end(), _Val);
   }
 }
 
 template <class Type, class Alloc, size_t BuffSize>
 template<class InputIterator>
-void deque<Type,Alloc,BuffSize>::assign(
-      InputIterator first,
-      InputIterator last,
-      typename is_iterator<InputIterator>::ID
-   )
+void deque<Type,Alloc,BuffSize>::
+assign(InputIterator _First, InputIterator _Last,
+      typename is_iterator<InputIterator>::ID)
 {
-#ifdef MINI_STL_DEBUG
-  _check_range(first, last);
-#endif
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "deque assign");
   iterator cur;
-  for (cur=begin(); cur!=end() && first!=last;
-       ++cur,++first)
-      *cur = *first;
-  if (cur==end())
-    insert(cur, first, last);
+  for (cur = begin(); cur!=end() && _First!=_Last;
+       ++cur, ++_First)
+      *cur = *_First;
+  if (cur == end())
+    insert(cur, _First, _Last);
   else
     erase(cur, end());
 }
@@ -769,283 +721,301 @@ void deque<Type,Alloc,BuffSize>::assign(
 template <class Type, class Alloc, size_t BuffSize>
 void deque<Type,Alloc,BuffSize>::_pop_back_aux()
 {
-  _deallocate_node(*lastIter_.map_node);
-  lastIter_.set_node(lastIter_.map_node - 1);
-  lastIter_.cur = lastIter_.last - 1;
-  destroy(lastIter_.cur);
+  _deallocate_node(*MylastIter_.map_node);
+  MylastIter_.set_node(MylastIter_.map_node - 1);
+  MylastIter_.cur = MylastIter_.last - 1;
+  destroy(MylastIter_.cur);
 }
 
 template <class Type, class Alloc, size_t BuffSize>
 void deque<Type,Alloc,BuffSize>::_pop_front_aux()
 {
-  destroy(firstIter_.cur);
-  _deallocate_node(*firstIter_.map_node);
-  firstIter_.set_node(firstIter_.map_node + 1);
-  firstIter_.cur = firstIter_.first;
+  _MY_STL::destroy(MyfirstIter_.cur);
+  _deallocate_node(*MyfirstIter_.map_node);
+  MyfirstIter_.set_node(MyfirstIter_.map_node + 1);
+  MyfirstIter_.cur = MyfirstIter_.first;
 }
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::_reserve_map_at_back(size_type nodes_add_num)
+void deque<Type,Alloc,BuffSize>::_reserve_map_at_back(size_type _Nodes_add_num)
 {
-  if (nodes_add_num + 1 > map_size_ - (lastIter_.map_node - map_))
-    _reallocate_map(nodes_add_num, false);
+  if (_Nodes_add_num + 1 > Mymap_size_ - (MylastIter_.map_node - Mymap_))
+    _reallocate_map(_Nodes_add_num, false);
 }
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::_reserve_map_at_front(size_type nodes_add_num)
+void deque<Type,Alloc,BuffSize>::_reserve_map_at_front(size_type _Nodes_add_num)
 {
-  if (nodes_add_num  > (size_type)(firstIter_.map_node - map_))
-    _reallocate_map(nodes_add_num, true);
+  if (_Nodes_add_num  > (size_type)(MyfirstIter_.map_node - Mymap_))
+    _reallocate_map(_Nodes_add_num, true);
 }
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::_reallocate_map(size_type nodes_add_num,bool frontOrback)
+void deque<Type,Alloc,BuffSize>::_reallocate_map(size_type _Nodes_add_num, bool _FrontOrback)
 {
-  size_type oldMapNum = lastIter_.map_node - firstIter_.map_node + 1;
-  size_type newMapNum = oldMapNum + nodes_add_num;
+  size_type oldMapNum = MylastIter_.map_node - MyfirstIter_.map_node + 1;
+  size_type newMapNum = oldMapNum + _Nodes_add_num;
   map_pointer newMapFirst;
-  if (map_size_ > 2 * newMapNum) {
-      newMapFirst = map_ + (map_size_ - newMapNum) / 2
-          + (frontOrback ? nodes_add_num : 0);
-      if (newMapFirst < firstIter_.map_node)
-        copy(firstIter_.map_node, lastIter_.map_node + 1, newMapFirst);
+  if (Mymap_size_ > 2 * newMapNum) {
+      newMapFirst = Mymap_ + (Mymap_size_ - newMapNum) / 2
+          + (_FrontOrback ? _Nodes_add_num : 0);
+      if (newMapFirst < MyfirstIter_.map_node)
+#ifdef MINI_STL_RVALUE_REFS
+        _MY_STL::move(MyfirstIter_.map_node, MylastIter_.map_node + 1, newMapFirst);
       else
-        copy_backward(firstIter_.map_node,
-                      lastIter_.map_node + 1,
+        _MY_STL::move_backward(MyfirstIter_.map_node,
+                               MylastIter_.map_node + 1,
+                               newMapFirst + oldMapNum);
+#else
+        copy(MyfirstIter_.map_node, MylastIter_.map_node + 1, newMapFirst);
+      else
+        copy_backward(MyfirstIter_.map_node,
+                      MylastIter_.map_node + 1,
                       newMapFirst + oldMapNum);
+#endif
   } else {
-      size_type addNum = nodes_add_num;
-      size_type newMapSize = map_size_ + max(map_size_, addNum) + 2;
+      size_type addNum = _Nodes_add_num;
+      size_type newMapSize = Mymap_size_ + _MY_STL::max(Mymap_size_, addNum) + 2;
       map_pointer newMap = _allocate_map(newMapSize);
       newMapFirst = newMap + (newMapSize - newMapNum) / 2
-                    + (frontOrback ? nodes_add_num : 0);
-      copy(firstIter_.map_node, lastIter_.map_node + 1, newMapFirst);
+                    + (_FrontOrback ? _Nodes_add_num : 0);
+      _MY_STL::uninitialized_copy(MyfirstIter_.map_node,
+                                  MylastIter_.map_node + 1,
+                                  newMapFirst);
 
-      _deallocate_map(map_, map_size_);
-      map_ = newMap;
-      map_size_ = newMapSize;
+      _deallocate_map(Mymap_, Mymap_size_);
+      Mymap_ = newMap;
+      Mymap_size_ = newMapSize;
   }
-  firstIter_.set_node(newMapFirst);
-  lastIter_.set_node(newMapFirst + oldMapNum - 1);
+  MyfirstIter_.set_node(newMapFirst);
+  MylastIter_.set_node(newMapFirst + oldMapNum - 1);
 }
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::_new_elem_at_back(size_type newElem)
+void deque<Type,Alloc,BuffSize>::_new_elem_at_back(size_type _NewElem)
 {
-  size_type new_map_node = (newElem + _buffer_size() - 1)
+  size_type new_map_node = (_NewElem + _buffer_size() - 1)
       / _buffer_size();
   _reserve_map_at_back(new_map_node);
   size_type i;
   MINI_STL_TRY {
-    for(i=1; i<=new_map_node; ++i)
-      *(lastIter_.map_node + i) = _allocate_node();
+    for (i = 1; i <= new_map_node; ++i)
+      *(MylastIter_.map_node + i) = _allocate_node();
   }
   MINI_STL_UNWIND(
-    for(size_type j=1; j<=i; ++j)
-          _deallocate_node(*(lastIter_.map_node + j));
+    for (size_type j = 1; j <= i; ++j)
+          _deallocate_node(*(MylastIter_.map_node + j));
   )
 }
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::_new_elem_at_front(size_type newElem)
+void deque<Type,Alloc,BuffSize>::_new_elem_at_front(size_type _NewElem)
 {
-  size_type new_map_node = (newElem + _buffer_size() - 1)
+  size_type new_map_node = (_NewElem + _buffer_size() - 1)
       / _buffer_size();
   _reserve_map_at_front(new_map_node);
   size_type i;
   MINI_STL_TRY {
-    for(i=1; i<=new_map_node; ++i)
-      *(firstIter_.map_node - i) = _allocate_node();
+    for (i =1; i <= new_map_node; ++i)
+      *(MyfirstIter_.map_node - i) = _allocate_node();
   }
   MINI_STL_UNWIND(
-    for(size_type j=1; j<=i; ++j)
-      _deallocate_node(*(firstIter_.map_node + j));
+    for (size_type j = 1; j <= i; ++j)
+      _deallocate_node(*(MyfirstIter_.map_node + j));
   )
 }
 
 template <class Type, class Alloc, size_t BuffSize>
 typename deque<Type,Alloc,BuffSize>::iterator
-deque<Type,Alloc,BuffSize>::_insert_aux(iterator position, const value_type& val)
+deque<Type,Alloc,BuffSize>::_insert_aux(iterator _Position, const value_type& _Val)
 {
-  difference_type offset = position - firstIter_;
+  difference_type offset = _Position - MyfirstIter_;
   if ((size_type)(offset)<size()/2) {
     push_front(front());
-    iterator frontTo = firstIter_;
+    iterator frontTo = MyfirstIter_;
     ++frontTo;
     iterator frontS = frontTo;
     ++frontS;
-    position = firstIter_ + offset;
-    copy(frontS, position, frontTo);
+    position = MyfirstIter_ + offset;
+#ifdef MINI_STL_RVALUE_REFS
+    _MY_STL::move(frontS, _Position, frontTo);
+#else
+    _MY_STL::copy(frontS, _Position, frontTo);
+#endif
   } else {
     push_back(back());
-    iterator back1 = lastIter_;
+    iterator back1 = MylastIter_;
     --back1;
     iterator back2 = back1;
     --back2;
-    position = firstIter_ + offset;
-    copy_backward(position, back2, back1);
+    _Position = MyfirstIter_ + offset;
+#ifdef MINI_STL_RVALUE_REFS
+    _MY_STL::move_backward(_Position, back2, back1);
+#else
+    _MY_STL::copy_backward(_Position, back2, back1);
+#endif
   }
-  *position = val;
-  return position;
+  *_Position = _Val;
+  return _Position;
 }
 
 template <class Type, class Alloc, size_t BuffSize>
 typename deque<Type,Alloc,BuffSize>::iterator
-deque<Type,Alloc,BuffSize>::insert(iterator position, const value_type& val)
+deque<Type,Alloc,BuffSize>::insert(iterator _Position, const value_type& _Val)
 {
-#ifdef MINI_STL_DEBUG
-  _check_range(position);
-#endif
-  if (position.cur==firstIter_.cur) {
-      push_front(val);
-      return firstIter_;
-  } else if (position.cur==lastIter_.cur) {
-      push_back(val);
-      return lastIter_;
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->begin(), _Position, "deque insert");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Position, this->end(), "deque insert");
+  if (_Position.cur == MyfirstIter_.cur) {
+      push_front(_Val);
+      return MyfirstIter_;
+  } else if (_Position.cur == MylastIter_.cur) {
+      push_back(_Val);
+      return MylastIter_;
   } else {
-      return _insert_aux(position, val);
+      return _insert_aux(_Position, _Val);
   }
 }
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::resize(size_type newSize)
+void deque<Type,Alloc,BuffSize>::resize(size_type _NewSize)
 {
-  resize(newSize, Type());
+  resize(_NewSize, Type());
 }
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::resize(
-    size_type newSize,
-    const Type& val)
+void deque<Type,Alloc,BuffSize>::
+resize(size_type _NewSize, const Type& _Val)
 {
-#ifdef MINI_STL_DEBUG
-  _check_range(newSize,true);
-#endif
-  if (newSize>size())
-    insert(end(), newSize-size(), val);
+  if (_NewSize > size())
+    insert(end(), _NewSize-size(), _Val);
   else
-    erase(begin()+newSize, end());
+    erase(begin()+_NewSize, end());
 }
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::_insert_aux(
-    iterator position,
-    size_type n,
-    const value_type& val)
+void deque<Type,Alloc,BuffSize>::
+_insert_aux(iterator _Position,
+            size_type _Count,
+            const value_type& _Val)
 {  
-  const difference_type frontNum = position - firstIter_;
+  const difference_type frontNum = _Position - MyfirstIter_;
   size_type length = size();
   if (frontNum < difference_type(length / 2)) {
-    iterator newFirst = _reserve_elem_at_front(n);
-    iterator oldFirst = firstIter_;
-    position = firstIter_ + frontNum;
+    iterator newFirst = _reserve_elem_at_front(_Count);
+    iterator oldFirst = MyfirstIter_;
+    _Position = MyfirstIter_ + frontNum;
     MINI_STL_TRY {
-        oldFirst =uninitialized_copy(firstIter_, position, newFirst);
-        firstIter_ = newFirst;
-        uninitialized_fill_n(oldFirst, n, val);
+        oldFirst = _MY_STL::uninitialized_copy(MyfirstIter_,
+                                               _Position,
+                                               newFirst);
+        MyfirstIter_ = newFirst;
+        _MY_STL::uninitialized_fill_n(oldFirst, _Count, _Val);
     }
     MINI_STL_UNWIND(
-       _destroy_node(newFirst.map_node, firstIter_.map_node))
+       _destroy_node(newFirst.map_node, MyfirstIter_.map_node))
   } else {
-    iterator newLast = _reserve_elem_at_back(n);
-    iterator oldLast = lastIter_;
+    iterator newLast = _reserve_elem_at_back(_Count);
+    iterator oldLast = MylastIter_;
     const difference_type afterNum = length - frontNum;
-    position = lastIter_ - afterNum;
+    _Position = MylastIter_ - afterNum;
     MINI_STL_TRY {
-      copy_backward(position, oldLast, newLast);
-      fill_n(position, n, val);
-      lastIter_ = newLast;
+#ifdef MINI_STL_RVALUE_REFS
+      _MY_STL::move_backward(_Position, oldLast, newLast);
+#else
+      _MY_STL::copy_backward(_Position, oldLast, newLast);
+#endif
+      _MY_STL::fill_n(_Position, _Count, _Val);
+      MylastIter_ = newLast;
     }
-    MINI_STL_UNWIND(_destroy_node(lastIter_.map_node + 1,
+    MINI_STL_UNWIND(_destroy_node(MylastIter_.map_node + 1,
                                   newLast.map_node + 1));
   }
 }
 
 template <class Type, class Alloc, size_t BuffSize>
-void deque<Type,Alloc,BuffSize>::_insert_fill_aux(
-    iterator position,
-    size_type n,
-    const Type &val
-    )
+void deque<Type,Alloc,BuffSize>::
+_insert_fill_aux(iterator _Position,
+                 size_type _Count,
+                 const Type& _Val)
 {
-#ifdef MINI_STL_DEBUG
-  _check_range(position);
-  _check_range(n, true);
-#endif
-  if (position.cur==firstIter_.cur) {
-    iterator newFirst = _reserve_elem_at_front(n);
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->begin(), _Position, "deque insert");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Position, this->end(), "deque insert");
+  if (_Position.cur == MyfirstIter_.cur) {
+    iterator newFirst = _reserve_elem_at_front(_Count);
     MINI_STL_TRY {
-      uninitialized_fill(newFirst, firstIter_, val);
-      firstIter_ = newFirst;
+      _MY_STL::uninitialized_fill(newFirst, MyfirstIter_, _Val);
+      MyfirstIter_ = newFirst;
     }
-    MINI_STL_UNWIND(_destroy_node(newFirst.map_node,firstIter_.map_node));
-  } else if (position.cur==lastIter_.cur) {
-    iterator newLast = _reserve_elem_at_back(n);
+    MINI_STL_UNWIND(_destroy_node(newFirst.map_node,MyfirstIter_.map_node));
+  } else if (_Position.cur == MylastIter_.cur) {
+    iterator newLast = _reserve_elem_at_back(_Count);
     MINI_STL_TRY {
-      uninitialized_fill(lastIter_, newLast, val);
-      lastIter_ = newLast;
+      uninitialized_fill(MylastIter_, newLast, _Val);
+      MylastIter_ = newLast;
     }
-    MINI_STL_UNWIND(_destroy_node(firstIter_.map_node + 1,
+    MINI_STL_UNWIND(_destroy_node(MyfirstIter_.map_node + 1,
                                   newLast.map_node + 1));
   } else {
-    _insert_aux(position, n, val);
+    _insert_aux(_Position, _Count, _Val);
   }
 }
 
 template <class Type, class Alloc, size_t BuffSize>
 template<class InputIterator>
-   void deque<Type,Alloc,BuffSize>::insert(
-      iterator position,
-      InputIterator first,
-      InputIterator last,
-      typename is_iterator<InputIterator>::ID
-   )
-  {
-#ifdef MINI_STL_DEBUG
-  _check_range(position);
-  _check_range(first, last);
-#endif
-  difference_type n = DISTANCE(first, last);
-  if (position.cur==firstIter_.cur) {
+void deque<Type,Alloc,BuffSize>::
+insert(iterator _Position,
+       InputIterator _First,
+       InputIterator _Last,
+       typename is_iterator<InputIterator>::ID)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->begin(), _Position, "deque insert");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Position, this->end(), "deque insert");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "deque insert");
+  difference_type n = DISTANCE(_First, _Last);
+  if (_Position.cur == MyfirstIter_.cur) {
     iterator newFirst = _reserve_elem_at_front(n);
     MINI_STL_TRY {
-      uninitialized_copy(first, last, newFirst);
-      firstIter_ = newFirst;
+      _MY_STL::uninitialized_copy(_First, _Last, newFirst);
+      MyfirstIter_ = newFirst;
     }
-    MINI_STL_UNWIND(_destroy_node(newFirst.map_node,firstIter_.map_node));
-  } else if (position.cur==lastIter_.cur) {
+    MINI_STL_UNWIND(_destroy_node(newFirst.map_node,MyfirstIter_.map_node));
+  } else if (_Position.cur == MylastIter_.cur) {
     iterator newLast = _reserve_elem_at_back(n);
     MINI_STL_TRY {
-      uninitialized_copy(first, last, lastIter_);//(lastIter_, newLast, val);
-      lastIter_ = newLast;
+      _MY_STL::uninitialized_copy(_First, _Last, MylastIter_);
+      MylastIter_ = newLast;
     }
-    MINI_STL_UNWIND(_destroy_node(firstIter_.map_node + 1,
+    MINI_STL_UNWIND(_destroy_node(MyfirstIter_.map_node + 1,
                                      newLast.map_node + 1));
   } else {
-    const difference_type frontNum = position - firstIter_;
+    const difference_type frontNum = _Position - MyfirstIter_;
     size_type length = size();
     if (frontNum < difference_type(length / 2)) {
       iterator newFirst = _reserve_elem_at_front(n);
-      iterator oldFirst = firstIter_;
-      position = firstIter_ + frontNum;
+      iterator oldFirst = MyfirstIter_;
+      _Position = MyfirstIter_ + frontNum;
       MINI_STL_TRY {
-        oldFirst =uninitialized_copy(firstIter_, position, newFirst);
-        firstIter_ = newFirst;
-        uninitialized_copy(first, last, oldFirst);
+        oldFirst = _MY_STL::uninitialized_copy(MyfirstIter_, _Position, newFirst);
+        MyfirstIter_ = newFirst;
+        _MY_STL::uninitialized_copy(_First, _Last, oldFirst);
       }
       MINI_STL_UNWIND(
-        _destroy_node(newFirst.map_node, firstIter_.map_node))
+        _destroy_node(newFirst.map_node, MyfirstIter_.map_node))
     } else {
       iterator newLast = _reserve_elem_at_back(n);
-      iterator oldLast = lastIter_;
+      iterator oldLast = MylastIter_;
       const difference_type afterNum = length - frontNum;
-      position = lastIter_ - afterNum;
+      _Position = MylastIter_ - afterNum;
       MINI_STL_TRY {
-        copy_backward(position, oldLast, newLast);
-        uninitialized_copy(first, last, position);
-        lastIter_ = newLast;
+#ifdef MINI_STL_RVALUE_REFS
+        _MY_STL::move_backward(_Position, oldLast, newLast);
+#else
+        _MY_STL::copy_backward(_Position, oldLast, newLast);
+#endif
+        _MY_STL::uninitialized_copy(_First, _Last, _Position);
+        MylastIter_ = newLast;
       }
-      MINI_STL_UNWIND(_destroy_node(lastIter_.map_node + 1,
+      MINI_STL_UNWIND(_destroy_node(MylastIter_.map_node + 1,
                                       newLast.map_node + 1));
     }
   }
@@ -1053,74 +1023,242 @@ template<class InputIterator>
 
 template <class Type, class Alloc, size_t BuffSize>
 typename deque<Type,Alloc,BuffSize>::iterator
-deque<Type,Alloc,BuffSize>::erase(iterator position)
+deque<Type,Alloc,BuffSize>::erase(iterator _Position)
 {
-#ifdef MINI_STL_DEBUG
-  _check_range(position);
-  _check_range(position - firstIter_);
-#endif
-  iterator next = position;
+  MINI_STL_DEBUG_CHECK_POS(this->size(), DISTANCE(this->begin(), _Position), "deque erase");
+  iterator next = _Position;
   ++next;
-  difference_type offset = position - firstIter_;
+  difference_type offset = _Position - MyfirstIter_;
   if ((size_type)(offset)<size()/2) {
-    copy_backward(firstIter_,position, next);
+#ifdef MINI_STL_RVALUE_REFS
+    _MY_STL::move_backward(MyfirstIter_, _Position, next);
+#else
+    _MY_STL::copy_backward(MyfirstIter_, _Position, next);
+#endif
     pop_front();
   } else {
-    copy(next, lastIter_, position);
+#ifdef MINI_STL_RVALUE_REFS
+    _MY_STL::move(next, MylastIter_, _Position);
+#else
+    _MY_STL::copy(next, MylastIter_, _Position);
+#endif
     pop_back();
   }
-  return firstIter_ + offset;
+  return MyfirstIter_ + offset;
 }
 
 template <class Type, class Alloc, size_t BuffSize>
 typename deque<Type,Alloc,BuffSize>::iterator
-deque<Type,Alloc,BuffSize>::erase(iterator first, iterator last)
+deque<Type,Alloc,BuffSize>::erase(iterator _First, iterator _Last)
 {
-#ifdef MINI_STL_DEBUG
-  _check_range(first);
-  _check_range(last);
-  _check_range(first, last);
-#endif
-  if (first==begin() && last==end()) {
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "deque erase");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->begin(), _First, "deque erase");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Last, this->end(), "deque erase");
+  MINI_STL_DEBUG_CHECK_POS(this->size(), DISTANCE(this->begin(), _First), "deque erase");
+  MINI_STL_DEBUG_CHECK_POS(this->size()+1, DISTANCE(this->begin(), _Last), "deque erase");
+  if (_First==begin() && _Last==end()) {
     clear();
-    return firstIter_;
+    return MyfirstIter_;
   } else {
-    difference_type n = last - first;
-    difference_type beforeNum = first - begin();
+    difference_type n = _Last - _First;
+    difference_type beforeNum = _First - begin();
     if ((size_type)(beforeNum) < (size()-n)/2){
-      copy_backward(begin(), first, last);
+#ifdef MINI_STL_RVALUE_REFS
+      _MY_STL::move_backward(begin(), _First, _Last);
+#else
+      _MY_STL::copy_backward(begin(), _First, _Last);
+#endif
       iterator newFirst = begin() + n;
-      destroy(begin(), newFirst);
-      _destroy_node(firstIter_.map_node, newFirst.map_node);
-      firstIter_ = newFirst;
+      _MY_STL::destroy(begin(), newFirst);
+      _destroy_node(MyfirstIter_.map_node, newFirst.map_node);
+      MyfirstIter_ = newFirst;
     } else {
-      copy(last, end(), first);
+#ifdef MINI_STL_RVALUE_REFS
+      _MY_STL::move(_Last, end(), _First);
+#else
+      _MY_STL::copy(_Last, end(), _First);
+#endif
       iterator newLast = end() - n;
-      destroy(newLast, end());
-      _destroy_node(newLast.map_node+1, lastIter_.map_node+1);
-      lastIter_ = newLast;
+      _MY_STL::destroy(newLast, end());
+      _destroy_node(newLast.map_node+1, MylastIter_.map_node+1);
+      MylastIter_ = newLast;
     }
-    return firstIter_ + beforeNum;
+    return MyfirstIter_ + beforeNum;
   }
 }
 
 template <class Type, class Alloc, size_t BuffSize>
 void deque<Type,Alloc,BuffSize>::clear()
 {
-  for (map_pointer node = firstIter_.map_node + 1;
-       node < lastIter_.map_node; ++ node) {
-    destroy(*node, *node + _buffer_size());
+  for (map_pointer node = MyfirstIter_.map_node + 1;
+       node < MylastIter_.map_node; ++ node) {
+    _MY_STL::destroy(*node, *node + _buffer_size());
     _deallocate_node(*node);
   }
 
-  if (firstIter_.map_node!=lastIter_.map_node) {
-    destroy(firstIter_.cur, firstIter_.last);
-    destroy(lastIter_.first, lastIter_.cur);
-    _deallocate_node(*lastIter_.map_node);
+  if (MyfirstIter_.map_node!=MylastIter_.map_node) {
+    _MY_STL::destroy(MyfirstIter_.cur, MyfirstIter_.last);
+    _MY_STL::destroy(MylastIter_.first, MylastIter_.cur);
+    _deallocate_node(*MylastIter_.map_node);
   } else {
-    destroy(firstIter_.cur, firstIter_.last);
+    _MY_STL::destroy(MyfirstIter_.cur, MyfirstIter_.last);
   }
-  lastIter_ = firstIter_;
+  MylastIter_ = MyfirstIter_;
+}
+#ifdef MINI_STL_RVALUE_REFS
+template <class Type, class Alloc, size_t BuffSize>
+void deque<Type,Alloc,BuffSize>::_push_front_aux(value_type&& _Val)
+{
+  _reserve_map_at_front();
+  *(MyfirstIter_.map_node - 1) = _allocate_node();
+  MINI_STL_TRY {
+    MyfirstIter_.set_node(MyfirstIter_.map_node - 1);
+    MyfirstIter_.cur = MyfirstIter_.last - 1;
+    _MY_STL::construct(MyfirstIter_.cur, _MY_STL::move(_Val));
+  }
+  MINI_STL_UNWIND(MyfirstIter_.set_node(MyfirstIter_.map_node + 1);
+      MyfirstIter_.cur = MyfirstIter_.first;
+      _deallocate_node(*(MyfirstIter_.map_node - 1));)
+}
+
+template <class Type, class Alloc, size_t BuffSize>
+void deque<Type,Alloc,BuffSize>::_push_back_aux(value_type&& _Val)
+{
+  _reserve_map_at_back();
+  *(MylastIter_.map_node + 1) = _allocate_node();
+  MINI_STL_TRY {
+    _MY_STL::construct(MylastIter_.cur, _MY_STL::move(_Val));
+    MylastIter_.set_node(MylastIter_.map_node + 1);
+    MylastIter_.cur = MylastIter_.first;
+  }
+  MINI_STL_UNWIND(_deallocate_node(*(MylastIter_.map_node + 1));)
+}
+
+template <class Type, class Alloc, size_t BuffSize>
+void deque<Type,Alloc,BuffSize>::push_back(value_type&& _Val)
+{
+  if (MylastIter_.cur != MylastIter_.last - 1) {
+      _MY_STL::construct(MylastIter_.cur, _MY_STL::move(_Val));
+      ++MylastIter_.cur;
+  } else {
+    _push_back_aux(_MY_STL::move(_Val));
+  }
+}
+
+template <class Type, class Alloc, size_t BuffSize>
+void deque<Type,Alloc,BuffSize>::push_front(value_type&& _Val)
+{
+  if (MyfirstIter_.cur != MyfirstIter_.first) {
+      _MY_STL::construct(MyfirstIter_.cur - 1, _MY_STL::move(_Val));
+      --MyfirstIter_.cur;
+  } else {
+      _push_front_aux(_MY_STL::move(_Val));
+  }
+}
+
+template <class Type, class Alloc, size_t BuffSize>
+typename deque<Type,Alloc,BuffSize>::iterator
+deque<Type,Alloc,BuffSize>::_insert_aux(iterator _Position, value_type&& _Val)
+{
+  difference_type offset = _Position - MyfirstIter_;
+  if ((size_type)(offset)<size()/2) {
+    push_front(front());
+    iterator frontTo = MyfirstIter_;
+    ++frontTo;
+    iterator frontS = frontTo;
+    ++frontS;
+    _Position = MyfirstIter_ + offset;
+    _MY_STL::move(frontS, _Position, frontTo);
+  } else {
+    push_back(back());
+    iterator back1 = MylastIter_;
+    --back1;
+    iterator back2 = back1;
+    --back2;
+    _Position = MyfirstIter_ + offset;
+    _MY_STL::move_backward(_Position, back2, back1);
+  }
+  *_Position = _MY_STL::move(_Val);
+  return _Position;
+}
+
+template <class Type, class Alloc, size_t BuffSize>
+typename deque<Type,Alloc,BuffSize>::iterator
+deque<Type,Alloc,BuffSize>::insert(iterator _Position, value_type&& _Val)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->begin(), _Position, "deque insert");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Position, this->end(), "deque insert");
+  if (_Position.cur == MyfirstIter_.cur) {
+      push_front(_MY_STL::move(_Val));
+      return MyfirstIter_;
+  } else if (_Position.cur == MylastIter_.cur) {
+      push_back(_MY_STL::move(_Val));
+      return MylastIter_;
+  } else {
+      return _insert_aux(_Position, _MY_STL::move(_Val));
+  }
+}
+#endif //MINI_STL_RVALUE_REFS
+
+template <class Type, class Alloc, size_t BuffSize>
+inline bool
+operator==(const deque<Type,Alloc,BuffSize>& _Left,
+           const deque<Type,Alloc,BuffSize>& _Right)
+{
+  return _Left.size() == _Right.size() &&
+         _MY_STL::equal(_Left.begin(), _Left.end(),
+                        _Right.begin());
+}
+
+template <class Type, class Alloc, size_t BuffSize>
+inline bool
+operator<(const deque<Type,Alloc,BuffSize>& _Left,
+          const deque<Type,Alloc,BuffSize>& _Right)
+{
+  return _MY_STL::lexicographical_compare(_Left.begin(),
+                                          _Left.end(),
+                                          _Right.begin(),
+                                          _Right.end());
+}
+
+template <class Type, class Alloc, size_t BuffSize>
+inline bool
+operator!=(const deque<Type,Alloc,BuffSize>& _Left,
+           const deque<Type,Alloc,BuffSize>& _Right)
+{
+  return !(_Left == _Right);
+}
+
+template <class Type, class Alloc, size_t BuffSize>
+inline bool
+operator>(const deque<Type,Alloc,BuffSize>& _Left,
+          const deque<Type,Alloc,BuffSize>& _Right)
+{
+  return _Right < _Left;
+}
+
+template <class Type, class Alloc, size_t BuffSize>
+inline bool
+operator<=(const deque<Type,Alloc,BuffSize>& _Left,
+           const deque<Type,Alloc,BuffSize>& _Right)
+{
+  return !(_Right < _Left);
+}
+
+template <class Type, class Alloc, size_t BuffSize>
+inline bool
+operator>=(const deque<Type,Alloc,BuffSize>& _Left,
+           const deque<Type,Alloc,BuffSize>& _Right)
+{
+  return !(_Left < _Right);
+}
+
+template <class Type, class Alloc, size_t BuffSize>
+inline void
+swap(const deque<Type,Alloc,BuffSize>& _Left,
+     const deque<Type,Alloc,BuffSize>& _Right)
+{
+  _Left.swap(_Right);
 }
 
 MINI_STL_END

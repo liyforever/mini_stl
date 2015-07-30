@@ -1,0 +1,5 @@
+#ifndef MINIMAP_H
+#define MINIMAP_H
+#include "mini_stl_map.h"
+#include "mini_stl_multimap.h"
+#endif // MINIMAP_H

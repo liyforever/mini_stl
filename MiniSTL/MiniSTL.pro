@@ -6,7 +6,6 @@ CONFIG -= qt
 SOURCES += main.cpp
 
 HEADERS += \
-    memory.h \
     mini_stl_construct.h \
     mini_stl_iterator.h \
     mini_stl_type_traits.h \
@@ -37,7 +36,25 @@ HEADERS += \
     mini_stl_bitset.h \
     tmp.h \
     mini_stl_algorithm.h \
-    mini_stl_debug.h
+    mini_stl_debug.h \
+    mini_stl_numeric.h \
+    mini_stl_memory.h \
+    MiniVector \
+    MiniDeque \
+    MiniMap \
+    MiniSet \
+    MiniMemory \
+    MiniAlgorithm \
+    MiniList \
+    MiniUnordered_set \
+    MiniUnordered_map \
+    MiniNumeric \
+    MiniString \
+    MiniStack \
+    MiniQueue \
+    MiniBitset \
+    MiniUtility \
+    MiniFunctional
 
 OTHER_FILES += \
     info.txt

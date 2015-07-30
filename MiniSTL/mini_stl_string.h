@@ -1,6 +1,6 @@
 #ifndef MINI_STL_STRING_H
 #define MINI_STL_STRING_H
-#include "memory.h"
+#include "mini_stl_memory.h"
 #include "mini_stl_chartraits.h"
 #include <iosfwd>
 #include <istream>
@@ -675,7 +675,7 @@ public:
 
   int compare(const basic_string& Str) const
   {
-    return _compare_aux(first_, last_, Str.first_, Str.last_);
+    return _compare_aux(this->begin(), this->end(), Str.begin(), Str.end());
   }
 
   int compare(size_type Pos1, size_type Num1, const basic_string& Str) const
@@ -821,11 +821,11 @@ protected:
   }
 
   int _compare_aux(const value_type* First1, const value_type* Last1,
-                   const value_type* First2, const value_type* Last2)
+                   const value_type* First2, const value_type* Last2) const
   {
     const difference_type n1 = Last1 - First1;
     const difference_type n2 = Last2 - First2;
-    const int cmp = traits_type::compare(First1, First2, min(n1, 2));
+    const int cmp = traits_type::compare(First1, First2, min(n1, (const difference_type)(2)));
     return cmp != 0 ? cmp : (n1 < n2 ? -1 : (n1 > n2 ? 1 : 0));
   }
 #ifdef MINI_STL_DEBUG

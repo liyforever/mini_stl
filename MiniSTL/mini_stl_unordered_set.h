@@ -14,7 +14,7 @@ private:
   typedef _MY_STL::hashtable<Key,Key,Hash,identity<Key>,
                              EqualKey,Alloc>
     HT_type;
-  HT_type c_;
+  HT_type Myc_;
 public:
   typedef typename HT_type::key_type        key_type;
   typedef typename HT_type::value_type      value_type;
@@ -35,226 +35,236 @@ public:
   typedef typename HT_type::const_reverse_iterator const_reverse_iterator;
 public:
   unordered_set()
-    : c_(52, hasher(), key_equal())
+    : Myc_(52, hasher(), key_equal())
   {}
 
   explicit unordered_set(
-      size_type n = 52,
-      const hasher& hfn = hasher(),
-      const EqualKey& comp = EqualKey(),
+      size_type _Count,
+      const hasher& _Hfn = hasher(),
+      const EqualKey& _Comp = EqualKey(),
       const Alloc&/*AL*/ = Alloc())
-    : c_(n, hfn, comp)
-  {}
+    : Myc_(_Count, _Hfn, _Comp)
+  {
+    MINI_STL_DEBUG_POINTER(_Hfn, "unordered_set Invalid hasher");
+    MINI_STL_DEBUG_POINTER(_Comp, "unordered_set Invalid EqualKey");
+  }
 
   template<class InputIterator>
     unordered_set(
-      InputIterator first,
-      InputIterator last,
-      size_type nbuckets = 52,
-      const Hash& hfn = Hash(),
-      const EqualKey& comp = EqualKey(),
+      InputIterator _First,
+      InputIterator _Last,
+      size_type _Nbuckets = 52,
+      const Hash& _Hfn = Hash(),
+      const EqualKey& _Comp = EqualKey(),
       const Alloc& /*AL*/ = Alloc())
-    : c_(nbuckets, hfn, comp)
+    : Myc_(_Nbuckets, _Hfn, _Comp)
   {
-    c_.insert_unique(first, last);
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "unordered_set unordered_set()");
+    MINI_STL_DEBUG_POINTER(_Hfn, "unordered_set Invalid hasher");
+    MINI_STL_DEBUG_POINTER(_Comp, "unordered_set Invalid EqualKey");
+    Myc_.insert_unique(_First, _Last);
   }
 
-  unordered_set(const unordered_set& right)
-    : c_(right.c_)
-  {}
-#ifdef MINI_STL_RVALUE_REFS
-  unordered_set(unordered_set&& right)
-    : c_(_MY_STL::move(right))
+  unordered_set(const unordered_set& _Right)
+    : Myc_(_Right.Myc_)
   {}
 
-  unordered_set& operator=(unordered_set&& right)
+#ifdef MINI_STL_RVALUE_REFS
+  unordered_set(unordered_set&& _Right)
+    : Myc_(_MY_STL::move(_Right.Myc_))
+  {}
+
+  unordered_set& operator=(unordered_set&& _Right)
   {
-    c_ = _MY_STL::move(right.c_);
+    Myc_ = _MY_STL::move(_Right.Myc_);
     return *this;
   }
 #endif
-  unordered_set& operator=(const unordered_set& right)
+
+  unordered_set& operator=(const unordered_set& _Right)
   {
-    c_ = right.c_;
+    Myc_ = _Right.Myc_;
     return *this;
   }
 public:
   allocator_type get_allocator() const
   {
-    return c_.get_allocator();
+    return Myc_.get_allocator();
   }
 
   iterator begin() const
   {
-    return c_.begin();
+    return Myc_.begin();
   }
 
   const_iterator cbegin() const
   {
-    return c_.cbegin();
+    return Myc_.cbegin();
   }
 
-  local_iterator begin(size_type nbucket) const
+  local_iterator begin(size_type _Nbucket) const
   {
-    return c_.begin(nbucket);
+    return Myc_.begin(_Nbucket);
   }
 
   iterator end() const
   {
-    return c_.end();
+    return Myc_.end();
   }
 
-  local_iterator end(size_type nbucket) const
+  local_iterator end(size_type _Nbucket) const
   {
-    return c_.end(nbucket);
+    return Myc_.end(_Nbucket);
   }
 
   const_iterator cend() const
   {
-    return c_.cend();
+    return Myc_.cend();
   }
 
-  size_type bucket(const Key& keyval) const
+  size_type bucket(const Key& _KeyVal) const
   {
-    return c_.bucket(keyval);
+    return Myc_.bucket(_KeyVal);
   }
 
   size_type bucket_count() const
   {
-    return c_.bucket_count();
+    return Myc_.bucket_count();
   }
 
-  size_type bucket_size(size_type nbucket) const
+  size_type bucket_size(size_type _Nbucket) const
   {
-    return c_.bucket_size(nbucket);
+    return Myc_.bucket_size(_Nbucket);
   }
 
   void clear()
   {
-    c_.clear();
+    Myc_.clear();
   }
 
-  size_type count(const Key& keyval) const
+  size_type count(const Key& _KeyVal) const
   {
-    return c_.find(keyval) == end() ? 0 : 1;
+    return Myc_.find(_KeyVal) == end() ? 0 : 1;
   }
 
   bool empty() const
   {
-    return c_.empty();
+    return Myc_.empty();
   }
 
   _MY_STL::pair<iterator, iterator>
-        equal_range(const Key& keyval) const
+        equal_range(const Key& _KeyVal) const
   {
-    return c_.equal_range(keyval);
+    return Myc_.equal_range(_KeyVal);
   }
 
-  void erase(iterator position)
+  void erase(iterator _Position)
   {
-    c_.erase(position);
+    Myc_.erase(_Position);
   }
 
-  void erase(iterator first, iterator last)
+  void erase(iterator _First, iterator _Last)
   {
-    c_.erase(first, last);
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "unordered_set erase");
+    Myc_.erase(first, last);
   }
 
-  size_type erase(const Key& keyval)
+  size_type erase(const Key& _KeyVal)
   {
-    return c_.erase(keyval);
+    return Myc_.erase(_KeyVal);
   }
 
-  const_iterator find(const Key& keyval) const
+  const_iterator find(const Key& _KeyVal) const
   {
-    return c_.find(keyval);
+    return Myc_.find(_KeyVal);
   }
 
   hasher hash_function() const
   {
-    return c_.hash_function();
+    return Myc_.hash_function();
   }
 
   key_equal key_eq() const
   {
-    return c_.key_eq();
+    return Myc_.key_eq();
   }
 
   float load_factor() const
   {
-    return c_.load_factor();
+    return Myc_.load_factor();
   }
 
   size_type max_bucket_count() const
   {
-    return c_.max_bucket_count();
+    return Myc_.max_bucket_count();
   }
 
   float max_load_factor() const
   {
-    return c_.max_load_factor();
+    return Myc_.max_load_factor();
   }
 
-  void max_load_factor(float factor)
+  void max_load_factor(float _Factor)
   {
-    c_.max_load_factor(factor);
+    Myc_.max_load_factor(_Factor);
   }
 
   size_type max_size() const
   {
-    return c_.max_size();
+    return Myc_.max_size();
   }
 
-  void rehash(size_type nbuckets)
+  void rehash(size_type _Nbuckets)
   {
-    return c_.rehash(nbuckets);
+    return Myc_.rehash(_Nbuckets);
   }
 
   size_type size() const
   {
-    return c_.size();
+    return Myc_.size();
   }
 
-  _MY_STL::pair<iterator, bool> insert(const value_type& val)
+  _MY_STL::pair<iterator, bool> insert(const value_type& _Val)
   {
-    return c_.insert_unique(val);
+    return Myc_.insert_unique(_Val);
   }
 
   template<class InputIterator>
-    void insert(InputIterator first, InputIterator last)
+    void insert(InputIterator _First, InputIterator _Last)
   {
-    c_.insert_unique(first, last);
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "unordered_set insert");
+    Myc_.insert_unique(_First, _Last);
   }
 
 #ifdef MINI_STL_RVALUE_REFS
-  _MY_STL::pair<iterator, bool> insert(value_type&& val)
+  _MY_STL::pair<iterator, bool> insert(value_type&& _Val)
   {
-    return c_.insert_unique(_MY_STL::move(val));
+    return Myc_.insert_unique(_MY_STL::move(_Val));
   }
 #endif
 
-  void swap(unordered_set& right)
+  void swap(unordered_set& _Right)
   {
-    c_.swap(right.c_);
+    Myc_.swap(_Right.Myc_);
   }
 
-  bool operator==(const unordered_set& rhs)
+  bool operator==(const unordered_set& _Right)
   {
-    return c_ == rhs.c_;
+    return Myc_ == _Right.Myc_;
   }
 
-  bool operator!=(const unordered_set& rhs)
+  bool operator!=(const unordered_set& _Right)
   {
-    return c_ != rhs.c_;
+    return Myc_ != _Right.Myc_;
   }
 };
 
 template<class Key, class Hash,
          class EqualKey,class Alloc>
-void swap(unordered_set<Key,Hash,EqualKey,Alloc>& lhs,
-          unordered_set<Key,Hash,EqualKey,Alloc>& rhs)
+void swap(unordered_set<Key,Hash,EqualKey,Alloc>& _Left,
+          unordered_set<Key,Hash,EqualKey,Alloc>& _Right)
 {
-  lhs.swap(rhs);
+  _Left.swap(_Right);
 }
 
 MINI_STL_END

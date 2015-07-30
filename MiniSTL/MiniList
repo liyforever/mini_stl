@@ -1,0 +1,4 @@
+#ifndef MINILIST_H
+#define MINILIST_H
+#include "mini_stl_list.h"
+#endif // MINILIST_H

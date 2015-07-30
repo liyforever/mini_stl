@@ -6,246 +6,263 @@
 #include "mini_stl_type_traits.h"
 #include "mini_stl_construct.h"
 #include "mini_stl_pair.h"
-#include <iostream>
-using std::cout;
-using std::endl;
+
 MINI_STL_BEGIN
 
-/***************************uninitalized_copy___begin***********************************/
-//内置类型
-template <class InputIter, class ForwardIter>
-inline ForwardIter
-uninitialized_copy_aux(InputIter first, InputIter last,
-                        ForwardIter result,
+
+template<class InputIterator, class ForwardIterator>
+inline ForwardIterator
+uninitialized_copy_aux(InputIterator _First, InputIterator _Last,
+                       ForwardIterator _Result,
                         __true_type)
 {
-  return copy(first, last, result);
+  return _MY_STL::copy(_First, _Last, _Result);
 }
 
-//有构造函数类型
-template <class InputIter, class ForwardIter>
-ForwardIter
-uninitialized_copy_aux(InputIter first, InputIter last,
-                         ForwardIter result,
-                         __false_type)
+
+template<class InputIterator, class ForwardIterator>
+ForwardIterator
+uninitialized_copy_aux(InputIterator _First, InputIterator _Last,
+                       ForwardIterator _Result,
+                       __false_type)
 {
-  ForwardIter cur = result;
+  ForwardIterator cur = _Result;
   MINI_STL_TRY {
-    for( ; first != last; ++first, ++cur)
-        construct(&*cur, *first);
+    for( ; _First != _Last; ++_First, ++cur)
+       _MY_STL::construct(&*cur, *_First);
     return cur;
   }
-  //吃掉异常,再抛出
-  MINI_STL_UNWIND(destroy(result, cur));
+  MINI_STL_UNWIND(_MY_STL::destroy(_Result, cur));
 }
 
-//萃取型别
-template <class InputIter, class ForwardIter, class Type>
-inline ForwardIter
-_uninitialized_copy(InputIter first, InputIter last,
-                     ForwardIter result, Type)
+
+template<class InputIterator, class ForwardIterator, class Type>
+inline ForwardIterator
+_uninitialized_copy(InputIterator _First, InputIterator _Last,
+                    ForwardIterator _Result,
+                    Type*)
 {
   typedef typename _type_traits<Type>::is_POD_type Is_POD;
-  return uninitialized_copy_aux(first, last, result, Is_POD());
+  return uninitialized_copy_aux(_First, _Last, _Result, Is_POD());
 }
 
 
-template <class InputIter, class ForwardIter>
-inline ForwardIter
-uninitialized_copy(InputIter first, InputIter last,
-                     ForwardIter result)
+template<class InputIterator, class ForwardIterator>
+inline ForwardIterator
+uninitialized_copy(InputIterator _First, InputIterator _Last,
+                   ForwardIterator _Result)
 {
-  return _uninitialized_copy(first, last, result,
-                              VALUE_TYPE(result));
+  return _uninitialized_copy(_First, _Last, _Result,
+                             VALUE_TYPE(_Result));
 }
 
-//特化版本
-inline char* uninitialized_copy(const char* first, const char* last,
-                                char* result)
+inline char*
+uninitialized_copy(const char* _First, const char* _Last,
+                   char* _Result)
 {
-  memmove(result, first, last - first);
-  return result + (last - first);
+  memmove(_Result, _First, sizeof(char)*(_Last - _First));
+  return _Result + (_Last - _First);
 }
 
 
 #ifdef MINI_STL_HAS_WCHAR_T
 inline wchar_t*
-uninitialized_copy(const wchar_t* first, const wchar_t* last,
-                   wchar_t* result)
+uninitialized_copy(const wchar_t* _First, const wchar_t* _Last,
+                   wchar_t* _Result)
 {
-  memmove(result, first, sizeof(wchar_t) * (last - first));
-  return result + (last - first);
+  memmove(_Result, _First, sizeof(wchar_t) * (_Last - _First));
+  return _Result + (_Last - _First);
 }
 #endif // MINI_STL_HAS_WCHAR_T
-/***************************uninitalized_copy___end***********************************/
 
 
-
-
-/***************************uninitalized_copy_n__begin***********************************/
-template <class InputIter, class Size, class ForwardIter>
-pair<InputIter, ForwardIter>
-__uninitialized_copy_n(InputIter first, Size count,
-                       ForwardIter result,
+template<class InputIterator, class Size, class ForwardIterator>
+inline _MY_STL::pair<InputIterator, ForwardIterator>
+__uninitialized_copy_n(InputIterator _First,
+                       Size _Count,
+                       ForwardIterator _Result,
                        input_iterator_tag)
 {
-  ForwardIter cur = result;
+  ForwardIterator cur = _Result;
   MINI_STL_TRY {
-    for ( ; __count > 0 ; --count, ++first, ++cur)
-      construct(&*cur, *first);
-    return pair<InputIter, ForwardIter>(first, cur);
+    for ( ; _Count > 0 ; --_Count, ++_First, ++cur)
+      _MY_STL::construct(&*cur, *_First);
+    return pair<InputIterator, ForwardIterator>(_First, cur);
   }
-  MINI_STL_UNWIND(destroy(result, cur));
+  MINI_STL_UNWIND(_MY_STL::destroy(_Result, cur));
 }
 
-template <class RandomAccessIter, class Size, class ForwardIter>
-inline pair<RandomAccessIter, ForwardIter>
-__uninitialized_copy_n(RandomAccessIter first, Size count,
-                       ForwardIter result,
+template <class RandomAccessIterator, class Size, class ForwardIterator>
+inline _MY_STL::pair<RandomAccessIterator, ForwardIterator>
+__uninitialized_copy_n(RandomAccessIterator _First,
+                       Size _Count,
+                       ForwardIterator _Result,
                        random_access_iterator_tag)
 {
-  RandomAccessIter last = first + count;
-  return pair<RandomAccessIter, ForwardIter>(
-        last,
-        uninitialized_copy(first, last, result));
+  RandomAccessIterator last = _First + _Count;
+  return pair<RandomAccessIterator, ForwardIterator>
+      (last,
+      uninitialized_copy(_First, last, _Result));
 }
 
-template <class InputIter, class Size, class ForwardIter>
-inline pair<InputIter, ForwardIter>
-__uninitialized_copy_n(InputIter first, Size count,
-                     ForwardIter result) {
-  return __uninitialized_copy_n(first, count, result,
-                                ITERATOR_CATEGORY(first));
+template <class InputIterator, class Size, class ForwardIterator>
+inline pair<InputIterator, ForwardIterator>
+__uninitialized_copy_n(InputIterator _First,
+                       Size _Count,
+                       ForwardIterator _Result) {
+  return __uninitialized_copy_n(_First, _Count, _Result,
+                                ITERATOR_CATEGORY(_First));
 }
 
-template <class InputIter, class Size, class ForwardIter>
-inline pair<InputIter, ForwardIter>
-uninitialized_copy_n(InputIter first, Size count,
-                     ForwardIter result) {
-  return __uninitialized_copy_n(first, count, result,
-                                ITERATOR_CATEGORY(first));
+template <class InputIterator, class Size, class ForwardIterator>
+inline _MY_STL::pair<InputIterator, ForwardIterator>
+uninitialized_copy_n(InputIterator _First,
+                     Size _Count,
+                     ForwardIterator _Result) {
+  return __uninitialized_copy_n(_First, _Count, _Result,
+                                ITERATOR_CATEGORY(_First));
 }
-//uninitialized_copy_n__end
 
 
-
-template <class ForwardIter, class T>
+template <class ForwardIterator, class Type>
 inline void
-__uninitialized_fill_aux(ForwardIter first, ForwardIter last,
-                         const T& x, __true_type)
+__uninitialized_fill_aux(ForwardIterator _First,
+                         ForwardIterator _Last,
+                         const Type& _Val,
+                         __true_type)
 {
-  fill(first, last, x);
+  _MY_STL::fill(_First, _Last, _Val);
 }
 
 
-template <class ForwardIter, class T>
+template <class ForwardIterator, class Type>
 void
-__uninitialized_fill_aux(ForwardIter first, ForwardIter last,
-                         const T& x, __false_type)
+__uninitialized_fill_aux(ForwardIterator _First,
+                         ForwardIterator _Last,
+                         const Type& _Val,
+                         __false_type)
 {
-  ForwardIter cur = first;
+  ForwardIterator cur = _First;
   MINI_STL_TRY {
-    for ( ; cur != last; ++cur)
-      construct(&*cur, x);
+    for ( ; cur != _Last; ++cur)
+      _MY_STL::construct(&*cur, _Val);
   }
-  //吃掉,再抛出异常
-  MINI_STL_UNWIND(_Destroy(__first, __cur));
+  MINI_STL_UNWIND(_MY_STL::destroy(_First, cur));
 }
 
-template <class ForwardIter, class T, class T1>
-inline void __uninitialized_fill(ForwardIter first,
-                                 ForwardIter last, const T& x, T1*)
+template <class ForwardIterator, class Type, class Type1>
+inline void
+__uninitialized_fill(ForwardIterator _First,
+                     ForwardIterator _Last,
+                     const Type& _Val,
+                     Type1*)
 {
-  typedef typename _type_traits<T1>::is_POD_type Is_POD;
-   __uninitialized_fill_aux(first, last, x, Is_POD());
+  typedef typename _type_traits<Type1>::is_POD_type Is_POD;
+   __uninitialized_fill_aux(_First, _Last, _Val, Is_POD());
 }
 
-template <class ForwardIter, class T>
-inline void uninitialized_fill(ForwardIter first,
-                               ForwardIter last,
-                               const T& x)
+template <class ForwardIterator, class Type>
+inline void
+uninitialized_fill(ForwardIterator _First,
+                   ForwardIterator _Last,
+                   const Type& _Val)
 {
-  __uninitialized_fill(first, last, x, VALUE_TYPE(first));
+  __uninitialized_fill(_First, _Last,
+                       _Val,
+                       VALUE_TYPE(_First));
 }
 
 
 
-template <class ForwardIter, class Size, class T>
-inline ForwardIter
-__uninitialized_fill_n_aux(ForwardIter first, Size n,
-                           const T& x, __true_type)
+template <class ForwardIterator, class Size, class Type>
+inline ForwardIterator
+__uninitialized_fill_n_aux(ForwardIterator _First,
+                           Size _Count,
+                           const Type& _Val,
+                           __true_type)
 {
-  return fill_n(first, n, x);
+  return fill_n(_First, _Count, _Val);
 }
 
-template <class ForwardIter, class Size, class T>
-ForwardIter
-__uninitialized_fill_n_aux(ForwardIter first, Size n,
-                           const T& x, __false_type)
+template <class ForwardIterator, class Size, class Type>
+ForwardIterator
+__uninitialized_fill_n_aux(ForwardIterator _First,
+                           Size _Count,
+                           const Type& _Val,
+                           __false_type)
 {
-  ForwardIter cur = first;
+  ForwardIterator cur = _First;
   MINI_STL_TRY {
-    for ( ; n > 0; --n, ++cur)
-      construct(&*cur, x);
+    for ( ; _Count > 0; --_Count, ++cur)
+      _MY_STL::construct(&*cur, _Val);
     return cur;
   }
-  MINI_STL_UNWIND(destroy(first, cur));
+  MINI_STL_UNWIND(_MY_STL::destroy(_First, cur));
 }
 
-template <class ForwardIter, class Size, class T, class T1>
-inline ForwardIter
-__uninitialized_fill_n(ForwardIter first, Size n, const T& x, T1*)
+template <class ForwardIterator, class Size, class Type, class Type1>
+inline ForwardIterator
+__uninitialized_fill_n(ForwardIterator _First,
+                       Size _Count,
+                       const Type& _Val,
+                       Type1*)
 {
-  typedef typename _type_traits<T1>::is_POD_type Is_POD;
-  return __uninitialized_fill_n_aux(first, n, x, Is_POD());
+  typedef typename _type_traits<Type1>::is_POD_type Is_POD;
+  return __uninitialized_fill_n_aux(_First, _Count, _Val, Is_POD());
 }
 
-template <class ForwardIter, class Size, class T>
-inline ForwardIter
-uninitialized_fill_n(ForwardIter first, Size n, const T& x)
+template <class ForwardIterator, class Size, class Type>
+inline ForwardIterator
+uninitialized_fill_n(ForwardIterator _First,
+                     Size _Count,
+                     const Type& _Val)
 {
-  return __uninitialized_fill_n(first, n, x, VALUE_TYPE(first));
+  return __uninitialized_fill_n(_First, _Count,
+                                _Val,
+                                VALUE_TYPE(_First));
 }
 
-template <class InputIter1, class InputIter2, class ForwardIter>
-inline ForwardIter
-__uninitialized_copy_copy(InputIter1 first1, InputIter1 last1,
-                          InputIter2 first2, InputIter2 last2,
-                          ForwardIter result)
+template <class InputIterator1, class InputIterator2, class ForwardIterator>
+inline ForwardIterator
+__uninitialized_copy_copy(InputIterator1 _First1, InputIterator1 _Last1,
+                          InputIterator2 _First2, InputIterator2 _Last2,
+                          ForwardIterator _Result)
 {
-  ForwardIter mid = uninitialized_copy(first1, last1, result);
+  ForwardIterator mid = uninitialized_copy(_First1, _Last1, _Result);
   MINI_STL_TRY {
-    return uninitialized_copy(first2, last2, mid);
+    return uninitialized_copy(_First2, _Last2, mid);
   }
-  MINI_STL_UNWIND(destroy(result, mid));
+  MINI_STL_UNWIND(_MY_STL::destroy(_Result, mid));
 }
 
 
-template <class ForwardIter, class T, class InputIter>
-inline ForwardIter
-__uninitialized_fill_copy(ForwardIter result, ForwardIter mid,
-                          const T& x,
-                          InputIter first, InputIter last)
+template <class ForwardIterator, class Type, class InputIterator>
+inline ForwardIterator
+__uninitialized_fill_copy(ForwardIterator _Result,
+                          ForwardIterator _Middle,
+                          const Type& _Val,
+                          InputIterator _First,
+                          InputIterator _Last)
 {
-  uninitialized_fill(result, mid, x);
+  uninitialized_fill(_Result, _Middle, _Val);
   MINI_STL_TRY {
-    return uninitialized_copy(first, last, mid);
+    return uninitialized_copy(_First, _Last, _Middle);
   }
-  MINI_STL_UNWIND(destroy(result, mid));
+  MINI_STL_UNWIND(_MY_STL::destroy(_Result, _Middle));
 }
 
 
-template <class InputIter, class ForwardIter, class T>
+template <class InputIterator, class ForwardIterator, class Type>
 inline void
-__uninitialized_copy_fill(InputIter first1, InputIter last1,
-                          ForwardIter first2, ForwardIter last2,
-                          const T& x)
+__uninitialized_copy_fill(InputIterator _First1, InputIterator _Last1,
+                          ForwardIterator _First2, ForwardIterator _Last2,
+                          const Type& _Val)
 {
-  ForwardIter mid2 = uninitialized_copy(first1, last1, first2);
+  ForwardIterator mid2 = uninitialized_copy(_First1, _Last1, _First2);
   MINI_STL_TRY {
-    uninitialized_fill(mid2, last2, x);
+    uninitialized_fill(mid2, _Last2, _Val);
   }
-  MINI_STL_UNWIND(destroy(first2, mid2));
+  MINI_STL_UNWIND(_MY_STL::destroy(_First2, mid2));
 }
 
 MINI_STL_END

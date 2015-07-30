@@ -1,0 +1,4 @@
+#ifndef MINIALGORITHM_H
+#define MINIALGORITHM_H
+#include "mini_stl_algorithm.h"
+#endif // MINIALGORITHM_H

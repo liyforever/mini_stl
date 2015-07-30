@@ -1,0 +1,4 @@
+#ifndef MINIQUEUE_H
+#define MINIQUEUE_H
+#include "mini_stl_queue.h"
+#endif // MINIQUEUE_H

@@ -7,18 +7,13 @@
 #include "mini_stl_debug.h"
 #include <string.h>
 #include <wchar.h>
-#include <iostream>
-using std::cout;
-using std::endl;
+
 MINI_STL_BEGIN
 
 template <class Type>
 inline const Type& max(const Type& _Left, const Type& _Right)
 {
-  MINI_STL_DEBUG_LESS(_Right, _Left, "Invalid operator< max");
-  //return _Right < _Left ? _Left : _Right;
-  return MINI_STL_DEBUG_LESS(_Right, _Left,
-                             "Invalid operator< max") ?
+  return MINI_STL_DEBUG_LESS(_Right, _Left) ?
         _Left : _Right;
 }
 
@@ -26,39 +21,44 @@ template <class Type, class Compare>
 inline const Type& max(const Type& _Left, const Type& _Right, Compare _Comp)
 {
   MINI_STL_DEBUG_POINTER(_Comp, "max_of_comp");
-  MINI_STL_DEBUG_COMP(_Comp, _Left, _Right, "Invalid comp max_of_comp");
-  return _Comp(_Right, _Left) ? _Left : _Right;
+
+  return MINI_STL_DEBUG_COMP(_Comp, _Right, _Left)  ?
+        _Left : _Right;
 }
 
 template <class Type>
 inline const Type& min(const Type& _Left, const Type& _Right)
 {
-  MINI_STL_DEBUG_LESS(_Left, _Right, "Invalid operator< min");
-  return _Left < _Right ? _Left : _Right;
+  return MINI_STL_DEBUG_LESS(_Left, _Right) ?
+        _Left : _Right;
 }
 
 template <class Type, class Compare>
 inline const Type& min(const Type& _Left, const Type& _Right, Compare _Comp)
 {
   MINI_STL_DEBUG_POINTER(_Comp, "min_of_comp");
-  MINI_STL_DEBUG_COMP(_Comp, _Left, _Right, "Invalid comp min_of_comp");
-  return _Comp(_Left, _Right) ? _Left : _Right;
+  return MINI_STL_DEBUG_COMP(_Comp, _Left, _Right) ?
+        _Left : _Right;
 }
 
-
+#ifdef MINI_STL_RVALUE_REFS
 template <class Type>
 inline void swap(Type& _Left, Type& _Right)
 {
-#ifdef MINI_STL_RVALUE_REFS
   Type tmp(_MY_STL::move(_Left));
   _Left = _MY_STL::move(_Right);
   _Right = _MY_STL::move(tmp);
+}
 #else
+template <class Type>
+inline void swap(Type& _Left, Type& _Right)
+{
   Type tmp(_Left);
   _Left = _Right;
   _Right = tmp;
-#endif
 }
+#endif // MINI_STL_RVALUE_REFS
+
 
 template <class ForwardIterator, class Type>
 inline void
@@ -104,8 +104,7 @@ equal(InputIterator1 _First1, InputIterator1 _Last1,
   MINI_STL_DEBUG_POINTER_FOR_N(_First2, DISTANCE(_First1, _Last1), "equal_for_comp");
   MINI_STL_DEBUG_POINTER(_Comp, "equal_of_comp");
   for (; _First1!=_Last1; ++_First1,++_First2)
-    if (!MINI_STL_DEBUG_COMP(_Comp, *_First1, *_First2,
-                             "Invalid operator< equal"))//_Comp(*_First1, *_First2))
+    if (!_Comp( *_First1, *_First2))
       return false;
   return true;
 }
@@ -119,9 +118,9 @@ lexicographical_compare(InputIterator1 _First1, InputIterator1 _Last1,
   MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First2, _Last2, "lexicographical_compare");
 
   for (; _First1!=_Last1 && _First2!=_Last2; ++_First1,++_First2) {
-    if (*_First1<*_First2)
+    if (MINI_STL_DEBUG_LESS(*_First1, *_First2))
       return true;
-    if (*_First2<*_First1)
+    if (MINI_STL_DEBUG_LESS(*_First2, *_First1))
       return false;
   }
   return _First1 == _Last1 && _First2 != _Last2;
@@ -139,9 +138,9 @@ lexicographical_compare(InputIterator1 _First1, InputIterator1 _Last1,
   MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First2, _Last2, "lexicographical_compare_of_comp");
 
   for (; _First1!=_Last1 && _First2!=&&_Last2; ++_First1,++_First2) {
-    if (_Comp(*_First1,*_First2))
+    if (MINI_STL_DEBUG_COMP(_Comp, *_First1, *_First2))
       return true;
-    if (_Comp(*_First2,*_First1))
+    if (MINI_STL_DEBUG_COMP(_Comp, *_First2, *_First1))
       return false;
   }
   return _First1 == _Last1 && _First2 != _Last2;
@@ -186,7 +185,7 @@ ForwardIterator _lower_bound_aux(ForwardIterator _First,
     half = len / 2;
     middle = _First;
     advance(middle, half);
-    if (*middle < _Val) {
+    if (MINI_STL_DEBUG_LESS(*middle, _Val)) {
       _First = middle;
       ++_First;
       len = len - half - 1;
@@ -210,7 +209,7 @@ RandomAccessIterator _lower_bound_aux(RandomAccessIterator _First,
     half = len / 2;
     middle = _First;
     middle += half;
-    if (*middle < _Val) {
+    if (MINI_STL_DEBUG_LESS(*middle, _Val)) {
       _First = middle;
       ++_First;
       len = len - half - 1;
@@ -235,7 +234,7 @@ ForwardIterator _lower_bound_aux(ForwardIterator _First,
     half = len / 2;
     middle = _First;
     advance(middle, half);
-    if (comp(*middle, _Val)) {
+    if (MINI_STL_DEBUG_COMP(comp,*middle, _Val)) {
       _First = middle;
       ++_First;
       len = len - half - 1;
@@ -260,7 +259,7 @@ RandomAccessIterator _lower_bound_aux(RandomAccessIterator _First,
     half = len / 2;
     middle = _First;
     middle += half;
-    if (comp(*middle, _Val)) {
+    if (MINI_STL_DEBUG_COMP(comp,*middle, _Val)) {
       _First = middle;
       ++_First;
       len = len - half - 1;
@@ -309,7 +308,7 @@ ForwardIterator _upper_bound_aux(ForwardIterator _First,
     half = len / 2;
     middle = _First;
     advance(middle, half);
-    if (_Val < *middle) {
+    if (MINI_STL_DEBUG_LESS(_Val, *middle)) {
       len = half;
     } else {
       _First = middle;
@@ -334,7 +333,7 @@ RandomAccessIterator _upper_bound_aux(RandomAccessIterator _First,
     half = len / 2;
     middle = _First;
     middle += half;
-    if (_Val < *middle) {
+    if (MINI_STL_DEBUG_LESS(_Val, *middle)) {
       len = half;
     } else {
       _First = middle;
@@ -360,7 +359,7 @@ ForwardIterator _upper_bound_aux(ForwardIterator _First,
     half = len / 2;
     middle = _First;
     advance(middle, half);
-    if (_Comp(_Val,*middle)) {
+    if (MINI_STL_DEBUG_COMP(_Comp,_Val,*middle)) {
       len = half;
     } else {
       _First = middle;
@@ -386,7 +385,7 @@ RandomAccessIterator _upper_bound_aux(RandomAccessIterator _First,
     half = len / 2;
     middle = _First;
     middle += half;
-    if (_Comp(_Val, *middle)) {
+    if (MINI_STL_DEBUG_COMP(_Comp, _Val, *middle)) {
       len = half;
     } else {
       _First = middle;
@@ -396,32 +395,103 @@ RandomAccessIterator _upper_bound_aux(RandomAccessIterator _First,
   }
   return _First;
 }
+
+template<class BidirectionalIterator1, class BidirectionalIterator2>
+inline BidirectionalIterator2
+_copy_backward_impl(BidirectionalIterator1 _First,
+                    BidirectionalIterator1 _Last,
+                    BidirectionalIterator2 _DestEnd,
+                    __true_type,
+                    bidirectional_iterator_tag,
+                    bidirectional_iterator_tag)
+{
+  while (_First != _Last)
+    *--_DestEnd = *--_Last;
+  return _DestEnd;
+}
+
+template<class BidirectionalIterator1, class BidirectionalIterator2>
+inline BidirectionalIterator2
+_copy_backward_impl(BidirectionalIterator1 _First,
+                    BidirectionalIterator1 _Last,
+                    BidirectionalIterator2 _DestEnd,
+                    __false_type,
+                    bidirectional_iterator_tag,
+                    bidirectional_iterator_tag)
+{
+  while (_First != _Last)
+    *--_DestEnd = *--_Last;
+  return _DestEnd;
+}
+
+template<class BidirectionalIterator1, class BidirectionalIterator2>
+inline BidirectionalIterator2
+_copy_backward_impl(BidirectionalIterator1 _First,
+                    BidirectionalIterator1 _Last,
+                    BidirectionalIterator2 _DestEnd,
+                    __true_type,
+                    native_pointer_iterator_tag,
+                    native_pointer_iterator_tag)
+{
+  ptrdiff_t count = _Last - _First;
+  memmove(_DestEnd-count, _First, count*sizeof(*_First));
+  return _DestEnd - count;
+}
+
+template<class BidirectionalIterator1, class BidirectionalIterator2,
+         class Type>
+inline BidirectionalIterator2
+_copy_backward_dispatch(BidirectionalIterator1 _First,
+                        BidirectionalIterator1 _Last,
+                        BidirectionalIterator2 _DestEnd,
+                        Type*)
+{
+  return _copy_backward_impl(_First, _Last,
+                             _DestEnd,
+                             _type_traits<Type>::has_trivial_assignment_operator(),
+                             ITERATOR_CATEGORY(_First),
+                             ITERATOR_CATEGORY(_DestEnd));
+}
+
+template<class BidirectionalIterator1, class BidirectionalIterator2>
+inline BidirectionalIterator2
+copy_backward(BidirectionalIterator1 _First,
+              BidirectionalIterator1 _Last,
+              BidirectionalIterator2 _DestEnd)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "copy_backward");
+  MINI_STL_DEBUG_POINTER_FOR_N(_DestEnd, DISTANCE(_First, _Last), "copy_backward");
+  return _copy_backward_dispatch(_First, _Last,
+                                 _DestEnd,
+                                 VALUE_TYPE(_First));
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <class RandomAccessIter, class OutputIter, class Distance>
 inline OutputIter
-__copy_d(RandomAccessIter first, RandomAccessIter last,
-         OutputIter result, Distance*)
+__copy_d(RandomAccessIter _First, RandomAccessIter _Last,
+         OutputIter _Result, Distance*)
 {
-  for(Distance n = last - first; n>0; --n, ++result, ++first)
-    *result = *first;
-  return result;
+  for(Distance n = _Last - _First; n>0; --n, ++_Result, ++_First)
+    *_Result = *_First;
+  return _Result;
 }
 
 template <class T>
 inline T*
-__copy_t(const T* first, const T* last, T* result,
+__copy_t(const T* _First, const T* _Last, T* _Result,
          __true_type)
 {
-  memmove(result, first, sizeof(T) * (last - first));
-  return result + (last - first);
+  memmove(_Result, _First, sizeof(T) * (_Last - _First));
+  return _Result + (_Last - _First);
 }
 
 template <class T>
 inline T*
-__copy_t(const T* first, const T* last, T* result,
+__copy_t(const T* _First, const T* _Last, T* _Result,
          __false_type)
 {
-  return __copy_d(first, last, result, (ptrdiff_t*)0);
+  return __copy_d(_First, _Last, _Result, (ptrdiff_t*)0);
 }
 
 //InputIter 版本
@@ -501,78 +571,7 @@ inline wchar_t* copy(const wchar_t *_First, const wchar_t *_Last, wchar_t *_Resu
 }
 
 
-/************************copy_backward__begin**************************/
 
-template<class BidirectionalIterator1, class BidirectionalIterator2>
-inline BidirectionalIterator2
-_copy_backward_impl(BidirectionalIterator1 _First,
-                    BidirectionalIterator1 _Last,
-                    BidirectionalIterator2 _DestEnd,
-                    __true_type,
-                    bidirectional_iterator_tag,
-                    bidirectional_iterator_tag)
-{
-  while (_First != _Last)
-    *--_DestEnd = *--_Last;
-  return _DestEnd;
-}
-
-template<class BidirectionalIterator1, class BidirectionalIterator2>
-inline BidirectionalIterator2
-_copy_backward_impl(BidirectionalIterator1 _First,
-                    BidirectionalIterator1 _Last,
-                    BidirectionalIterator2 _DestEnd,
-                    __false_type,
-                    bidirectional_iterator_tag,
-                    bidirectional_iterator_tag)
-{
-  while (_First != _Last)
-    *--_DestEnd = *--_Last;
-  return _DestEnd;
-}
-
-template<class BidirectionalIterator1, class BidirectionalIterator2>
-inline BidirectionalIterator2
-_copy_backward_impl(BidirectionalIterator1 _First,
-                    BidirectionalIterator1 _Last,
-                    BidirectionalIterator2 _DestEnd,
-                    __true_type,
-                    native_pointer_iterator_tag,
-                    native_pointer_iterator_tag)
-{
-  ptrdiff_t count = _Last - _First;
-  memmove(_DestEnd-count, _First, count*sizeof(*_First));
-  return _DestEnd - count;
-}
-
-template<class BidirectionalIterator1, class BidirectionalIterator2,
-         class Type>
-inline BidirectionalIterator2
-_copy_backward_dispatch(BidirectionalIterator1 _First,
-                        BidirectionalIterator1 _Last,
-                        BidirectionalIterator2 _DestEnd,
-                        Type*)
-{
-  return _copy_backward_impl(_First, _Last,
-                             _DestEnd,
-                             _type_traits<Type>::has_trivial_assignment_operator(),
-                             ITERATOR_CATEGORY(_First),
-                             ITERATOR_CATEGORY(_DestEnd));
-}
-
-template<class BidirectionalIterator1, class BidirectionalIterator2>
-inline BidirectionalIterator2
-copy_backward(BidirectionalIterator1 _First,
-              BidirectionalIterator1 _Last,
-              BidirectionalIterator2 _DestEnd)
-{
-  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "copy_backward");
-  MINI_STL_DEBUG_POINTER_FOR_N(_DestEnd, DISTANCE(_First, _Last), "copy_backward");
-  return _copy_backward_dispatch(_First, _Last,
-                                 _DestEnd,
-                                 VALUE_TYPE(_First));
-}
-/************************copy_backward__end**************************/
 
 /************************heap_begin**********************************/
 template <class RandomAccessIterator, class Distance, class Type>

@@ -1,72 +1,86 @@
 #ifndef MINI_STL_CONSTRUCT_H
 #define MINI_STL_CONSTRUCT_H
-
 #include "mini_stl_config.h"
 #include "mini_stl_type_traits.h"
 #include "mini_stl_iterator.h"
 #include <new.h>
-MINI_STL_BEGIN
-template <class T1, class T2>
-inline void construct(T1* p, const T2& value)
-{
-  ::new (p)T1(value);
-}
 
-template <class T>
-inline void construct(T* p)
-{
-  ::new (p) T();
-}
+MINI_STL_BEGIN
 
 template <class Type1, class Type2>
-inline void construct(Type1* p, Type2&& _Val)
+inline void construct(Type1* _Ptr, const Type2& _Val)
 {
-  cout << "move C" << endl;
-  ::new (p) _MY_STL::move(_Val);
-}
-//true_type的destroy版本调用析构函数
-template <class T>
-inline void destroy(T* pointer)
-{
-  pointer->~T();
+  ::new ((void*)_Ptr) Type1(_Val);
 }
 
-//一对迭代器版本
-//false_type的一对迭代器的destroy版本调用析构函数
-template <class ForwardIter>
-inline void _destroy_aux(ForwardIter first, ForwardIter last, __false_type)
+template <class Type>
+inline void construct(Type* _Ptr)
 {
-  for (; first!=last; ++first)
-    destroy(&*first);
-}
-//内置类型,空函数
-template <class ForwardIter>
-inline void _destroy_aux(ForwardIter , ForwardIter , __true_type) {}
-
-//判断迭代器型别
-template <class ForwardIter, class T>
-inline void _destroy(ForwardIter first, ForwardIter last, T*)
-{
-  typedef typename _type_traits<T>::has_trivial_destructor trivial_destructor;
-  _destroy_aux(first, last, trivial_destructor());
+  ::new ((void*)_Ptr) Type();
 }
 
-//上层接口的析构函数,一对迭代器版本
-template <class ForwardIter>
-inline void destroy(ForwardIter first, ForwardIter last)
+#ifdef MINI_STL_RVALUE_REFS
+template <class Type1, class Type2>
+inline void construct(Type1* _Ptr, Type2&& _Val)
 {
-  _destroy(first, last, VALUE_TYPE(first));
+  ::new ((void*)_Ptr) Type1(_MY_STL::move(_Val));
+}
+#endif
+
+template <class Type>
+inline void destroy(Type* _Ptr)
+{
+  _Ptr->~Type();
 }
 
-inline void destroy(char*, char*) {}
+
+template <class ForwardIterator>
+inline void
+_destroy_aux(ForwardIterator _First,
+             ForwardIterator _Last,
+             __false_type)
+{
+  for (; _First != _Last; ++_First)
+    destroy(&*_First);
+}
+
+template <class ForwardIterator>
+inline void
+_destroy_aux(ForwardIterator,
+             ForwardIterator,
+             __true_type)
+{}
+
+
+template <class ForwardIterator, class Type>
+inline void
+_destroy(ForwardIterator _First,
+         ForwardIterator _Last,
+         Type*)
+{
+  typedef typename _type_traits<Type>::has_trivial_destructor
+      trivial_destructor;
+  _destroy_aux(_First, _Last,
+               trivial_destructor());
+}
+
+
+template <class ForwardIterator>
+inline void
+destroy(ForwardIterator _First,
+        ForwardIterator _Last)
+{
+  _destroy(_First, _Last, VALUE_TYPE(_First));
+}
+
 inline void destroy(int*, int*) {}
+inline void destroy(char*, char*) {}
 inline void destroy(long*, long*) {}
 inline void destroy(float*, float*) {}
 inline void destroy(double*, double*) {}
 #ifdef MINI_STL_HAS_WCHAR_T
 inline void destroy(wchar_t*, wchar_t*) {}
 #endif // MINI_STL_HAS_WCHAR_T
-
 
 MINI_STL_END
 #endif // MINI_STL_CONSTRUCT_H

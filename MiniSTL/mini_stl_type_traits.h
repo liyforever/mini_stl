@@ -1,20 +1,12 @@
 #ifndef MINI_STL___true_type_H
 #define MINI_STL___true_type_H
 #include "mini_stl_config.h"
-#include <iostream>
-using std::cout;
-using std::endl;
+
 MINI_STL_BEGIN
-struct __true_type
-{
-
-};
-
-struct __false_type
-{
-
-};
-
+struct __true_type {};
+//has_trivaial constructor and destructor
+struct __false_type {};
+//has notrivaial constructor and destructor
 template <class type>
 struct _type_traits
 {
@@ -236,7 +228,9 @@ struct _type_traits<const unsigned char*>
   typedef __true_type    is_POD_type;
 };
 #endif
+
 struct Identity {};
+//aux class distinguish Iterator or built-in type
 
 template <class Iterator>
 struct is_iterator
@@ -245,75 +239,40 @@ struct is_iterator
 };
 
 template <>
-struct is_iterator<char>
-{
-
-};
+struct is_iterator<char> {};
 
 template <>
-struct is_iterator<unsigned char>
-{
-
-};
+struct is_iterator<unsigned char> {};
 
 template <>
-struct is_iterator<signed char>
-{
-
-};
+struct is_iterator<signed char> {};
 
 template <>
-struct is_iterator<short>
-{
-
-};
+struct is_iterator<short> {};
 
 template <>
-struct is_iterator<unsigned short>
-{
-
-};
+struct is_iterator<unsigned short> {};
 
 template <>
-struct is_iterator<int>
-{
-
-};
+struct is_iterator<int> {};
 
 template <>
-struct is_iterator<unsigned int>
-{
-
-};
+struct is_iterator<unsigned int> {};
 
 template <>
-struct is_iterator<long> {
-
-};
+struct is_iterator<long> {};
 
 template <>
-struct is_iterator<unsigned long>
-{
-
-};
+struct is_iterator<unsigned long> {};
 
 template <>
-struct is_iterator<float>
-{
-
-};
+struct is_iterator<float> {};
 
 template <>
-struct is_iterator<double>
-{
-
-};
+struct is_iterator<double> {};
 
 template <>
-struct is_iterator<long double>
-{
-
-};
+struct is_iterator<long double> {};
 
 #ifdef MINI_STL_RVALUE_REFS
 template<class Type>
@@ -336,10 +295,12 @@ struct remove_reference<Type&&>
 
 template<class Type> inline
 typename remove_reference<Type>::type&&
-  move(Type&& Arg)
+  move(Type&& _Arg)
 {
-  return ((typename remove_reference<Type>::type&&)Arg);
+  return (typename remove_reference<Type>::type&&)
+      (_Arg);
 }
 #endif //MINI_STL_RVALUE_REFS
+
 MINI_STL_END
 #endif // MINI_STL___true_type_H

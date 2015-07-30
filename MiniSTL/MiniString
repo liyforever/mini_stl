@@ -1,0 +1,4 @@
+#ifndef MINISTRING_H
+#define MINISTRING_H
+#include "mini_stl_string.h"
+#endif // MINISTRING_H

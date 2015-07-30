@@ -1,6 +1,5 @@
 #ifndef MINI_STL_HASHTABLE_H
 #define MINI_STL_HASHTABLE_H
-#include "memory.h"
 #include "mini_stl_list.h"
 #include "mini_stl_vector.h"
 #include "mini_stl_hash_fun.h"
@@ -22,27 +21,54 @@ template <class Val, class Key, class HashFcn,
 struct HT_iterator
 {
   typedef hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>
-         hashtable;
+          hashtable;
   typedef HT_iterator<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc,ListIterator>
-         iterator;
+          Self;
   typedef _list_node<Val> node;
   typedef bidirectional_iterator_tag iterator_category;
-  typedef Val value_type;
   typedef ptrdiff_t difference_type;
   typedef size_t size_type;
-  typedef Val& reference;
-  typedef Val* pointer;
+  typedef typename ListIterator::pointer pointer;
+  typedef typename ListIterator::reference reference;
+  typedef typename ListIterator::value_type value_type;
 
   ListIterator cur;
   hashtable* ht_ptr;
   size_type index;
-  HT_iterator(ListIterator li, hashtable* ht, size_type i)
-    : cur(li), ht_ptr(ht), index(i){}
-  HT_iterator() {}
+  HT_iterator()
+    : ht_ptr(0), index(0)
+  {}
+
+  HT_iterator(const ListIterator& _Li, const hashtable* _Ht, size_type _Ind)
+    : cur(_Li),
+      ht_ptr(const_cast<hashtable*>(_Ht)),
+      index(_Ind)
+  {}
+
+  template <class HT_Citerator>
+  HT_iterator(const HT_Citerator& _Right)
+    : cur(_Right.cur),
+      ht_ptr(_Right.ht_ptr),
+      index(_Right.index)
+  {}
+
+  HT_iterator(const HT_iterator& _Right)
+    : cur(_Right.cur),
+      ht_ptr(_Right.ht_ptr),
+      index(_Right.index)
+  {}
+
+  Self& operator=(const HT_iterator& _Right)
+  {
+    this->cur = _Right.cur;
+    this->ht_ptr = _Right.ht_ptr;
+    this->index = _Right.index;
+    return *this;
+  }
 
   reference operator*() const
   {
-    return *cur;
+    return cur.operator*();
   }
 
   pointer operator->() const
@@ -50,32 +76,32 @@ struct HT_iterator
     return &(operator*());
   }
 
-  iterator& operator++();
+  Self& operator++();
 
-  iterator operator++(int)
+  Self operator++(int)
   {
-    iterator tmp = *this;
+    Self tmp = *this;
     ++*this;
     return tmp;
   }
 
-  iterator& operator--();
+  Self& operator--();
 
-  iterator operator--(int)
+  Self operator--(int)
   {
-    iterator tmp = *this;
+    Self tmp = *this;
     --*this;
     return tmp;
   }
 
-  bool operator==(const iterator& it) const
+  bool operator==(const Self& _Iter) const
   {
-    return this->cur == it.cur;
+    return this->cur == _Iter.cur;
   }
 
-  bool operator!=(const iterator& it) const
+  bool operator!=(const Self& _Iter) const
   {
-    return this->cur != it.cur;
+    return this->cur != _Iter.cur;
   }
 };
 
@@ -91,11 +117,11 @@ static const unsigned long _prime_list[_num_primes] =
   1610612741ul, 3221225473ul, 4294967291ul
 };
 
-inline unsigned long _next_prime(unsigned long n)
+inline unsigned long _next_prime(unsigned long _Num)
 {
   const unsigned long *first = _prime_list;
   const unsigned long *last = _prime_list + _num_primes;
-  const unsigned long *pos = lower_bound(first, last, n);
+  const unsigned long *pos = _MY_STL::lower_bound(first, last, _Num);
   return pos == last ? *(last - 1) : *pos;
 }
 
@@ -106,17 +132,17 @@ HT_iterator<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc,ListIterator>&
 HT_iterator<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc,ListIterator>::operator++()
 {
   ++cur;
-  if (cur!=ht_ptr->buckets_[index].end()) {
+  if (cur!=ht_ptr->Mybuckets_[index].end()) {
     return *this;
   } else {
-    while (++index < ht_ptr->buckets_.size())
-      if (!ht_ptr->buckets_[index].empty()) {
-        cur = ht_ptr->buckets_[index].begin();
+    while (++index < ht_ptr->Mybuckets_.size())
+      if (!ht_ptr->Mybuckets_[index].empty()) {
+        cur = ht_ptr->Mybuckets_[index].begin();
         return *this;
       }
   }
   --index;
-  cur = ht_ptr->buckets_[index].end();
+  cur = ht_ptr->Mybuckets_[index].end();
   return *this;
 }
 
@@ -126,22 +152,24 @@ template <class Val, class Key, class HashFcn,
 HT_iterator<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc,ListIterator>&
 HT_iterator<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc,ListIterator>::operator--()
 {
-  if (cur!=ht_ptr->buckets_[index].begin()) {
+  if (cur!=ht_ptr->Mybuckets_[index].begin()) {
     --cur;
     return *this;
   } else {
     while (--index >= 0)
-      if (!ht_ptr->buckets_[index].empty()) {
-        cur = --ht_ptr->buckets_[index].end();
+      if (!ht_ptr->Mybuckets_[index].empty()) {
+        cur = --ht_ptr->Mybuckets_[index].end();
         return *this;
       }
   }
   ++index;
-  cur = ht_ptr->buckets_[index].end();
+  cur = ht_ptr->Mybuckets_[index].end();
   return *this;
 }
 
 const float _MAX_FACTOR = 0.75;
+//hash_table load max factor
+
 template <class Val, class Key, class HashFcn,
           class ExtractKey, class EqualKey, class Alloc>
 class hashtable
@@ -178,116 +206,122 @@ private:
   friend struct
   HT_iterator<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc,LCI>;
 private:
-  hasher               hash_;
-  key_equal            equals_;
-  ExtractKey           get_key_;
-  bucket_type          buckets_;
-  size_type            num_count_;
-  float                max_factor_;
+  hasher               Myhash_;
+  key_equal            Myequals_;
+  ExtractKey           Myget_key_;
+  bucket_type          Mybuckets_;
+  size_type            Mynum_count_;
+  float                Mymax_factor_;
 public:
-  hashtable(size_type n,
-            const HashFcn& hf = HashFcn(),
-            const EqualKey& eql = EqualKey(),
-            const ExtractKey& ext = ExtractKey(),
+  hashtable(size_type _Count,
+            const HashFcn& _Hf = HashFcn(),
+            const EqualKey& _Eql = EqualKey(),
+            const ExtractKey& _Ext = ExtractKey(),
             const allocator_type& /*Al*/ = allocator_type())
-    : hash_(hf),
-      equals_(eql),
-      get_key_(ext),
-      num_count_(0),
-      max_factor_(_MAX_FACTOR)
+    : Myhash_(_Hf),
+      Myequals_(_Eql),
+      Myget_key_(_Ext),
+      Mynum_count_(0),
+      Mymax_factor_(_MAX_FACTOR)
   {
-    _init_bucket(n);
+    MINI_STL_DEBUG_POINTER(_Hf, "invalid HashFcn");
+    MINI_STL_DEBUG_POINTER(_Eql, "invalid EqualKey");
+    _init_bucket(_Count);
   }
 
-  hashtable(const hashtable& ht)
-    : hash_(ht.hash_),
-      equals_(ht.equals_),
-      get_key_(ht.get_key_),
-      num_count_(ht.num_count_),
-      max_factor_(ht.max_factor_)
+  hashtable(const hashtable& _Ht)
+    : Myhash_(_Ht.Myhash_),
+      Myequals_(_Ht.Myequals_),
+      Myget_key_(_Ht.Myget_key_),
+      Mynum_count_(_Ht.Mynum_count_),
+      Mymax_factor_(_Ht.Mymax_factor_)
   {
-    _copy_from(ht);
+    _copy_from(_Ht);
   }
 
 #ifdef MINI_STL_RVALUE_REFS
-  hashtable(hashtable&& ht)
-    : hash_(ht.hash_),
-      equals_(ht.equals_),
-      get_key_(ht.get_key_),
-      num_count_(ht.num_count_),
-      max_factor_(ht.max_factor_),
-      buckets_(_MY_STL::move(ht.buckets_))
+  hashtable(hashtable&& _Ht)
+    : Myhash_(_Ht.Myhash_),
+      Myequals_(_Ht.Myequals_),
+      Myget_key_(_Ht.Myget_key_),
+      Mynum_count_(_Ht.Mynum_count_),
+      Mymax_factor_(_Ht.Mymax_factor_),
+      Mybuckets_(_MY_STL::move(_Ht.Mybuckets_))
   {}
 
-  hashtable& operator=(hashtable&& ht)
+  hashtable& operator=(hashtable&& _Ht)
   {
-    if (&ht != this) {
-      hash_ = ht.hash_;
-      equals_ = ht.equals_;
-      get_key_ = ht.get_key_;
-      num_count_ = ht.num_count_;
-      max_factor_ = ht.max_factor_;
-      buckets_ = move(ht.buckets_);
+    if (&_Ht != this) {
+      _MY_STL::swap(Myhash_, _Ht.Myhash_);
+      _MY_STL::swap(Myequals_, _Ht.Myequals_);
+      _MY_STL::swap(Myget_key_, _Ht.Myget_key_);
+      Mynum_count_ =  _Ht.Mynum_count_;
+      Mybuckets_ = _MY_STL::move(_Ht.Mybuckets_);
     }
+    return *this;
   }
 #endif
-  hashtable& operator=(const hashtable& ht)
+  hashtable& operator=(const hashtable& _Ht)
   {
-    if (&ht != this) {
-      hash_ = ht.hash_;
-      equals_ = ht.equals_;
-      get_key_ = ht.get_key_;
-      num_count_ = ht.num_count_;
-      max_factor_ = ht.max_factor_;
-      _copy_from(ht);
+    if (&_Ht != this) {
+      Myhash_ = _Ht.Myhash_;
+      Myequals_ = _Ht.Myequals_;
+      Myget_key_ = _Ht.Myget_key_;
+      Mynum_count_ = _Ht.Mynum_count_;
+      Mymax_factor_ = _Ht.Mymax_factor_;
+      _copy_from(_Ht);
     }
+    return *this;
   }
 public:
   iterator begin()
   {
-    for(size_type index=0; index<buckets_.size(); ++index)
-      if (!buckets_[index].empty())
-        return iterator(buckets_[index].begin(), this, index);
-
+    for(size_type index=0; index < Mybuckets_.size(); ++index)
+      if (!Mybuckets_[index].empty())
+        return iterator(Mybuckets_[index].begin(), this, index);
     return end();
   }
 
   const_iterator begin() const
   {
-    for(size_type index=0; index<buckets_.size(); ++index)
-      if (!buckets_[index].empty())
-        return const_iterator(buckets_[index].begin(), this, index);
-    return end();
+    for(size_type index=0; index < Mybuckets_.size(); ++index)
+      if (!Mybuckets_[index].empty())
+        return const_iterator(Mybuckets_[index].cbegin(), this, index);
+    return cend();
   }
 
-  LI begin(size_type nbucket)
+  LI begin(size_type _Nbucket)
   {
-    return buckets_[nbucket].begin();
+    return Mybuckets_[_Nbucket].begin();
   }
 
-  LCI begin(size_type nbucket) const
+  LCI begin(size_type _Nbucket) const
   {
-    return buckets_[nbucket].begin();
+    return Mybuckets_[_Nbucket].begin();
   }
 
   iterator end()
   {
-    return iterator(buckets_[buckets_.size()-1].end(), this, buckets_.size()-1);
+    return iterator(Mybuckets_[Mybuckets_.size()-1].end(),
+                    this,
+                    Mybuckets_.size()-1);
   }
 
   const_iterator end() const
   {
-    return const_iterator(buckets_[buckets_.size()-1].end(), this, buckets_.size()-1);
+    return const_iterator(Mybuckets_[Mybuckets_.size()-1].end(),
+                          this,
+                          Mybuckets_.size()-1);
   }
 
-  LI end(size_type nbucket)
+  LI end(size_type _Nbucket)
   {
-    return buckets_[nbucket].end();
+    return Mybuckets_[_Nbucket].end();
   }
 
-  LCI end(size_type nbucket) const
+  LCI end(size_type _Nbucket) const
   {
-    return buckets_[nbucket].end();
+    return Mybuckets_[_Nbucket].end();
   }
 
   reverse_iterator rbegin()
@@ -348,24 +382,24 @@ public:
 
   void clear()
   {
-    buckets_.clear();
-    num_count_ = 0;
+    for (size_type index = 0; index != Mybuckets_.size(); ++index)
+      Mybuckets_[index].clear();
+    Mynum_count_ = 0;
   }
 
-  size_type bucket(const Key& keyval) const
+  size_type bucket(const Key& _KeyVal) const
   {
-    const size_type index = _get_index_for_key(keyval);
-    return buckets_[index].size();
+    return _get_index_for_key(_KeyVal);
   }
 
-  size_type bucket_size(size_type nbucket) const
+  size_type bucket_size(size_type _Nbucket) const
   {
-    return buckets_[nbucket].size();
+    return Mybuckets_[_Nbucket].size();
   }
 
   size_type bucket_count() const
   {
-    return buckets_.size();
+    return Mybuckets_.size();
   }
 
   size_type max_bucket_count() const
@@ -380,7 +414,7 @@ public:
 
   size_type size() const
   {
-    return num_count_;
+    return Mynum_count_;
   }
 
   size_type max_size() const
@@ -395,247 +429,247 @@ public:
 
   float max_load_factor() const
   {
-    return max_factor_;
+    return Mymax_factor_;
   }
 
   void max_load_factor(float factor)
   {
-    this->max_factor_ = factor;
+    this->Mymax_factor_ = factor;
   }
 
-  void swap(hashtable& ht)
+  void swap(hashtable& _Ht)
   {
-    _MY_STL::swap(this->equals_, ht.equals_);
-    _MY_STL::swap(this->hash_, ht.hash_);
-    _MY_STL::swap(this->get_key_, ht.get_key_);
-    _MY_STL::swap(this->num_count_, ht.num_count_);
-    _MY_STL::swap(this->max_factor_, ht.max_factor_);
-    buckets_.swap(ht.buckets_);
+    _MY_STL::swap(this->Myequals_, _Ht.Myequals_);
+    _MY_STL::swap(this->Myhash_, _Ht.Myhash_);
+    _MY_STL::swap(this->Myget_key_, _Ht.Myget_key_);
+    _MY_STL::swap(this->Mynum_count_, _Ht.Mynum_count_);
+    _MY_STL::swap(this->Mymax_factor_, _Ht.Mymax_factor_);
+    Mybuckets_.swap(_Ht.Mybuckets_);
   }
 
-  pair<iterator, bool> insert_unique(const value_type& val)
+  _MY_STL::pair<iterator, bool> insert_unique(const value_type& _Val)
   {
-    _check_size();
+    _check_size(Mybuckets_.size() + 1);
     bool ok = true;
-    size_type index = _get_index(val);
-    LI result=buckets_[index].begin();
-    for ( ;result!=buckets_[index].end(); ++result)
+    size_type index = _get_index(_Val);
+    LI result=Mybuckets_[index].begin();
+    for ( ;result!=Mybuckets_[index].end(); ++result)
     {
-      if (equals_(get_key_(val),get_key_(*result))) {
+      if (Myequals_(Myget_key_(_Val),Myget_key_(*result))) {
         ok = false;
         break;
       }
     }
     if (ok) {
-      ++num_count_;
-      return pair<iterator,bool>
-          (iterator(buckets_[index].insert(buckets_[index].end(),val),this,index),
+      ++Mynum_count_;
+      return _MY_STL::pair<iterator,bool>
+          (iterator(Mybuckets_[index].insert(Mybuckets_[index].end(),_Val),this,index),
            true);
     }
     else
-      return pair<iterator,bool>
+      return _MY_STL::pair<iterator,bool>
           (iterator(result, this, index), false);
   }
 #ifdef MINI_STL_RVALUE_REFS
-  pair<iterator, bool> insert_unique(value_type&& val)
+  _MY_STL::pair<iterator, bool> insert_unique(value_type&& _Val)
   {
-    _check_size();
+    _check_size(Mybuckets_.size() + 1);
     bool ok = true;
-    size_type index = _get_index(val);
-    LI result = buckets_[index].begin();
-    for ( ;result!=buckets_[index].end(); ++result)
+    size_type index = _get_index(_Val);
+    LI result = Mybuckets_[index].begin();
+    for ( ;result!=Mybuckets_[index].end(); ++result)
     {
-      if (equals_(get_key_(val),get_key_(*result))) {
+      if (Myequals_(Myget_key_(_Val),Myget_key_(*result))) {
         ok = false;
         break;
       }
     }
     if (ok) {
-      ++num_count_;
-      return pair<iterator,bool>
-          (iterator(buckets_[index].insert(buckets_[index].end(),_MY_STL::move(val)),
+      ++Mynum_count_;
+      return _MY_STL::pair<iterator,bool>
+          (iterator(Mybuckets_[index].insert(Mybuckets_[index].end(), _MY_STL::move(_Val)),
                     this,index),
            true);
     }
     else
-      return pair<iterator,bool>
+      return _MY_STL::pair<iterator,bool>
           (iterator(result, this, index), false);
   }
 #endif
   template <class InputIterator>
-  void insert_unique(InputIterator first, InputIterator last)
+  void insert_unique(InputIterator _First, InputIterator _Last)
   {
-    while (first != last)
-      insert_unique(*first);
+    for (; _First != _Last; ++_First)
+      insert_unique(*_First);
   }
 
-  iterator insert_equal(const value_type& val)
+  iterator insert_equal(const value_type& _Val)
   {
-    _check_size();
-    size_type index = _get_index(val);
-    ++num_count_;
+    _check_size(Mybuckets_.size() + 1);
+    size_type index = _get_index(_Val);
+    ++Mynum_count_;
 
-    for(LI position = buckets_[index].begin();
-        position!=buckets_[index].end();
+    for(LI position = Mybuckets_[index].begin();
+        position!=Mybuckets_[index].end();
         ++position)
-      if(equals_(get_key_(*position), get_key_(val)))
-        return iterator(buckets_[index].insert(position, val),
+      if(Myequals_(Myget_key_(*position), Myget_key_(_Val)))
+        return iterator(Mybuckets_[index].insert(position, _Val),
                     this, index);
-    return iterator(buckets_[index].insert(buckets_[index].end(), val),
+    return iterator(Mybuckets_[index].insert(Mybuckets_[index].end(), _Val),
                 this, index);
   }
 #ifdef MINI_STL_RVALUE_REFS
-  iterator insert_equal(value_type&& val)
+  iterator insert_equal(value_type&& _Val)
   {
-    _check_size();
-    size_type index = _get_index(val);
-    ++num_count_;
+    _check_size(Mybuckets_.size() + 1);
+    size_type index = _get_index(_Val);
+    ++Mynum_count_;
 
-    for(LI position = buckets_[index].begin();
-        position!=buckets_[index].end();
+    for(LI position = Mybuckets_[index].begin();
+        position!=Mybuckets_[index].end();
         ++position)
-      if(equals_(get_key_(*position), get_key_(val)))
-        return iterator(buckets_[index].insert(position, _MY_STL::move(val)),
+      if(Myequals_(Myget_key_(*position), Myget_key_(_Val)))
+        return iterator(Mybuckets_[index].insert(position, _MY_STL::move(_Val)),
                     this, index);
-    return iterator(buckets_[index].insert(buckets_[index].end(),
-                                           _MY_STL::move(val)),
+    return iterator(Mybuckets_[index].insert(Mybuckets_[index].end(),
+                                           _MY_STL::move(_Val)),
                 this, index);
   }
 #endif
   template <class InputIterator>
-  void insert_equal(InputIterator first, InputIterator last)
+  void insert_equal(InputIterator _First, InputIterator _Last)
   {
-    while (first != last)
-      insert_equal(*first);
+    for (; _First != _Last; ++_First)
+      insert_equal(*_First);
   }
 
-  iterator find(const key_type& k)
+  iterator find(const key_type& _Key)
   {
-    size_type index = _get_index_for_key(k);
-    LI result;// = buckets_[index].begin();
-    for (result = buckets_[index].begin();
-         result!=buckets_[index].end() &&
-         !equals_(get_key_(*result), k);
+    size_type index = _get_index_for_key(_Key);
+    LI result;
+    for (result = Mybuckets_[index].begin();
+         result!=Mybuckets_[index].end() &&
+         !Myequals_(Myget_key_(*result), _Key);
          ++result)
       {}
-    if (result==buckets_[index].end())
+    if (result==Mybuckets_[index].end())
       return end();
     else
       return iterator(result, this, index);
   }
 
-  const_iterator find(const key_type& k) const
+  const_iterator find(const key_type& _Key) const
   {
-    size_type index = _get_index_for_key(k);
-    LI result;// = buckets_[index].begin();
-    for (result = buckets_[index].begin();
-         result!=buckets_[index].end() &&
-         !equals_(get_key_(*result), k);
+    size_type index = _get_index_for_key(_Key);
+    LI result;
+    for (result = Mybuckets_[index].begin();
+         result!=Mybuckets_[index].end() &&
+         !Myequals_(Myget_key_(*result), _Key);
          ++result)
       {}
-    if (result==buckets_[index].end())
+    if (result==Mybuckets_[index].end())
       return end();
     else
       return const_iterator(result, this, index);
   }
 
-  size_type count(const key_type& k) const
+  size_type count(const key_type& _Key) const
   {
-    const size_type index = _get_index_for_key(k);
+    const size_type index = _get_index_for_key(_Key);
     size_type result = 0;
 
-    for (LCI cur = buckets_[index].begin();
-         cur != buckets_[index].end(); ++cur)
-      if (equals_(get_key_(*cur), k))
+    for (LCI cur = Mybuckets_[index].begin();
+         cur != Mybuckets_[index].end(); ++cur)
+      if (Myequals_(Myget_key_(*cur), _Key))
         ++result;
     return result;
   }
 
   pair<iterator, iterator>
-  equal_range(const key_type& k);
+  equal_range(const key_type& _Key);
 
   pair<const_iterator, const_iterator>
-  equal_range(const key_type& k) const;
+  equal_range(const key_type& _Key) const;
 
-  size_type erase(const key_type& k);
-  void erase(const iterator& i);
-  void erase(iterator first, iterator last);
+  size_type erase(const key_type& _Key);
+  void erase(const iterator& _Iter);
+  void erase(iterator _First, iterator _Last);
 
-  void erase(const const_iterator& it);
-  void erase(const_iterator first, const_iterator last);
+  void erase(const const_iterator& _Iter);
+  void erase(const_iterator _First, const_iterator _Last);
 
-  void rehash(size_type nbuckets);
+  void rehash(size_type _Nbuckets);
 
-  bool operator==(const hashtable& rhs)
+  bool operator==(const hashtable& _Right)
   {
-    return this->buckets_ == rhs.buckets_;
+    return this->Mybuckets_ == _Right.Mybuckets_;
   }
 
-  bool operator!=(const hashtable& rhs)
+  bool operator!=(const hashtable& _Right)
   {
-    return this->buckets_ != rhs.buckets_;
+    return this->Mybuckets_ != _Right.Mybuckets_;
   }
 protected:
-  size_type _next_size(size_type n) const
+  size_type _next_size(size_type _Num) const
   {
-    return static_cast<size_type>(_next_prime(n));
+    return (size_type)(_next_prime(_Num));
   }
 
-  void _init_bucket(size_type n)
+  void _init_bucket(size_type _Num)
   {
-    const size_type bucket_count = _next_size(n);
-    buckets_.resize(bucket_count, node());
-    num_count_ = 0;
+    const size_type bucket_count = _next_size(_Num);
+    Mybuckets_.resize(bucket_count, node());
+    Mynum_count_ = 0;
   }
 
-  void _copy_from(const hashtable& ht)
+  void _copy_from(const hashtable& _Ht)
   {
-    buckets_.clear();
-    buckets_.reserve(ht.buckets_.size());
-    buckets_ = ht.buckets_;
+    Mybuckets_.clear();
+    Mybuckets_.reserve(_Ht.Mybuckets_.size());
+    Mybuckets_ = _Ht.Mybuckets_;
   }
 
-  size_type _get_index(const value_type& val, size_type n) const
+  size_type _get_index(const value_type& _Val, size_type _Num) const
   {
-    return _get_index_for_key(get_key_(val), n);
+    return _get_index_for_key(Myget_key_(_Val), _Num);
   }
 
-  size_type _get_index(const value_type &val) const
+  size_type _get_index(const value_type& _Val) const
   {
-    return _get_index_for_key(get_key_(val));
+    return _get_index_for_key(Myget_key_(_Val));
   }
 
-  size_type _get_index_for_key(const key_type& k) const
+  size_type _get_index_for_key(const key_type& _Key) const
   {
-    return _get_index_for_key(k, buckets_.size());
+    return _get_index_for_key(_Key, Mybuckets_.size());
   }
 
-  size_type _get_index_for_key(const key_type &k, size_type n) const
+  size_type _get_index_for_key(const key_type& _Key, size_type _Num) const
   {
-    return hash_(k) % n;
+    return Myhash_(_Key) % _Num;
   }
 
-  void _check_size(size_type nbuckets = buckets_.size()+1,
-                   bool checkOrResash = false);
+  void _check_size(size_type _Nbuckets,
+                   bool _CheckOrRehash = false);
 };
 
 template <class Val, class Key, class HashFcn,
           class ExtractKey, class EqualKey, class Alloc>
 void hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::
-_check_size(size_type nbuckets, bool checkOrResash)
+_check_size(size_type _Nbuckets, bool _CheckOrRehash)
 {
-  if (load_factor() > max_factor_ || checkOrResash) {
-    const size_type new_bucket_size = _next_size(nbuckets);
+  if (load_factor() > Mymax_factor_ || _CheckOrRehash) {
+    const size_type new_bucket_size = _next_size(_Nbuckets);
     bucket_type tmp_bucket(new_bucket_size, node());
-    for(int i=0; i<buckets_.size(); ++i)
-      if (!buckets_[i].empty()) {
-        for (size_type size_for_node = buckets_[i].size();
+    for(int i=0; i < Mybuckets_.size(); ++i)
+      if (!Mybuckets_[i].empty()) {
+        for (size_type size_for_node = Mybuckets_[i].size();
              size_for_node >0; --size_for_node) {
-          size_type index = _get_index(*buckets_[i].begin(), new_bucket_size);
-          tmp_bucket[index].splice(tmp_bucket[index].begin(),buckets_[i],buckets_[i].begin());
+          size_type index = _get_index(*Mybuckets_[i].begin(), new_bucket_size);
+          tmp_bucket[index].splice(tmp_bucket[index].begin(),Mybuckets_[i],Mybuckets_[i].begin());
         }
       }
-    buckets_.swap(tmp_bucket);
+    Mybuckets_.swap(tmp_bucket);
   }
 }
 
@@ -643,14 +677,14 @@ template <class Val, class Key, class HashFcn,
           class ExtractKey, class EqualKey, class Alloc>
 pair<typename hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::iterator,
      typename hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::iterator>
-hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::equal_range(const key_type& k)
+hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::equal_range(const key_type& _Key)
 {
   typedef pair<iterator, iterator> PII;
-  const size_type index = _get_index_for_key(k);
-  iterator PII_first = find(k);
-  LRI PII_second = buckets_[index].rbegin();
-  for (; PII_second!=buckets_[index].rend();++PII_second)
-    if (equals_(get_key_(*PII_second),k))
+  const size_type index = _get_index_for_key(_Key);
+  iterator PII_first = find(_Key);
+  LRI PII_second = Mybuckets_[index].rbegin();
+  for (; PII_second!=Mybuckets_[index].rend(); ++PII_second)
+    if (Myequals_(Myget_key_(*PII_second),_Key))
       return PII(PII_first,
                  ++iterator(--PII_second.base(), this, index));
 
@@ -661,16 +695,16 @@ template <class Val, class Key, class HashFcn,
           class ExtractKey, class EqualKey, class Alloc>
 pair<typename hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::const_iterator,
      typename hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::const_iterator>
-hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::equal_range(const key_type& k) const
+hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::equal_range(const key_type& _Key) const
 {
   typedef pair<const_iterator, const_iterator> PCICI;
-  const size_type index = _get_index_for_key(k);
-  const_iterator PII_first = find(k);
-  LRCI PII_second = buckets_[index].rbegin();
-  for (; PII_second!=buckets_[index].rend();++PII_second)
-    if (equals_(get_key_(*PII_second),k))
+  const size_type index = _get_index_for_key(_Key);
+  const_iterator PII_first = find(_Key);
+  LRCI PII_second = Mybuckets_[index].rbegin();
+  for (; PII_second!=Mybuckets_[index].rend();++PII_second)
+    if (Myequals_(Myget_key_(*PII_second),_Key))
       return PCICI(PII_first,
-                 ++iterator(--PII_second.base(), this, index));
+                 ++const_iterator(--PII_second.base(), this, index));
 
   return PCICI(end(), end());
 }
@@ -678,20 +712,20 @@ hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::equal_range(const key_type
 template <class Val, class Key, class HashFcn,
           class ExtractKey, class EqualKey, class Alloc>
 typename hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::size_type
-hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::erase(const key_type& k)
+hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::erase(const key_type& _Key)
 {
-  const size_type index = _get_index_for_key(k);
+  const size_type index = _get_index_for_key(_Key);
   size_type erase_num = 0;
 
-  if (!buckets_[index].empty()) {
-    LI cur = buckets_[index].begin();
+  if (!Mybuckets_[index].empty()) {
+    LI cur = Mybuckets_[index].begin();
     LI next = cur;
     ++next;
-    while (cur!=buckets_[index].end()) {
-      if (equals_(get_key_(*cur), k)) {
+    while (cur!=Mybuckets_[index].end()) {
+      if (Myequals_(Myget_key_(*cur), _Key)) {
         ++erase_num;
-        --num_count_;
-        buckets_[index].erase(cur);
+        --Mynum_count_;
+        Mybuckets_[index].erase(cur);
         cur = next;
         ++next;
       } else {
@@ -707,47 +741,47 @@ hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::erase(const key_type& k)
 template <class Val, class Key, class HashFcn,
           class ExtractKey, class EqualKey, class Alloc>
 void hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::
-erase(const iterator& i)
+erase(const iterator& _Iter)
 {
-  const size_type index = _get_index(*i);
-  --num_count_;
-  buckets_[index].erase(i.cur);
+  const size_type index = _get_index(*_Iter);
+  --Mynum_count_;
+  Mybuckets_[index].erase(_Iter.cur);
 }
 
 template <class Val, class Key, class HashFcn,
           class ExtractKey, class EqualKey, class Alloc>
 void hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::
-erase(const const_iterator& i)
+erase(const const_iterator& _Iter)
 {
-  const size_type index = _get_index(*i);
-  --num_count_;
-  buckets_[index].erase(i.cur);
+  const size_type index = _get_index(*_Iter);
+  --Mynum_count_;
+  Mybuckets_[index].erase(_Iter.cur);
 }
 
 template <class Val, class Key, class HashFcn,
           class ExtractKey, class EqualKey, class Alloc>
 void hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::
-erase(iterator first, iterator last)
+erase(iterator _First, iterator _Last)
 {
-  while (first!=last)
-    erase(first++);
+  while (first != _Last)
+    erase(_First++);
 }
 
 template <class Val, class Key, class HashFcn,
           class ExtractKey, class EqualKey, class Alloc>
 void hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::
-erase(const_iterator first, const_iterator last)
+erase(const_iterator _First, const_iterator _Last)
 {
-  while (first!=last)
-    erase(first++);
+  while (_First != _Last)
+    erase(_First++);
 }
 
 template <class Val, class Key, class HashFcn,
           class ExtractKey, class EqualKey, class Alloc>
 void hashtable<Val,Key,HashFcn,ExtractKey,EqualKey,Alloc>::
-rehash(size_type nbuckets)
+rehash(size_type _Nbuckets)
 {
-  _check_size(nbuckets, true);
+  _check_size(_Nbuckets, true);
 }
 
 MINI_STL_END

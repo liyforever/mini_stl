@@ -13,9 +13,9 @@ class unordered_multimap
 {
 private:
   typedef _MY_STL::hashtable<_MY_STL::pair<const Key, Type>, Key, Hash,
-                             select1st<pair<const Key, Type>, EqualKey, Alloc>
+                             select1st<pair<const Key, Type> >, EqualKey, Alloc>
     HT_type;
-  HT_type c_;
+  HT_type Myc_;
 public:
   typedef typename HT_type::key_type        key_type;
   typedef typename HT_type::value_type      value_type;
@@ -36,217 +36,264 @@ public:
   typedef typename HT_type::const_reverse_iterator const_reverse_iterator;
 public:
   unordered_multimap()
-    : c_(52, hasher(), key_equal())
+    : Myc_(52, hasher(), key_equal())
   {}
 
   explicit unordered_multimap(
-      size_type n = 52,
-      const hasher& hfn = hasher(),
-      const EqualKey& comp = EqualKey(),
+      size_type _Count,
+      const hasher& _Hfn = hasher(),
+      const EqualKey& _Comp = EqualKey(),
       const Alloc&/*AL*/ = Alloc())
-    : c_(n, hfn, comp)
-  {}
+    : Myc_(_Count, _Hfn, _Comp)
+  {
+    MINI_STL_DEBUG_POINTER(_Hfn, "unordered_multimap Invalid hasher");
+    MINI_STL_DEBUG_POINTER(_Comp, "unordered_multimap Invalid EqualKey");
+  }
 
   template<class InputIterator>
     unordered_multimap(
-      InputIterator first,
-      InputIterator last,
-      size_type nbuckets = 52,
-      const Hash& hfn = Hash(),
-      const EqualKey& comp = EqualKey(),
+      InputIterator _First,
+      InputIterator _Last,
+      size_type _Nbuckets = 52,
+      const Hash& _Hfn = Hash(),
+      const EqualKey& _Comp = EqualKey(),
       const Alloc& /*AL*/ = Alloc())
-    : c_(nbuckets, hfn, comp)
+    : Myc_(_Nbuckets, _Hfn, _Comp)
   {
-    c_.insert_equal(first, last);
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "unordered_multimap unordered_multimap()");
+    Myc_.insert_equal(_First, _Last);
   }
 
-  unordered_multimap(const unordered_multimap& right)
-    : c_(right.c_)
-  {}
-#ifdef MINI_STL_RVALUE_REFS
-  unordered_multimap(unordered_multimap&& right)
-    : c_(_MY_STL::move(right))
+  unordered_multimap(const unordered_multimap& _Right)
+    : Myc_(_Right.Myc_)
   {}
 
-  unordered_multimap& operator=(unordered_multimap&& right)
+#ifdef MINI_STL_RVALUE_REFS
+  unordered_multimap(unordered_multimap&& _Right)
+    : Myc_(_MY_STL::move(_Right.Myc_))
+  {}
+
+  unordered_multimap& operator=(unordered_multimap&& _Right)
   {
-    c_ = _MY_STL::move(right.c_);
+    Myc_ = _MY_STL::move(_Right.Myc_);
     return *this;
   }
 #endif
-  unordered_multimap& operator=(const unordered_multimap& right)
+  unordered_multimap& operator=(const unordered_multimap& _Right)
   {
-    c_ = right.c_;
+    Myc_ = _Right.Myc_;
     return *this;
   }
 public:
   allocator_type get_allocator() const
   {
-    return c_.get_allocator();
+    return Myc_.get_allocator();
   }
 
-  iterator begin() const
+  iterator begin()
   {
-    return c_.begin();
+    return Myc_.begin();
+  }
+
+  const_iterator begin() const
+  {
+    return Myc_.cbegin();
   }
 
   const_iterator cbegin() const
   {
-    return c_.cbegin();
+    return Myc_.cbegin();
   }
 
-  local_iterator begin(size_type nbucket) const
+  local_iterator begin(size_type _Nbucket)
   {
-    return c_.begin(nbucket);
+    return Myc_.begin(_Nbucket);
   }
 
-  iterator end() const
+  const_local_iterator begin(size_type _Nbucket) const
   {
-    return c_.end();
+    return Myc_.begin(_Nbucket);
   }
 
-  local_iterator end(size_type nbucket) const
+  iterator end()
   {
-    return c_.end(nbucket);
+    return Myc_.end();
+  }
+
+  const_iterator end() const
+  {
+    return Myc_.end();
+  }
+
+  local_iterator end(size_type _Nbucket)
+  {
+    return Myc_.end(_Nbucket);
+  }
+
+  const_local_iterator end(size_type _Nbucket) const
+  {
+    return Myc_.end(_Nbucket);
   }
 
   const_iterator cend() const
   {
-    return c_.cend();
+    return Myc_.cend();
   }
 
-  size_type bucket(const Key& keyval) const
+  size_type bucket(const Key& _KeyVal) const
   {
-    return c_.bucket(keyval);
+    return Myc_.bucket(_KeyVal);
   }
 
   size_type bucket_count() const
   {
-    return c_.bucket_count();
+    return Myc_.bucket_count();
   }
 
-  size_type bucket_size(size_type nbucket) const
+  size_type bucket_size(size_type _Nbucket) const
   {
-    return c_.bucket_size(nbucket);
+    return Myc_.bucket_size(_Nbucket);
   }
 
   void clear()
   {
-    c_.clear();
+    Myc_.clear();
   }
 
-  size_type count(const Key& keyval) const
+  size_type count(const Key& _KeyVal) const
   {
-    return c_.count(keyval);
+    return Myc_.count(_KeyVal);
   }
 
   bool empty() const
   {
-    return c_.empty();
+    return Myc_.empty();
   }
 
   _MY_STL::pair<iterator, iterator>
-        equal_range(const Key& keyval) const
+        equal_range(const Key& _KeyVal) const
   {
-    return c_.equal_range(keyval);
+    return Myc_.equal_range(_KeyVal);
   }
 
-  void erase(iterator position)
+  void erase(iterator _Position)
   {
-    c_.erase(position);
+    Myc_.erase(_Position);
   }
 
-  void erase(iterator first, iterator last)
+  void erase(iterator _First, iterator _Last)
   {
-    c_.erase(first, last);
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "unordered_multimap erase");
+    Myc_.erase(_First, _Last);
   }
 
-  size_type erase(const Key& keyval)
+  size_type erase(const Key& _KeyVal)
   {
-    return c_.erase(keyval);
+    return Myc_.erase(_KeyVal);
   }
 
-  const_iterator find(const Key& keyval) const
+  const_iterator find(const Key& _KeyVal) const
   {
-    return c_.find(keyval);
+    return Myc_.find(_KeyVal);
   }
 
   hasher hash_function() const
   {
-    return c_.hash_function();
+    return Myc_.hash_function();
   }
 
   key_equal key_eq() const
   {
-    return c_.key_eq();
+    return Myc_.key_eq();
   }
 
   float load_factor() const
   {
-    return c_.load_factor();
+    return Myc_.load_factor();
   }
 
   size_type max_bucket_count() const
   {
-    return c_.max_bucket_count();
+    return Myc_.max_bucket_count();
   }
 
   float max_load_factor() const
   {
-    return c_.max_load_factor();
+    return Myc_.max_load_factor();
   }
 
-  void max_load_factor(float factor)
+  void max_load_factor(float _Factor)
   {
-    c_.max_load_factor(factor);
+    Myc_.max_load_factor(_Factor);
   }
 
   size_type max_size() const
   {
-    return c_.max_size();
+    return Myc_.max_size();
   }
 
-  void rehash(size_type nbuckets)
+  void rehash(size_type _Nbuckets)
   {
-    return c_.rehash(nbuckets);
+    return Myc_.rehash(_Nbuckets);
   }
 
   size_type size() const
   {
-    return c_.size();
+    return Myc_.size();
   }
 
-  iterator insert(const value_type& val)
+  iterator insert(const value_type& _Val)
   {
-    return c_.insert_equal(val);
+    return Myc_.insert_equal(_Val);
   }
 
   template<class InputIterator>
-    void insert(InputIterator first, InputIterator last)
+    void insert(InputIterator _First, InputIterator _Last)
   {
-    c_.insert_equal(first, last);
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "unordered_multimap insert");
+    Myc_.insert_equal(_First, _Last);
   }
 
 #ifdef MINI_STL_RVALUE_REFS
-  iterator insert(value_type&& val)
+  iterator insert(value_type&& _Val)
   {
-    return c_.insert_equal(_MY_STL::move(val));
+    return Myc_.insert_equal(_MY_STL::move(_Val));
   }
 #endif
 
-  void swap(unordered_multimap& right)
+  Type& at(const Key& _Key)
   {
-    c_.swap(right.c_);
+    return (*((insert(value_type(_Key,Type()))).first)).second;
   }
 
-  bool operator==(const unordered_multimap& rhs)
+  const Type& at(const Key& _Key) const
   {
-    return c_ == rhs.c_;
+    return (*((insert(value_type(_Key,Type()))).first)).second;
   }
 
-  bool operator!=(const unordered_multimap& rhs)
+  Type& operator[](const Key& _Key)
   {
-    return c_ != rhs.c_;
+    return (*((insert(value_type(_Key,Type()))).first)).second;
+  }
+
+  Type& operator[](Key&& _Key)
+  {
+    return (*((insert(value_type(_MY_STL::move(_Key), Type()))).first)).second;
+  }
+
+  void swap(unordered_multimap& _Right)
+  {
+    Myc_.swap(_Right.Myc_);
+  }
+
+  bool operator==(const unordered_multimap& _Right)
+  {
+    return Myc_ == _Right.Myc_;
+  }
+
+  bool operator!=(const unordered_multimap& _Right)
+  {
+    return Myc_ != _Right.Myc_;
   }
 };
 
@@ -255,10 +302,10 @@ template<class Key,
     class Hash,
     class EqualKey,
     class Alloc>
-void swap(unordered_multimap<Key,Type,Hash,EqualKey,Alloc>& lhs,
-          unordered_multimap<Key,Type,Hash,EqualKey,Alloc>& rhs)
+void swap(unordered_multimap<Key,Type,Hash,EqualKey,Alloc>& _Left,
+          unordered_multimap<Key,Type,Hash,EqualKey,Alloc>& _Right)
 {
-  lhs.swap(rhs);
+  _Left.swap(_Right);
 }
 MINI_STL_END
 #endif // MINI_STL_UNORDERED_MULTIMAP_H

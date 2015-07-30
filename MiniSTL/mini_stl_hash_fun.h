@@ -1,7 +1,7 @@
 #ifndef MINI_STL_HASH_FUN_H
 #define MINI_STL_HASH_FUN_H
 #include "mini_stl_config.h"
-#include "memory.h"
+#include "mini_stl_memory.h"
 MINI_STL_BEGIN
 
 template <class Key>

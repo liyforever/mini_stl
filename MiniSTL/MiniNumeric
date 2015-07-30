@@ -1,0 +1,4 @@
+#ifndef MININUMERIC_H
+#define MININUMERIC_H
+#include "mini_stl_numeric.h"
+#endif // MININUMERIC_H

@@ -1,14 +1,13 @@
 #ifndef MINI_STL_VECTOR_H
 #define MINI_STL_VECTOR_H
-#include "memory.h"
-#ifdef MINI_STL_DEBUG
+#include "mini_stl_memory.h"
+#include "mini_stl_algorithm.h"
 #include <iostream>
-using std::endl;
 using std::cerr;
-#endif
+using std::endl;
 MINI_STL_BEGIN
 
-template <class Type, class Alloc = default_allocator>
+template <class Type, class Alloc = _MY_STL::default_allocator>
 class vector
 {
 public:
@@ -26,98 +25,96 @@ public:
   typedef _MY_STL::reverse_iterator<const_iterator> const_reverse_iterator;
 protected:
   typedef simpleAlloc<value_type, Alloc> data_allocator_;
-  iterator first_;
-  iterator last_;
-  iterator end_;
+  iterator Myfirst_;
+  iterator Mylast_;
+  iterator Myend_;
 public:
-  explicit vector(const allocator_type&/*Al*/=allocator_type()) :
-    first_(0), last_(0), end_(0) {}
+  vector(const allocator_type&/*Al*/=allocator_type())
+    : Myfirst_(0), Mylast_(0), Myend_(0) {}
 
-  explicit vector(size_type count)
+  explicit vector(size_type _Count)
   {
-    _fill_init(count, Type());
+    _fill_init(_Count, Type());
   }
 
-  vector(int count, const value_type& val,
-         const allocator_type&/*Al*/=allocator_type()
-    )
-  {
-    _fill_init(count, val);
-  }
-
-  vector(long count, const value_type& val,
-         const allocator_type&/*Al*/=allocator_type()
-    )
-  {
-    _fill_init(count, val);
-  }
-
-  vector(size_type count, const value_type& val,
+  vector(int _Count,
+         const value_type& _Val,
          const allocator_type&/*Al*/=allocator_type())
   {
-    _fill_init(count, val);
+    _fill_init(_Count, _Val);
   }
 
-  vector(const vector& rightVec)
+  vector(long _Count,
+         const value_type& _Val,
+         const allocator_type&/*Al*/=allocator_type())
   {
-    first_ = data_allocator_::allocate(rightVec.size());
-    last_ = uninitialized_copy(rightVec.first_, rightVec.end_, first_);
-    end_ = last_;
+    _fill_init(_Count, _Val);
+  }
+
+  vector(size_type _Count, const value_type& _Val,
+         const allocator_type&/*Al*/=allocator_type())
+  {
+    _fill_init(_Count, _Val);
+  }
+
+  vector(const vector& _Right)
+  {
+    Myfirst_ = data_allocator_::allocate(_Right.size());
+    Mylast_ = _MY_STL::uninitialized_copy(_Right.begin(), _Right.end(), Myfirst_);
+    Myend_ = Mylast_;
   }
 
   template <class InputIterator>
-    vector(InputIterator first,
-           InputIterator last,
+    vector(InputIterator _First,
+           InputIterator _Last,
            const allocator_type&/*Al*/=allocator_type(),
-           typename is_iterator<InputIterator>::ID = Identity()
-    )
+           typename is_iterator<InputIterator>::ID = Identity())
   {
-#ifdef MINI_STL_DEBUG
-    _check_range(first, last);
-#endif
-    difference_type size = last - first;
-    first_ = data_allocator_::allocate(size);
-    last_ = uninitialized_copy(first, last, first_);
-    end_ = last_;
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "vector");
+    difference_type size = _Last - _First;
+    Myfirst_ = data_allocator_::allocate(size);
+    Mylast_ = _MY_STL::uninitialized_copy(_First, _Last, Myfirst_);
+    Myend_ = Mylast_;
   }
 
 #ifdef MINI_STL_RVALUE_REFS
-  vector(vector&& rightVec)
+  vector(vector&& _Right)
   {
-    this->first_ = rightVec.first_;
-    this->last_ = rightVec.last_;
-    this->end_ = rightVec.end_;
-    rightVec.first_ = nullptr;
-    rightVec.last_ = nullptr;
-    rightVec.end_ = nullptr;
+    this->Myfirst_ = _Right.Myfirst_;
+    this->Mylast_ = _Right.Mylast_;
+    this->Myend_ = _Right.Myend_;
+    _Right.Myfirst_ = nullptr;
+    _Right.Mylast_ = nullptr;
+    _Right.Myend_ = nullptr;
   }
 
-  vector& operator=(vector&& rightVec)
+  vector& operator=(vector&& _Right)
   {
-    destroy(begin(), end());
-    _deallocate();
-    this->first_ = rightVec.first_;
-    this->last_ = rightVec.last_;
-    this->end_ = rightVec.end_;
-    rightVec.first_ = nullptr;
-    rightVec.last_ = nullptr;
-    rightVec.end_ = nullptr;
+    if (this != &_Right) {
+      _MY_STL::swap(this->Myfirst_, _Right.Myfirst_);
+      _MY_STL::swap(this->Mylast_, _Right.Mylast_);
+      _MY_STL::swap(this->Myend_, _Right.Myend_);
+    }
     return *this;
   }
 
 #endif //MINI_STL_RVALUE_REFS
 
-  vector& operator=(const vector& rightVec)
+  vector& operator=(const vector& _Right)
   {
-    if (this!=&rightVec) {
+    if (this !=& _Right) {
       destroy(begin(), end());
-      if(size() >= rightVec.size()) {
-        last_ = uninitialized_copy(rightVec.first_, rightVec.last_,begin());
+      if (size() >= _Right.size()) {
+        Mylast_ = _MY_STL::copy(_Right.begin(),
+                                _Right.end(),
+                                begin());
       } else {
         _deallocate();
-        first_ = data_allocator_::allocate(rightVec.size());
-        last_ = uninitialized_copy(rightVec.first_, rightVec.last_,begin());
-        end_ = last_;
+        Myfirst_ = data_allocator_::allocate(_Right.size());
+        Mylast_ = _MY_STL::uninitialized_copy(_Right.begin(),
+                                              _Right.end(),
+                                              begin());
+        Myend_ = Mylast_;
       }
     }
     return *this;
@@ -125,29 +122,29 @@ public:
 
   ~vector()
   {
-    destroy(first_, last_);
+    destroy(Myfirst_, Mylast_);
     _deallocate();
   }
 
 public:
   iterator begin()
   {
-    return first_;
+    return Myfirst_;
   }
 
   const_iterator begin() const
   {
-    return first_;
+    return Myfirst_;
   }
 
   iterator end()
   {
-    return last_;
+    return Mylast_;
   }
 
   const_iterator end() const
   {
-    return last_;
+    return Mylast_;
   }
 
   reverse_iterator rbegin()
@@ -172,12 +169,12 @@ public:
 
   const_iterator cbegin() const
   {
-    return (const_iterator)(first_);
+    return (const_iterator)(Myfirst_);
   }
 
   const_iterator cend() const
   {
-    return (const_iterator)(last_);
+    return (const_iterator)(Mylast_);
   }
 
   const_reverse_iterator crbegin() const
@@ -192,126 +189,116 @@ public:
 
   pointer data()
   {
-    return first_;
+    return Myfirst_;
   }
 
   const_pointer data() const
   {
-    return first_;
+    return Myfirst_;
   }
 
   reference front()
   {
-#ifdef MINI_STL_DEBUG
-    _check_range();
-#endif
-    return *first_;
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(), "vector front");
+    return *Myfirst_;
   }
 
   const_reference front() const
   {
-#ifdef MINI_STL_DEBUG
-    _check_range();
-#endif
-    return *first_;
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(), "vector front");
+    return *Myfirst_;
   }
 
   reference back()
   {
-#ifdef MINI_STL_DEBUG
-    _check_range();
-#endif
-    return *(last_ - 1);
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(), "vector back");
+    return *(Mylast_ - 1);
   }
 
   const_reference back() const
   {
-#ifdef MINI_STL_DEBUG
-    _check_range();
-#endif
-    return *(last_ - 1);
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(), "vector back");
+    return *(Mylast_ - 1);
   }
 
   size_type size() const
   {
-    return static_cast<size_type>(last_ - first_);
+    return static_cast<size_type>(Mylast_ - Myfirst_);
   }
 
   size_type capacity() const
   {
-    return static_cast<size_type>(end_ - first_);
+    return static_cast<size_type>(Myend_ - Myfirst_);
   }
 
   bool empty() const
   {
-    return first_ == last_;
+    return Myfirst_ == Mylast_;
   }
 
-  reference operator[](size_type pos)
+  reference operator[](size_type _Pos)
   {
-#ifdef MINI_STL_DEBUG
-    _check_range(pos);
-#endif
-    return *(first_ + pos);
+    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos, "vector operator[]");
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(),"vector operator[]");
+    return *(Myfirst_ + _Pos);
   }
 
-  const_reference operator[](size_type pos) const
+  const_reference operator[](size_type _Pos) const
   {
-#ifdef MINI_STL_DEBUG
-    _check_range(pos);
-#endif
-    return *(first_ + pos);
+    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos, "vector operator[]");
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(),"vector operator[]");
+    return *(Myfirst_ + _Pos);
   }
 
-  reference at(size_type pos)
+  reference at(size_type _Pos)
   {
-#ifdef MINI_STL_DEBUG
-    _check_range(pos);
-#endif
-    return first_[pos];
+    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos, "vector at");
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(),"vector at");
+    return Myfirst_[_Pos];
   }
 
-  const_reference at(size_type pos) const
+  const_reference at(size_type _Pos) const
   {
-#ifdef MINI_STL_DEBUG
-    _check_range(pos);
-#endif
-    return first_[pos];
+    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos, "vector at");
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(),"vector at");
+    return Myfirst_[_Pos];
   }
 
-  void swap(vector<Type, Alloc> &rightVec);
+  void swap(vector<Type, Alloc> &_Right);
 
-  void push_back(const Type& val);
+  void push_back(const Type& _Val);
 
 #ifdef MINI_STL_RVALUE_REFS
-  void push_back(Type&& val);
+  void push_back(Type&& _Val);
 #endif
 
   void pop_back()
   {
-#ifdef MINI_STL_DEBUG
-    _check_range();
-#endif
-    --last_;
-    destroy(last_);
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(), "vector pop_back");
+    --Mylast_;
+    _MY_STL::destroy(Mylast_);
   }
 
-  iterator erase(iterator first, iterator last);
-  iterator erase(iterator position);
+  iterator erase(iterator _First, iterator _Last);
+  iterator erase(iterator _Position);
 
   void clear()
   {
-    erase(first_, last_);
+    erase(Myfirst_, Mylast_);
   }
 
-  void reserve(size_type count)
+  void reserve(size_type _Count)
   {
-#ifdef MINI_STL_DEBUG
-    _check_range(count,true);
-#endif
-    first_ = data_allocator_::allocate(count);
-    last_ = first_;
-    end_ = first_ + count;
+    if (this->capacity() < _Count) {
+      const size_type old_size = size();
+      iterator tmp = data_allocator_::allocate(_Count);
+      _MY_STL::uninitialized_copy(Myfirst_, Mylast_, tmp);
+      _MY_STL::destroy(Myfirst_, Mylast_);
+      data_allocator_::deallocate(Myfirst_, Myend_ - Myfirst_);
+      Myfirst_ = tmp;
+      Mylast_ = tmp + old_size;
+      Myend_ = Myfirst_ + _Count;
+    }
   }
 
   allocator_type get_allocator() const
@@ -319,188 +306,156 @@ public:
     return allocator_type();
   }
 
-  void insert(const_iterator position, size_type n, const Type& val);
+  void insert(const_iterator _Position, size_type _Count, const Type& _Val);
 
-  iterator insert(const_iterator position, const Type& val);
+  iterator insert(const_iterator _Position, const Type& _Val);
 
 #ifdef MINI_STL_RVALUE_REFS
-  iterator insert(const_iterator position, Type&& val);
+  iterator insert(const_iterator _Position, Type&& _Val);
 #endif // MINI_STL_RVALUE_REFS
 
   template<class InputIterator>
-  void insert(const_iterator position,
-              InputIterator first,
-              InputIterator last,
+  void insert(const_iterator _Position,
+              InputIterator _First,
+              InputIterator _Last,
               typename is_iterator<InputIterator>::ID = Identity()
             );
   template<class InputIterator>
-  void assign(InputIterator first,
-              InputIterator last,
-              typename is_iterator<InputIterator>::ID = Identity()
-            )
+  inline void
+  assign(InputIterator _First,
+         InputIterator _Last,
+         typename is_iterator<InputIterator>::ID = Identity())
   {
-#ifdef MINI_STL_DEBUG
-    _check_range(first, last);
-#endif
-    clear();
-    insert(begin(), first, last);
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "vector assign");
+    this->clear();
+    this->insert(this->begin(), _First, _Last);
   }
 
-  void assign(size_type n, const Type& val)
+  void assign(size_type _Count, const Type& _Val)
   {
-#ifdef MINI_STL_DEBUG
-    _check_range(n,true);
-#endif
-    clear();
-    insert(begin(), n, val);
+    this->clear();
+    this->insert(begin(), _Count, _Val);
   }
 
-  void resize(size_type newSize)
+  void resize(size_type _NewSize)
   {
-    resize(newSize, Type());
+    this->resize(_NewSize, Type());
   }
 
-  void resize(size_type newSize, const Type& val);
+  void resize(size_type _NewSize, const Type& _Val);
 
   size_type max_size() const
   {
     return size_type(-1);
   }
 protected:
-  void _fill_init(size_type count, const Type& value);
-  iterator _allocator_and_fill(size_type n, const Type& val);
+  void _fill_init(size_type _Count, const Type& _Val);
+  iterator _allocator_and_fill(size_type _Count, const Type& _Val);
   void _deallocate()
   {
-    if (first_)
-     data_allocator_::deallocate(first_, end_ - first_);
+    if (Myfirst_)
+     data_allocator_::deallocate(Myfirst_, Myend_ - Myfirst_);
   }
 
-  void _insert_aux(iterator position, const Type& val);
-  void _insert_aux(iterator position);
-
-#ifdef MINI_STL_DEBUG
-  void _check_range(size_t pos) const
-  {
-    if (pos<0 || pos>=size()) {
-      cerr << "vector:pos<0 || pos>=size()" << endl;
-      MINI_STL_THROW_RANGE_ERROR("vector");
-    }
-  }
-
-  void _check_range(size_t n, bool) const
-  {
-    if (n<0 || n>=max_size()) {
-      cerr << "vector:n<0" << endl;
-      MINI_STL_THROW_RANGE_ERROR("vector");
-    }
-  }
-
-  void _check_range(const_iterator position) const
-  {
-    if (position>last_ ||
-        position<first_) {
-      cerr << "vector:postion>=end() || position < begin()" << endl;
-      MINI_STL_THROW_RANGE_ERROR("vector");
-    }
-  }
-
-  template <class InputIterator>
-  void _check_range(InputIterator first,
-                   InputIterator last) const
-  {
-    difference_type n = DISTANCE(first, last);
-    if (n<0) {
-      cerr << "vector:InputIterator last - first < 0" << endl;
-      MINI_STL_THROW_RANGE_ERROR("vector");
-    }
-  }
-
-  void _check_range() const
-  {
-    if (this->empty()) {
-      cerr << "vector:is empty" << endl;
-      MINI_STL_THROW_RANGE_ERROR("vector");
-    }
-  }
-#endif //MINI_STL_DEBUG
+  void _insert_aux(iterator _Position, const Type& _Val);
+  void _insert_aux(iterator _Position);
 };
 
 template <class Type, class Alloc>
 inline bool
-operator==(const vector<Type, Alloc>& lhs, const vector<Type, Alloc>& rhs)
+operator==(const vector<Type, Alloc>& _Left,
+           const vector<Type, Alloc>& _Right)
 {
-  return lhs.size() == rhs.size() &&
-         equal(lhs.begin(), lhs.end(), rhs.begin());
+  return _Left.size() == _Right.size() &&
+         _MY_STL::equal(_Left.begin(), _Left.end(),
+                        _Right.begin());
 }
 
 template <class Type, class Alloc>
 inline bool
-operator<(const vector<Type, Alloc>& lhs, const vector<Type, Alloc>& rhs)
+operator<(const vector<Type, Alloc>& _Left,
+          const vector<Type, Alloc>& _Right)
 {
-  return lexicographical_compare(lhs.begin(), lhs.end(),
-                                 rhs.begin(), rhs.end());
+  return _MY_STL::lexicographical_compare(_Left.begin(),
+                                          _Left.end(),
+                                          _Right.begin(),
+                                          _Right.end());
 }
 
 template <class Type, class Alloc>
 inline bool
-operator!=(const vector<Type, Alloc>& lhs, const vector<Type, Alloc>& rhs)
+operator!=(const vector<Type, Alloc>& _Left,
+           const vector<Type, Alloc>& _Right)
 {
-  return !(lhs == rhs);
+  return !(_Left == _Right);
 }
 
 template <class Type, class Alloc>
 inline bool
-operator>(const vector<Type, Alloc>& lhs, const vector<Type, Alloc>& rhs)
+operator>(const vector<Type, Alloc>& _Left,
+          const vector<Type, Alloc>& _Right)
 {
-  return rhs < lhs;
+  return _Right < _Left;
 }
 
 template <class Type, class Alloc>
 inline bool
-operator<=(const vector<Type, Alloc>& lhs, const vector<Type, Alloc>& rhs)
+operator<=(const vector<Type, Alloc>& _Left,
+           const vector<Type, Alloc>& _Right)
 {
-  return !(rhs < lhs);
+  return !(_Right < _Left);
 }
 
 template <class Type, class Alloc>
 inline bool
-operator>=(const vector<Type, Alloc>& lhs, const vector<Type, Alloc>& rhs)
+operator>=(const vector<Type, Alloc>& _Left,
+           const vector<Type, Alloc>& _Right)
 {
-  return !(lhs < rhs);
+  return !(_Left < _Right);
 }
 
 template <class Type, class Alloc>
 inline void
-swap(const vector<Type, Alloc>& lhs, const vector<Type, Alloc>& rhs)
+swap(const vector<Type, Alloc>& _Left,
+     const vector<Type, Alloc>& _Right)
 {
-  lhs.swap(rhs);
+  _Left.swap(_Right);
 }
 
 template <class Type, class Alloc>
 inline typename vector<Type, Alloc>::iterator
-vector<Type, Alloc>::_allocator_and_fill(size_type n, const Type& val)
+vector<Type, Alloc>::
+_allocator_and_fill(size_type _Count,
+                    const Type& _Val)
 {
-  iterator result = data_allocator_::allocate(n);
-  uninitialized_fill_n(result, n, val);
+  iterator result = data_allocator_::allocate(_Count);
+  _MY_STL::uninitialized_fill_n(result, _Count, _Val);
   return result;
 }
 
 template <class Type, class Alloc>
-void vector<Type, Alloc>::_fill_init(size_type count, const Type& value)
+void vector<Type, Alloc>::
+_fill_init(size_type _Count,
+           const Type& _Val)
 {
-  first_ = _allocator_and_fill(count, value);
-  last_ = first_ + count;
-  end_ = last_;
+  Myfirst_ = _allocator_and_fill(_Count, _Val);
+  Mylast_ = Myfirst_ + _Count;
+  Myend_ = Mylast_;
 }
 
 template <class Type, class Alloc>
-void vector<Type, Alloc>::_insert_aux(iterator position, const Type& val)
+void vector<Type, Alloc>::_insert_aux(iterator _Position,
+                                      const Type& _Val)
 {
-  if (last_ != end_) {
-    construct(last_, *(last_ - 1));
-    ++last_;
-    copy_backward(position, last_ - 2, last_ - 1);
-    *position = val;
+  if (Mylast_ != Myend_) {
+    _MY_STL::construct(Mylast_, *(Mylast_ - 1));
+    ++Mylast_;
+#ifdef MINI_STL_RVALUE_REFS
+    _MY_STL::move_backward(_Position, Mylast_ - 2, Mylast_ - 1);
+#else
+    _MY_STL::copy_backward(_Position, Mylast_ - 2, Mylast_ - 1);
+#endif
+    *_Position = _Val;
   } else {
     const size_type oldSize = size();
     const size_type newSize = oldSize != 0 ? 2 * oldSize : 1;
@@ -508,155 +463,167 @@ void vector<Type, Alloc>::_insert_aux(iterator position, const Type& val)
     iterator newFirst = data_allocator_::allocate(newSize);
     iterator newLast = newFirst;
     MINI_STL_TRY {
-      newLast = uninitialized_copy(first_, position, newFirst);
-      construct(newLast, val);
+      newLast = _MY_STL::uninitialized_copy(Myfirst_, _Position, newFirst);
+      _MY_STL::construct(newLast, _Val);
       ++newLast;
-      newLast = uninitialized_copy(position, last_, newLast);
+      newLast = _MY_STL::uninitialized_copy(_Position, Mylast_, newLast);
     }
     MINI_STL_UNWIND((destroy(newFirst,newLast);
                     _deallocate(newFirst,newSize);))
-    destroy(first_, last_);
+    _MY_STL::destroy(Myfirst_, Mylast_);
     _deallocate();
 
-    first_ = newFirst;
-    last_ = newLast;
-    end_ = newFirst + newSize;
+    Myfirst_ = newFirst;
+    Mylast_ = newLast;
+    Myend_ = newFirst + newSize;
   }
 }
 
 template <class Type, class Alloc>
-void vector<Type, Alloc>::_insert_aux(iterator position)
+void vector<Type, Alloc>::_insert_aux(iterator _Position)
 {
-  _insert_aux(position, Type());
-}
-
-template <class Type, class Alloc>
-void vector<Type, Alloc>::swap(vector<Type, Alloc> &rightVec)
-{
-  _MY_STL::swap(first_, rightVec.first_);
-  _MY_STL::swap(last_, rightVec.last_);
-  _MY_STL::swap(end_, rightVec.end_);
+  _insert_aux(_Position, Type());
 }
 
 template <class Type, class Alloc>
 inline void
-vector<Type, Alloc>::push_back(const Type& val)
+vector<Type, Alloc>::swap(vector<Type, Alloc> &_Right)
 {
-  if (last_ != end_) {
-    construct(last_, val);
-    ++last_;
+  _MY_STL::swap(this->Myfirst_, _Right.Myfirst_);
+  _MY_STL::swap(this->Mylast_, _Right.Mylast_);
+  _MY_STL::swap(this->Myend_, _Right.Myend_);
+}
+
+template <class Type, class Alloc>
+inline void
+vector<Type, Alloc>::push_back(const Type& _Val)
+{
+  if (Mylast_ != Myend_) {
+    _MY_STL::construct(Mylast_, _Val);
+    ++Mylast_;
   } else {
-    _insert_aux(last_, val);
+    _insert_aux(Mylast_, _Val);
   }
 }
 #ifdef MINI_STL_RVALUE_REFS
 template <class Type, class Alloc>
 inline void
-vector<Type, Alloc>::push_back(Type&& val)
+vector<Type, Alloc>::push_back(Type&& _Val)
 {
-  insert(end(), _MY_STL::move(val));
-}
-#endif
-template <class Type, class Alloc>
-inline void
-vector<Type, Alloc>::resize(size_type newSize, const Type &val)
-{
-#ifdef MINI_STL_DEBUG
-  _check_range(newSize,true);
-#endif
-  if (newSize < size())
-    erase(begin() + newSize, end());
-  else
-    insert(end(), newSize - size(), val);
-}
-
-template <class Type, class Alloc>
-typename vector<Type, Alloc>::iterator
-vector<Type, Alloc>::erase(iterator first, iterator last)
-{
-#ifdef MINI_STL_DEBUG
-  _check_range(first,last);
-  _check_range(first);
-  _check_range(last);
-#endif
-  iterator i = copy(last, last_, first);
-  destroy(i, last_);
-  last_ -= (last - first);
-  return first;
-}
-
-template <class Type, class Alloc>
-typename vector<Type, Alloc>::iterator
-vector<Type, Alloc>::erase(iterator position)
-{
-#ifdef MINI_STL_DEBUG
-  _check_range(position - first_);
-#endif
-  if (position + 1 != last_) {
-    copy(position + 1, last_, position);
+  if (Mylast_ != Myend_) {
+    _MY_STL::construct(Mylast_, _MY_STL::move(_Val));
+    ++Mylast_;
+  } else {
+    insert(end(), _MY_STL::move(_Val));
   }
-  --last_;
-  destroy(last_);
-  return position;
+}
+#endif
+
+template <class Type, class Alloc>
+inline void
+vector<Type, Alloc>::resize(size_type _NewSize, const Type &_Val)
+{
+  if (_NewSize < size())
+    erase(begin() + _NewSize, end());
+  else
+    insert(end(), _NewSize - size(), _Val);
+}
+
+template <class Type, class Alloc>
+typename vector<Type, Alloc>::iterator
+vector<Type, Alloc>::erase(iterator _First, iterator _Last)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "vector erase1");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->Myfirst_, _Last, "vector erase2");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->Myfirst_, _First, "vector erase3");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Last, this->Mylast_, "vector erase4");
+#ifdef MINI_STL_RVALUE_REFS
+  iterator i = _MY_STL::move(_Last, Mylast_, _First);
+#else
+  iterator i = _MY_STL::copy(_Last, Mylast_, _First);
+#endif
+  _MY_STL::destroy(i, Mylast_);
+  Mylast_ -= (_Last - _First);
+  return _First;
+}
+
+template <class Type, class Alloc>
+typename vector<Type, Alloc>::iterator
+vector<Type, Alloc>::erase(iterator _Position)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->Myfirst_, _Position, "vector erase");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Position, this->Mylast_-1,  "vector erase");
+  if (_Position + 1 != Mylast_)
+#ifdef MINI_STL_RVALUE_REFS
+    _MY_STL::move(_Position + 1, Mylast_, _Position);
+#else
+    _MY_STL::copy(_Position + 1, Mylast_, _Position);
+#endif
+  --Mylast_;
+  destroy(Mylast_);
+  return _Position;
 }
 
 template <class Type, class Alloc>
 inline void
-vector<Type, Alloc>::insert(const_iterator position, size_type n, const Type& val)
+vector<Type, Alloc>::insert(const_iterator _Position,
+                            size_type _Count,
+                            const Type& _Val)
 {
-#ifdef MINI_STL_DEBUG
-  _check_range(position);
-  _check_range(n,true);
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->cbegin(), _Position, "vector insert");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Position, this->cend(), "vector insert");
+  if (_Count != 0) {
+    if (size_type(Myend_ - Mylast_) >= _Count) {
+      Type copyVal(_Val);
+      const size_type posAfterNum = Mylast_ - _Position;
+      iterator oldLast = Mylast_;
+      if (posAfterNum > _Count) {
+        _MY_STL::uninitialized_copy(Mylast_ - _Count, Mylast_, Mylast_);
+        Mylast_ += _Count;
+#ifdef MINI_STL_RVALUE_REFS
+        _MY_STL::move_backward((iterator)_Position, oldLast - _Count, oldLast);
+#else
+        _MY_STL::copy_backward((iterator)_Position, oldLast - _Count, oldLast);
 #endif
-  if (n!=0) {
-    if (size_type(end_ - last_) >= n) {
-      Type copyVal(val);
-      const size_type posAfterNum = last_ - position;
-      iterator oldLast = last_;
-      if (posAfterNum > n) {
-        uninitialized_copy(last_ - n, last_, last_);
-        last_ += n;
-        copy_backward((iterator)position, oldLast -n, oldLast);
-        fill((iterator)position, (iterator)position + n, copyVal);
+        fill((iterator)_Position, (iterator)_Position + _Count, copyVal);
       } else {
-        uninitialized_fill_n(last_, n - posAfterNum, copyVal);
-        last_ += n - posAfterNum;
-        uninitialized_copy((iterator)position, oldLast, last_);
-        last_ += posAfterNum;
-        fill((iterator)position, oldLast, copyVal);
+        _MY_STL::uninitialized_fill_n(Mylast_, _Count - posAfterNum, copyVal);
+        Mylast_ += _Count - posAfterNum;
+        _MY_STL::uninitialized_copy((iterator)_Position, oldLast, Mylast_);
+        Mylast_ += posAfterNum;
+        _MY_STL::fill((iterator)_Position, oldLast, copyVal);
       }
     } else {
         const size_type oldSize = size();
-        const size_type newSize = oldSize + max((size_type)oldSize, n);
+        const size_type newSize = oldSize + max((size_type)oldSize, _Count);
         iterator newFirst = data_allocator_::allocate(newSize);
         iterator newLast = newFirst;
         MINI_STL_TRY {
-          newLast = uninitialized_copy(first_, (iterator)position, newFirst);
-          newLast = uninitialized_fill_n(newLast, n, val);
-          newLast = uninitialized_copy((iterator)position, last_, newLast);
+          newLast = _MY_STL::uninitialized_copy(Myfirst_, (iterator)_Position, newFirst);
+          newLast = _MY_STL::uninitialized_fill_n(newLast, _Count, _Val);
+          newLast = _MY_STL::uninitialized_copy((iterator)_Position, Mylast_, newLast);
         }
         MINI_STL_UNWIND (
-          destroy(newFirst, newLast);
+          _MY_STL::destroy(newFirst, newLast);
           data_allocator_::deallocate(newFirst, newSize);)
-        destroy(first_, last_);
+        _MY_STL::destroy(Myfirst_, Mylast_);
         _deallocate();
 
-        first_ = newFirst;
-        last_ = newLast;
-        end_ = newFirst + newSize;
+        Myfirst_ = newFirst;
+        Mylast_ = newLast;
+        Myend_ = newFirst + newSize;
     }
   }
 }
 
 template <class Type, class Alloc>
 typename vector<Type, Alloc>::iterator
-vector<Type, Alloc>::insert(const_iterator position, const Type& val)
+vector<Type, Alloc>::insert(const_iterator _Position, const Type& _Val)
 {
-#ifdef MINI_STL_DEBUG
-  _check_range(position);
-#endif
-  difference_type off = position - begin();
-  _insert_aux((iterator)position, val);
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->begin(), _Position, "vector insert");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Position, this->end(),  "vector insert");
+  difference_type off = _Position - begin();
+  _insert_aux((iterator)_Position, _Val);
   return begin() + off;
 }
 
@@ -664,40 +631,42 @@ vector<Type, Alloc>::insert(const_iterator position, const Type& val)
 template <class Type, class Alloc>
 template <class InputIterator>
 void vector<Type, Alloc>::
-insert(const_iterator position,
-       InputIterator first,
-       InputIterator last,
-       typename is_iterator<InputIterator>::ID
-      )
+insert(const_iterator _Position,
+       InputIterator _First,
+       InputIterator _Last,
+       typename is_iterator<InputIterator>::ID)
 {
-#ifdef MINI_STL_DEBUG
-  _check_range(position);
-  _check_range(first, last);
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->cbegin(), _Position, "vector insert");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Position, this->cend(),  "vector insert");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "vector insert");
+  if (_First != _Last) {
+    size_type n = _MY_STL::DISTANCE(_First, _Last);
+    if ((size_type)(Myend_ - Mylast_) >= n) {//has space
+      iterator oldLast = Mylast_;
+#ifdef MINI_STL_RVALUE_REFS
+      _MY_STL::move_backward((iterator)_Position, oldLast, oldLast + n);
+#else
+      _MY_STL::copy_backward((iterator)_Position, oldLast, oldLast + n);
 #endif
-  if (first != last) {//范围不空
-    size_type n = last - first;
-    if ((size_type)(end_ - last_) >= n) {//还有空间
-      iterator oldLast = last_;
-      copy_backward((iterator)position, oldLast, oldLast + n);
-      copy(first, last, (iterator)position);
-      last_ += n;
-    } else {//空间不够
+      _MY_STL::copy(_First, _Last, (iterator)_Position);
+      Mylast_ += n;
+    } else {//no space
       const size_type oldSize = size();
       const size_type newSize = oldSize + max((size_type)oldSize, (size_type)n);
       iterator newFirst = data_allocator_::allocate(newSize);
       iterator newLast = newFirst;
       MINI_STL_TRY {
-        newLast = uninitialized_copy(first_, (iterator)position, newFirst);
-        newLast = uninitialized_copy(first, last, newLast);
-        newLast = uninitialized_copy((iterator)position, last_, newLast);
+        newLast = _MY_STL::uninitialized_copy(Myfirst_, (iterator)_Position, newFirst);
+        newLast = _MY_STL::uninitialized_copy(_First, _Last, newLast);
+        newLast = _MY_STL::uninitialized_copy((iterator)_Position, Mylast_, newLast);
       }
-      MINI_STL_UNWIND((destroy(newFirst,newLast),
+      MINI_STL_UNWIND((_MY_STL::destroy(newFirst,newLast),
                           data_allocator_::deallocate(newFirst, newSize)));
-      destroy(first_, last_);
+      _MY_STL::destroy(Myfirst_, Mylast_);
       _deallocate();
-      first_ = newFirst;
-      last_ = newLast;
-      end_ = newFirst + newSize;
+      Myfirst_ = newFirst;
+      Mylast_ = newLast;
+      Myend_ = newFirst + newSize;
     }
   }
 }
@@ -705,18 +674,17 @@ insert(const_iterator position,
 #ifdef MINI_STL_RVALUE_REFS
 template <class Type, class Alloc>
 typename vector<Type,Alloc>::iterator
-vector<Type, Alloc>::insert(const_iterator position, Type&& val)
+vector<Type, Alloc>::insert(const_iterator _Position, Type&& _Val)
 {
-#ifdef MINI_STL_DEBUG
-  _check_range(position);
-#endif
-  iterator myIter = (iterator)position;
-  difference_type offset = myIter - first_;
-  if (last_ != end_) {
-    construct(last_, *(last_ - 1));
-    ++last_;
-    copy_backward((iterator)(myIter), last_ - 2, last_ - 1);
-    *myIter = _MY_STL::move(val);
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->cbegin(), _Position, "vector insert");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_Position, this->cend(),  "vector insert");
+  iterator myIter = (iterator)_Position;
+  difference_type offset = myIter - Myfirst_;
+  if (Mylast_ != Myend_) {
+    _MY_STL::construct(Mylast_, *(Mylast_ - 1));
+    ++Mylast_;
+    _MY_STL::move_backward((iterator)(myIter), Mylast_ - 2, Mylast_ - 1);
+    _MY_STL::construct(myIter, _MY_STL::move(_Val));
   } else {
     const size_type oldSize = size();
     const size_type newSize = oldSize != 0 ? 2 * oldSize : 1;
@@ -724,24 +692,22 @@ vector<Type, Alloc>::insert(const_iterator position, Type&& val)
     iterator newFirst = data_allocator_::allocate(newSize);
     iterator newLast = newFirst;
     MINI_STL_TRY {
-      newLast = uninitialized_copy(first_, myIter, newFirst);
-      construct(newLast);
-      *newLast = _MY_STL::move(val);
+      newLast = _MY_STL::uninitialized_copy(Myfirst_, myIter, newFirst);
+      _MY_STL::construct(newLast, _MY_STL::move(_Val));
       ++newLast;
-      newLast = uninitialized_copy(myIter, last_, newLast);
+      newLast = _MY_STL::uninitialized_copy(myIter, Mylast_, newLast);
     }
-    MINI_STL_UNWIND((destroy(newFirst,newLast);
+    MINI_STL_UNWIND((_MY_STL::destroy(newFirst,newLast);
                     _deallocate(newFirst,newSize);))
-    destroy(first_, last_);
+    destroy(Myfirst_, Mylast_);
     _deallocate();
 
-    first_ = newFirst;
-    last_ = newLast;
-    end_ = newFirst + newSize;
+    Myfirst_ = newFirst;
+    Mylast_ = newLast;
+    Myend_ = newFirst + newSize;
   }
-  return first_ + offset;
+  return Myfirst_ + offset;
 }
-
 #endif // MINI_STL_RVALUE_REFS
 
 MINI_STL_END
