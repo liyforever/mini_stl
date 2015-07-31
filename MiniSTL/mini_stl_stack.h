@@ -3,7 +3,7 @@
 #include "mini_stl_deque.h"
 MINI_STL_BEGIN
 
-template <class Type, class Container = deque<Type> >
+template <class Type, class Container = _MY_STL::deque<Type> >
 class stack
 {
 public:
@@ -12,71 +12,76 @@ public:
   typedef typename Container::reference  reference;
   typedef typename Container::const_reference const_reference;
   typedef typename Container container_type;
+private:
+  Container Myc_;
 public:
-  explicit stack() : c_() {}
-  explicit stack(const container_type& rhs) : c_(rhs) {}
+  explicit stack() : Myc_() {}
+  explicit stack(const container_type& _Right) : Myc_(_Right) {}
 public:
-  void push(const Type& val)
+  void push(const Type& _Val)
   {
-    c_.push_back(val);
+    Myc_.push_back(_Val);
+  }
+
+  void push(Type&& _Val)
+  {
+    Myc_.push_back(_MY_STL::move(_Val));
   }
 
   void pop()
   {
-    c_.pop_back();
+    Myc_.pop_back();
   }
 
   bool empty() const
   {
-    return c_.empty();
+    return Myc_.empty();
   }
 
   size_type size() const
   {
-    return c_.size();
+    return Myc_.size();
   }
 
   reference top()
   {
-    return c_.back();
+    return Myc_.back();
   }
 
   const_reference top() const
   {
-    return c_.back();
+    return Myc_.back();
   }
 
-  bool operator!=(const stack& rhs)
+  bool operator!=(const stack& _Right)
   {
-    return this->c_ != rhs.c_;
+    return this->Myc_ != _Right.Myc_;
   }
 
-  bool operator<(const stack& rhs)
+  bool operator<(const stack& _Right)
   {
-    return this->c_ < rhs.c_;
+    return this->Myc_ < _Right.Myc_;
   }
 
-  bool operator<=(const stack& rhs)
+  bool operator<=(const stack& _Right)
   {
-    return this->c_ <= rhs.c_;
+    return this->Myc_ <= _Right.Myc_;
   }
 
-  bool operator==(const stack& rhs)
+  bool operator==(const stack& _Right)
   {
-    return this->c_ == rhs.c_;
+    return this->Myc_ == _Right.Myc_;
   }
 
-  bool operator>(const stack& rhs)
+  bool operator>(const stack& _Right)
   {
-    return this->c_ > rhs.c_;
+    return this->Myc_ > _Right.Myc_;
   }
 
-  bool operator>=(const stack& rhs)
+  bool operator>=(const stack& _Right)
   {
-    return this->c_ >= rhs.c_;
+    return this->Myc_ >= _Right.Myc_;
   }
-private:
-  Container c_;
 };
 
 MINI_STL_END

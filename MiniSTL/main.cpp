@@ -51,142 +51,27 @@ using namespace std;
 //#include <deque>
 using namespace Mini_STL;
 
-class CInt;
-std::ostream& operator<<( std::ostream& osIn, const CInt& rhs );
-
-class CInt
+void show(const string& _Str)
 {
-public:
-   CInt( int n = 0 ) : m_nVal( n ){}
-   CInt( const CInt& rhs ) : m_nVal( rhs.m_nVal ){}
-   CInt& operator=( const CInt& rhs ) {m_nVal =
-   rhs.m_nVal; return *this;}
-   bool operator<( const CInt& rhs ) const
-      {return ( m_nVal < rhs.m_nVal );}
-   friend std::ostream& operator<<(std::ostream& osIn, const CInt& rhs);
-
-private:
-   int m_nVal;
-};
-
-inline std:: ostream& operator<<( std::ostream& osIn, const CInt& rhs )
-{
-   osIn << "CInt( " << rhs.m_nVal << " )";
-   return osIn;
+  cout << "str data:" << _Str << " str use:"
+          << _Str.get_use() << endl;
 }
 
-// Return whether modulus of elem1 is less than modulus of elem2
-bool mod_lesser ( int elem1, int elem2 )
-{
-   if ( elem1 < 0 )
-      elem1 = - elem1;
-   if ( elem2 < 0 )
-      elem2 = - elem2;
-   return elem1 < elem2;
-}
-
-bool UDgreater ( int elem1, int elem2 ) {
-   return elem1 > elem2;
-}
-bool greater5 ( int value ) {
-   return value >5;
-}
-bool twice (int elem1, int elem2 )
-{
-   return 2 * elem1 == elem2;
-}
-bool one_half ( int elem1, int elem2 )
-{
-   return elem1 == 2 * elem2;
-}template <class Type>
-class MultValue
-{
-   private:
-      Type Factor;   // The value to multiply by
-   public:
-      // Constructor initializes the value to multiply by
-      MultValue ( const Type& _Val ) : Factor ( _Val ) {
-      }
-
-      // The function call for the element to be multiplied
-      Type operator ( ) ( Type& elem ) const
-      {
-         return elem * Factor;
-      }
-};bool mod_equal ( int elem1, int elem2 )
-{
-   if ( elem1 < 0 )
-      elem1 = - elem1;
-   if ( elem2 < 0 )
-      elem2 = - elem2;
-   return elem1 == elem2;
-}
-#include <unordered_map>
 int main()
 {try{
+    string str1 ( "quintillion" );
+      cout << "The original string str1 is: " << str1 << endl;
+      basic_string <char>::size_type indexChFi, indexChLi;
 
+      indexChFi = str1.find_first_of ( "i" );
+      indexChLi = str1.find_last_of ( "i" );
+      basic_string<char>::difference_type diffi = indexChLi - indexChFi;
 
-
-       vector <int> v1;
-       vector <int>::iterator Iter1, Result1;
-
-       // Constructing vectors v1a & v1b with default less-than ordering
-       int i;
-       for ( i = -1 ; i <= 4 ; i++ )
-       {
-          v1.push_back(  i );
-       }
-
-       int ii;
-       for ( ii =-3 ; ii <= 0 ; ii++ )
-       {
-          v1.push_back(  ii  );
-       }
-
-       sort ( v1.begin ( ) , v1.end ( ) );
-       cout << "Original vector v1 with range sorted by the\n "
-            << "binary predicate less than is  v1 = ( " ;
-       for ( Iter1 = v1.begin( ) ; Iter1 != v1.end( ) ; Iter1++ )
-          cout << *Iter1 << " ";
-       cout << ")." << endl;
-
-       // Constructing vectors v2 with range sorted by greater
-       vector <int> v2 ( v1 );
-       vector <int>::iterator Iter2, Result2;
-       sort ( v2.begin ( ) , v2.end ( ) , greater<int> ( ) );
-
-       cout << "Original vector v2 with range sorted by the\n "
-            <<  "binary predicate greater is    v2 = ( " ;
-       for ( Iter2 = v2.begin ( ) ; Iter2 != v2.end ( ) ; Iter2++ )
-          cout << *Iter2 << " ";
-       cout << ")." << endl;
-
-       // Constructing vectors v3 with range sorted by mod_lesser
-       vector <int> v3 ( v1 );
-       vector <int>::iterator Iter3, Result3;
-       sort ( v3.begin ( ) , v3.end ( ) , mod_lesser );
-
-       cout << "Original vector v3 with range sorted by the\n "
-            <<  "binary predicate mod_lesser is v3 = ( " ;
-       for ( Iter3 = v3.begin ( ) ; Iter3 != v3.end ( ) ; Iter3++ )
-          cout << *Iter3 << " ";
-       cout << ")." << endl;
-
-       // upper_bound of 3 in v1 with default binary predicate less <int> ( )
-       Result1 = upper_bound ( v1.begin ( ) , v1.end ( ) , 3 );
-       cout << "The upper_bound in v2 for the element with a value of 3 is: "
-            << *Result1 << "." << endl;
-
-       // upper_bound of 3 in v2 with the binary predicate greater <int> ( )
-       Result2 = upper_bound ( v2.begin ( ) , v2.end ( ) , 3, greater <int> ( ) );
-       cout << "The upper_bound in v2 for the element with a value of 3 is: "
-            << *Result2 << "." << endl;
-
-       // upper_bound of 3 in v3 with the binary predicate  mod_lesser
-       Result3 = upper_bound ( v3.begin ( ) , v3.end ( ) , 3,mod_lesser );
-       cout << "The upper_bound in v3 for the element with a value of 3 is: "
-            << *Result3 << "." << endl;
-
+      cout << "The first character i is at position: "
+           << indexChFi << "." << endl;
+      cout << "The last character i is at position: "
+           << indexChLi << "." << endl;
+      cout << "The difference is: " << diffi << "." << endl;
 
   }
   catch (std::exception & e)

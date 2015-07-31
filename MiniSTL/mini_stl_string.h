@@ -1,6 +1,7 @@
 #ifndef MINI_STL_STRING_H
 #define MINI_STL_STRING_H
 #include "mini_stl_memory.h"
+#include "mini_stl_algorithm.h"
 #include "mini_stl_chartraits.h"
 #include <iosfwd>
 #include <istream>
@@ -8,8 +9,8 @@
 MINI_STL_BEGIN
 
 template <class CharType,
-          class Traits = char_traits<CharType>,
-          class Alloc = default_allocator>
+          class Traits = _MY_STL::char_traits<CharType>,
+          class Alloc = _MY_STL::default_allocator>
 class basic_string
 {
 public:  
@@ -29,145 +30,146 @@ public:
 public:
   static const size_type npos;
 private:
+  enum { E_DEFAULT_BLOCK_ = 8};
   typedef simpleAlloc<value_type, Alloc> data_allocator_;
   typedef simpleAlloc<size_type, Alloc> use_allocator_;
-  iterator first_;
-  iterator last_;
-  iterator end_;
-  size_type *use_;
+  iterator Myfirst_;
+  iterator Mylast_;
+  iterator Myend_;
+  size_type *Myuse_;
 public:
   size_type get_use() const
   {
-    return *use_;
+    return *Myuse_;
   }
 
   basic_string()
   {
-    _init_block(8);
+    _init_block(E_DEFAULT_BLOCK_);
+    _make_terinate();
   }
 
   explicit basic_string(const allocator_type& /*AL*/)
   {
-    _init_block(8);
+    _init_block(E_DEFAULT_BLOCK_);
+    _make_terinate();
   }
 
-  basic_string(const basic_string& Right)
+  basic_string(const basic_string& _Right)
   {
-    first_ = Right.first_;
-    last_ = Right.last_;
-    end_ = Right.end_;
-    use_ = Right.use_;
-    ++*use_;
+    Myfirst_ = _Right.Myfirst_;
+    Mylast_ = _Right.Mylast_;
+    Myend_ = _Right.Myend_;
+    Myuse_ = _Right.Myuse_;
+    ++*Myuse_;
   }
 
 #ifdef MINI_STL_RVALUE_REFS
-  basic_string(basic_string&& Right)
+  basic_string(basic_string&& _Right)
   {
-    first_ = Right.first_;
-    last_ = Right.last_;
-    end_ = Right.end_;
-    use_ = Right.use_;
-    ++*use_;
+    Myfirst_ = _Right.Myfirst_;
+    Mylast_ = _Right.Mylast_;
+    Myend_ = _Right.Myend_;
+    Myuse_ = _Right.Myuse_;
+    ++*Myuse_;
   }
 #endif
-  basic_string(
-      const basic_string& Right,
-      size_type Pos,
-      size_type Count = npos,
-      const allocator_type& /*Al*/ = allocator_type()
-  )
+  basic_string(const basic_string& _Right,
+               size_type _Pos,
+               size_type _Count = npos,
+               const allocator_type& /*Al*/
+               = allocator_type())
   {
-    if (pos > Right.size())
-      MINI_STL_THROW_RANGE_ERROR("basic_string");
-    else
-      _init_range(Right.begin() + Pos,
-                  Right.begin() + Pos + min(Count, Right.size() - Pos));
+    MINI_STL_DEBUG_CHECK_POS(_Right.size(), _Pos, "basic_string basic_string");
+    _init_range(_Right.begin() + _Pos,
+                _Right.begin() + _Pos + min(_Count, _Right.size() - _Pos));
   }
 
-  basic_string(
-      const_pointer Ptr,
-      size_type Count,
-      const allocator_type& /*Al*/ = allocator_type()
-  )
+  basic_string(const_pointer _Ptr,
+               size_type _Count,
+               const allocator_type& /*Al*/
+               = allocator_type())
   {
-    _init_range(Ptr, Ptr + Count);
+    _init_range(_Ptr, _Ptr + _Count);
   }
 
-  basic_string(const_pointer Ptr, const allocator_type& /*Al*/ = allocator_type())
+  basic_string(const_pointer _Ptr,
+               const allocator_type& /*Al*/
+               = allocator_type())
   {
-    _init_range(Ptr, Ptr + traits_type::length(Ptr));
+    MINI_STL_DEBUG_POINTER(_Ptr,"basic_string basic_string");
+    _init_range(_Ptr, _Ptr + traits_type::length(_Ptr));
   }
 
-  basic_string(
-      size_type Count,
-      value_type Ch,
-      const allocator_type& /*Al*/ = allocator_type()
-  )
+  basic_string(size_type _Count,
+               value_type _Ch,
+               const allocator_type& /*Al*/
+               = allocator_type())
   {
-    _init_block(Count + 1);
-    traits_type::assign(first_, Count, Ch);
-    last_ = first_ + Count;
+    _init_block(_Count + 1);
+    traits_type::assign(Myfirst_, _Count, _Ch);
+    Mylast_ = Myfirst_ + _Count;
     _make_terinate();
   }
 
   template <class InputIterator>
-      basic_string(
-          InputIterator First,
-          InputIterator Last,
-          const allocator_type& /*Al*/ = allocator_type(),
-          typename is_iterator<InputIterator>::ID = Identity()
-      )
+  basic_string(InputIterator _First,
+               InputIterator _Last,
+               const allocator_type& /*Al*/
+               = allocator_type(),
+               typename is_iterator<InputIterator>::ID
+               = Identity())
   {
-#ifdef MINI_STL_DEBUG
-    _check_range(First, Last);
-#endif
-    _init_range(First, Last);
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "basic_string basic_string");
+    size_type n = DISTANCE(_First, _Last);
+    _init_block(n + 1);
+    Mylast_ = _MY_STL::uninitialized_copy(_First, _Last, Myfirst_);
+    _make_terinate();
   }
 
-  basic_string(const_pointer First, const_pointer Last)
+  basic_string(const_pointer _First, const_pointer _Last)
   {
-#ifdef MINI_STL_DEBUG
-    _check_range(First, Last);
-#endif
-    _init_range(First, Last);
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "basic_string basic_string");
+    _init_range(_First, _Last);
   }
 
-  basic_string& operator=(value_type Ch)
+  basic_string& operator=(value_type _Ch)
   {
     clear();
-    insert(begin(), 1, Ch);
+    insert(begin(), 1, _Ch);
     return *this;
   }
 
-  basic_string& operator=(const_pointer Ptr)
+  basic_string& operator=(const_pointer _Ptr)
   {
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string operator=");
     clear();
-    insert(begin, Ptr, Ptr+traits_type::length(Ptr));
+    insert(begin, _Ptr, _Ptr+traits_type::length(_Ptr));
     return *this;
   }
 
-  basic_string& operator=(const basic_string& Right)
+  basic_string& operator=(const basic_string& _Right)
   {
-    if (this != &Right) {
+    if (this != &_Right) {
       _destroy_block();
-      this->first_ = Right.first_;
-      this->last_ = Right.last_;
-      this->end_ = Right.end_;
-      this->use_ = Right.use_;
-      ++*use_;
+      this->Myfirst_ = _Right.Myfirst_;
+      this->Mylast_ = _Right.Mylast_;
+      this->Myend_ = _Right.Myend_;
+      this->Myuse_ = _Right.Myuse_;
+      ++*Myuse_;
     }
     return *this;
   }
 
 #ifdef MINI_STL_RVALUE_REFS
-  basic_string& operator=(basic_string&& Right)
+  basic_string& operator=(basic_string&& _Right)
   {
     _destroy_block();
-    this->first_ = Right.first_;
-    this->last_ = Right.last_;
-    this->end_ = Right.end_;
-    this->use_ = Right.use_;
-    ++*use_;
+    this->Myfirst_ = _Right.Myfirst_;
+    this->Mylast_ = _Right.Mylast_;
+    this->Myend_ = _Right.Myend_;
+    this->Myuse_ = _Right.Myuse_;
+    ++*Myuse_;
     return *this;
   }
 #endif
@@ -190,55 +192,55 @@ public:
   iterator begin()
   {
     _detach();
-    return first_;
+    return Myfirst_;
   }
 
   const_iterator begin() const
   {
-    return first_;
+    return Myfirst_;
   }
 
   iterator end()
   {
     _detach();
-    return last_;
+    return Mylast_;
   }
 
   const_iterator end() const
   {
-    return last_;
+    return Mylast_;
   }
 
   reverse_iterator rbegin()
   {
     _detach();
-    return reverse_iterator(last_);
+    return reverse_iterator(Mylast_);
   }
 
   const_reverse_iterator rbegin() const
   {
-    return const_reverse_iterator(last_);
+    return const_reverse_iterator(Mylast_);
   }
 
   reverse_iterator rend()
   {
     _detach();
-    return reverse_iterator(first_);
+    return reverse_iterator(Myfirst_);
   }
 
   const_reverse_iterator rend() const
   {
-    return const_reverse_iterator(first_);
+    return const_reverse_iterator(Myfirst_);
   }
 
   const_iterator cbegin() const
   {
-    return first_;
+    return Myfirst_;
   }
 
   const_iterator cend() const
   {
-    return last_;
+    return Mylast_;
   }
 
   const_reverse_iterator crbegin() const
@@ -251,257 +253,270 @@ public:
     return rend();
   }
 
-  reference at(size_type Off)
+  reference at(size_type _Off)
   {
-#ifdef MINI_STL_DEBUG
-    _check_range(Off);
-#endif
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Off, "basic_string at");
     _detach();
-    return first_[Off];
+    return Myfirst_[_Off];
   }
 
-  const_reference at(size_type Off) const
+  const_reference at(size_type _Off) const
   {
-#ifdef MINI_STL_DEBUG
-    _check_range(Off);
-#endif
-    return first_[Off];
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Off, "basic_string at");
+    return Myfirst_[_Off];
   }
 
-  reference operator[](size_type Off)
+  reference operator[](size_type _Off)
   {
-#ifdef MINI_STL_DEBUG
-    _check_range(Off);
-#endif
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Off, "basic_string operator[]");
     _detach();
-    return first_[Off];
+    return Myfirst_[_Off];
   }
 
-  const_reference operator[](size_type Off) const
+  const_reference operator[](size_type _Off) const
   {
-#ifdef MINI_STL_DEBUG
-    _check_range(Off);
-#endif
-    return first_[Off];
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Off, "basic_string operator[]");
+    return Myfirst_[_Off];
+  }
+
+  size_type _Copy_s(value_type *_Dest, size_type _Dest_size,
+                    size_type _Count, size_type _Off = 0) const
+  {
+    const_iterator iter;
+    for (iter= begin() + _Off;
+         iter != end() && _Dest_size > 0 && _Count > 0;
+         --_Dest_size, ++iter, ++_Dest, --_Count)
+      *_Dest = *iter;
+    return iter - begin() - _Off;
   }
 
   reference back()
   {
-#ifdef MINI_STL_DEBUG
-    _check_range();
-#endif
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(), "basic_string back");
     _detach();
-    return *(last_ - 1);
+    return *(Mylast_ - 1);
   }
 
   const_reference back() const
   {
-#ifdef MINI_STL_DEBUG
-    _check_range();
-#endif
-    return *(last_ - 1);
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(), "basic_string back");
+    return *(Mylast_ - 1);
   }
 
   size_type size() const
   {
-    return last_ - first_;
+    return Mylast_ - Myfirst_;
   }
 
   bool empty() const
   {
-    return first_ == last_;
+    return Myfirst_ == Mylast_;
   }
 
-  basic_string& insert(size_type Pos, const value_type* Ptr)
+  basic_string& insert(size_type _Pos, const value_type* _Ptr)
   {
-    insert(first_ + Pos, Ptr, Ptr + traits_type::length(Ptr));
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string insert");
+    insert(Myfirst_ + _Pos, _Ptr, _Ptr + traits_type::length(_Ptr));
     return *this;
   }
 
-  basic_string& insert(
-       size_type Off,
-       const value_type* Ptr,
-       size_type Count
-    )
+  basic_string& insert(size_type _Off,
+                       const value_type* _Ptr,
+                       size_type _Count)
   {
-    insert(first_ + Off, Ptr, Ptr + Count);
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string insert");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Off, "basic_string insert");
+    insert(Myfirst_ + _Off, _Ptr, _Ptr + _Count);
     return *this;
   }
 
-  basic_string& insert(size_type Off,const basic_string& Str)
+  basic_string& insert(size_type _Off,const basic_string& _Str)
   {
-    insert(first_ + Off, Str.begin(), Str.end());
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Off, "basic_string insert");
+    insert(Myfirst_ + _Off, _Str.begin(), _Str.end());
     return *this;
   }
 
-  basic_string& insert(
-      size_type Off1,
-      const basic_string& Str,
-      size_type Off2,
-      size_type Count
-    )
+  basic_string& insert(size_type _Off1,
+                       const basic_string& _Str,
+                       size_type _Off2,
+                       size_type _Count)
   {
-    insert(first_ + Off1, Str.begin() + Off2, Str.begin() + Off2 + Count);
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Off1, "basic_string insert");
+    MINI_STL_DEBUG_CHECK_POS(_Str.size()+1, _Off2+_Count, "basic_string insert");
+    insert(Myfirst_ + _Off1, _Str.begin() + _Off2,
+           _Str.begin() + _Off2 + _Count);
     return *this;
   }
 
-  basic_string& insert(size_type Off, size_type Count, value_type Ch);
+  basic_string& insert(size_type _Off, size_type _Count, value_type _Ch);
 
-  iterator insert(iterator Position)
+  iterator insert(iterator _Position)
   {
-    size_type off = Position - first_;
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(Myfirst_, _Position, "basic_string insert");
+    size_type off = _Position - Myfirst_;
     insert(off, 1, value_type());
-    return first_ + off;
+    return Myfirst_ + _off;
   }
 
-  iterator insert(iterator Position, value_type Ch)
+  iterator insert(iterator _Position, value_type _Ch)
   {
-    size_type off = Position - first_;
-    insert(off, 1, Ch);
-    return first_ + off;
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(Myfirst_, _Position, "basic_string insert");
+    size_type off = _Position - Myfirst_;
+    insert(off, 1, _Ch);
+    return Myfirst_ + _off;
   }
 
-  void insert(iterator Position,size_type Count, value_type Ch)
+  void insert(iterator _Position,size_type _Count, value_type _Ch)
   {
-    size_type off = Position - first_;
-    insert(off, Count, Ch);
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(Myfirst_, _Position, "basic_string insert");
+    size_type off = _Position - Myfirst_;
+    insert(off, _Count, _Ch);
   }
 
   template<class InputIterator>
-    void insert(
-        iterator Position,
-        InputIterator First,
-        InputIterator Last,
-        typename is_iterator<InputIterator>::ID = Identity()
-      );
+  void insert(iterator _Position,
+              InputIterator _First,
+              InputIterator _Last,
+              typename is_iterator<InputIterator>::ID
+              = Identity());
 
-  basic_string& assign(const value_type* Ptr)
+  basic_string& assign(const value_type* _Ptr)
   {
-    size_type n = traits_type::length(Ptr);
-    return assign(Ptr, Ptr+n);
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string assign");
+    size_type n = traits_type::length(_Ptr);
+    return assign(_Ptr, _Ptr + n);
   }
 
-  basic_string& assign(const value_type* Ptr, size_type Count)
+  basic_string& assign(const value_type* _Ptr, size_type _Count)
   {
-    return assign(Ptr, Ptr+Count);
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string assign");
+    return assign(_Ptr, _Ptr + _Count);
   }
 
-  basic_string& assign(const basic_string& Str, size_type Off, size_type Count)
+  basic_string& assign(const basic_string& _Str, size_type _Off, size_type _Count)
   {
-    return assign(Str.begin()+Off, Str.begin()+Off+Count);
+    MINI_STL_DEBUG_CHECK_POS(_Str.size() + 1, _Off, "basic_string assign");
+    MINI_STL_DEBUG_CHECK_POS(_Str.size() + 1, _Off + _Count, "basic_string assign");
+    return assign(_Str.begin()+_Off, _Str.begin()+_Off+_Count);
   }
 
-  basic_string& assign(const basic_string& Str)
+  basic_string& assign(const basic_string& _Str)
   {
-    return assign(Str.begin(), Str.end());
+    return assign(_Str.begin(), _Str.end());
   }
 
-  basic_string& assign(size_type Count, value_type Ch)
+  basic_string& assign(size_type _Count, value_type _Ch)
   {
     clear();
-    insert(begin(), Count, Ch);
+    insert(begin(), _Count, _Ch);
     return *this;
   }
 
   template<class InputIterator>
-    basic_string& assign(
-      InputIterator First,
-      InputIterator Last,
-      typename is_iterator<InputIterator>::ID = Identity()
-    )
+  basic_string& assign(InputIterator _First,
+                       InputIterator _Last,
+                       typename is_iterator<InputIterator>::ID
+                       = Identity())
   {
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "basic_sting assing");
     clear();
-    insert(begin(),First, Last);
+    insert(begin(), _First, _Last);
     return *this;
   }
 
   template<class InputIterator>
-    basic_string& append(
-      InputIterator First,
-      InputIterator Last,
-      typename is_iterator<InputIterator>::ID = Identity()
-    )
+  basic_string& append(InputIterator _First,
+                       InputIterator _Last,
+                       typename is_iterator<InputIterator>::ID
+                       = Identity())
   {
-    return insert(end(), First, Last);
-  }
-
-  basic_string& append(const value_type* Ptr)
-  {
-    return insert(end(), Ptr, Ptr+traits_type::length(Ptr));
-  }
-
-  basic_string& append(const value_type* Ptr, size_type Count)
-  {
-    return insert(end(), Ptr, Ptr+Count);
-  }
-
-  basic_string& append(
-        const basic_string& Str,
-        size_type Off,
-        size_type Count
-    )
-  {
-    return insert(end(), Str.begin()+Off, Str.begin()+Off+Count);
-  }
-
-   basic_string& append(const basic_string& Str)
-  {
-    return insert(end(), Str.begin(), Str.end());
-  }
-
-  basic_string& append(size_type Count, value_type Ch)
-  {
-    insert(end(), Count, Ch);
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "basic_string append");
+    insert(end(), _First, _Last);
     return *this;
   }
 
-  basic_string& erase(size_type Pos = 0, size_type Count = npos)
+  basic_string& append(const value_type* _Ptr)
   {
-    if (Pos > size())
-      MINI_STL_THROW_RANGE_ERROR("basic_string");
-    erase(first_ + Pos, first_ + Pos + min(Count, size() - Pos));
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string append");
+    insert(end(), _Ptr, _Ptr+traits_type::length(_Ptr));
     return *this;
   }
 
-  iterator erase(iterator Position)
+  basic_string& append(const value_type* _Ptr, size_type _Count)
   {
-    return erase(Position, Position + 1);
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string append");
+    MINI_STL_DEBUG_CHECK_POS(traits_type::length(_Ptr) + 1, _Count, "basic_string append");
+    insert(end(), _Ptr, _Ptr+_Count);
+    return *this;
   }
 
-  iterator erase(iterator First, iterator Last)
+  basic_string& append(const basic_string& _Str,
+                       size_type _Off,
+                       size_type _Count)
   {
-#ifdef MINI_STL_DEBUG
-    _check_range(First, Last);
-    _check_range(First);
-    _check_range(Last);
-#endif
-    if (*use_ == 1) {
-      if (First != Last) {
-        traits_type::move(First, Last, (last_ - Last) + 1);//include null
-        const iterator new_last = last_ - (Last - First);
-        destroy(new_last + 1, last + 1);
-        last_ = new_last;
+    MINI_STL_DEBUG_CHECK_POS(_Str.size() + 1, _Off, "basic_string append");
+    MINI_STL_DEBUG_CHECK_POS(_Str.size() + 1, _Off + _Count, "basic_string append");
+    insert(end(), _Str.begin()+_Off, _Str.begin()+_Off+_Count);
+    return *this;
+  }
+
+  basic_string& append(const basic_string& _Str)
+  {
+    insert(end(), _Str.begin(), _Str.end());
+    return *this;
+  }
+
+  basic_string& append(size_type _Count, value_type _Ch)
+  {
+    insert(end(), _Count, _Ch);
+    return *this;
+  }
+
+  basic_string& erase(size_type _Pos = 0, size_type _Count = npos)
+  {
+    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos, "basic_string erase");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos+_Count, "basic_string erase");
+    erase(Myfirst_ + _Pos, Myfirst_ + _Pos + min(_Count, size() - _Pos));
+    return *this;
+  }
+
+  iterator erase(iterator _Position)
+  {
+    MINI_STL_DEBUG_CHECK_POS(this->size(), DISTANCE(begin(), _Position), "basic_string erase");
+    return erase(_Position, _Position + 1);
+  }
+
+  iterator erase(iterator _First, iterator _Last)
+  {
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "basic_stringerase");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, DISTANCE(begin(), _First), "basic_string erase");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, DISTANCE(begin(), _Last), "basic_string erase");
+    if (*Myuse_ == 1) {
+      if (_First != _Last) {
+        traits_type::move(_First, _Last, (Mylast_ - _Last) + 1);//include null
+        const iterator new_last = Mylast_ - (_Last - _First);
+        destroy(new_last + 1, _Last + 1);
+        Mylast_ = new_last;
       }
-      return First;
+      return _First;
     } else {
-      --*use_;
-      iterator old_first = first_;
-      iterator old_last = last_;
-      size_type n1 = First - first_;
-      size_type n2 = last_ - Last;
+      --*Myuse_;
+      const_iterator old_first = Myfirst_;
+      const_iterator old_last = Mylast_;
+      size_type n1 = _First - Myfirst_;
+      size_type n2 = Mylast_ - _Last;
       _init_block(n1 + n2 + 1);
-      last_ = uninitialized_copy(old_first, First, first_);
-      last_ = uninitialized_copy(Last, old_last, last_);
+      Mylast_ = _MY_STL::uninitialized_copy(old_first, _First, Myfirst_);
+      Mylast_ = _MY_STL::uninitialized_copy(_Last, old_last, Mylast_);
       _make_terinate();
-      return first_ + n1;
+      return Myfirst_ + n1;
     }
   }
 
   void pop_back()
   {
-#ifdef MINI_STL_DEBUG
-    _check_range();
-#endif
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(), "basic_string pop_back");
     erase(--end());
   }
 
@@ -510,89 +525,156 @@ public:
     insert(end(), 1, Ch);
   }
 
-/*  size_type find(value_type Ch, size_type Off = 0) const
+  size_type find(const basic_string& _Str, size_type _Off = 0) const
+  {
+    MINI_STL_DEBUG_CHECK_POS(_Str.size() + 1, _Off, "basic_string find");
+    return find(_Str.begin(), _Off, _Str.size());
+  }
+
+  size_type find(const value_type* _Ptr, size_type _Off = 0) const
+  {
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string find");
+    return find(_Ptr, _Off, traits_type::length(_Ptr));
+  }
+  size_type find(value_type _Ch, size_type _Off = 0) const
+  {
+    if (_Off >= size())
+      return npos;
+    const iterator result = find(begin() + _Off, end(),
+                                  _Ch);
+    return result != end() ? result - begin()
+                           : npos;
+  }
+
+  size_type find(const value_type* _Ptr,
+                 size_type _Off,
+                 size_type _Count) const
+  {
+    if (_Off + _Count > size());
+      return npos;
+    const const_iterator result = _MY_STL::search(begin() + _Off, end(),
+                                                  _Ptr, _Ptr + _Count);
+    return result != end() ? result - begin()
+                           : npos;
+  }
+
+  size_type find_first_not_of(const basic_string& _Str,
+                              size_type _Off = 0) const
+  {
+    return find_first_not_of(_Str.begin(), _Off, _Str.size());
+  }
+
+  size_type find_first_not_of(const value_type* _Ptr,
+                              size_type _Off = 0) const
+  {
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string find_first_not_of");
+    return find_first_not_of(_Ptr, _Off, traits_type::length(_Ptr));
+  }
+
+  size_type find_first_not_of(const value_type* _Ptr,
+                              size_type _Off,
+                              size_type _Count) const
   {
 
   }
-    size_type find(
-        const value_type* _Ptr,
-        size_type _Off = 0
-    ) const;
-    size_type find(
-        const value_type* _Ptr,
-        size_type _Off,
-        size_type _Count
-    ) const;
-    size_type find(
-        const basic_string<CharType, Traits, Allocator>& _Str,
-        size_type _Off = 0
-    ) const;*/
+
+  size_type find_first_not_of(value_type _Ch, size_type _Off = 0) const
+  {
+
+  }
+
 
   void clear()
   {
-    if (*use_ == 1) {
+    if (*Myuse_ == 1) {
       if (!empty()) {
-        traits_type::assign(*first_, value_type());
-        destroy(first_+1, last_+1);
-        last_ = first_;
+        traits_type::assign(*Myfirst_, value_type());
+        destroy(Myfirst_+1, Mylast_+1);
+        Mylast_ = Myfirst_;
       }
     } else {
-      --*use_;
+      --*Myuse_;
       _init_block(8);
+      _make_terinate();
     }
   }
 
   size_type capacity() const
   {
-    return end_ - first_ - 1;
+    return Myend_ - Myfirst_ - 1;
   }
 
   const value_type *c_str() const
   {
-    return first_;
+    return Myfirst_;
   }
 
   const value_type *data() const
   {
-    return first_;
+    return Myfirst_;
   }
 
-  size_type copy(value_type* Ptr, size_type Count, size_type Off = 0) const
+  size_type copy(value_type* _Ptr, size_type _Count, size_type _Off = 0) const
   {\
-//#ifdef MINI_STL_DEBUG
-    size_type len = traits_type::length(Ptr);
-    if (Off >= len || Off+Count>len)
-      MINI_STL_THROW_RANGE_ERROR("basic_string");
-//#endif
-    traits_type::copy(Ptr, first_+Off, Count);
-    return Count;
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string copy");
+    size_type len = traits_type::length(_Ptr);
+    MINI_STL_DEBUG_CHECK_POS(len, _Off, "basic_string copy");
+    MINI_STL_DEBUG_CHECK_POS(len, _Off + _Count, "basic_string copy");
+    traits_type::copy(_Ptr, Myfirst_+_Off, _Count);
+    return _Count;
   }
 
-  basic_string& replace(size_type Pos1, size_type Num1, const value_type* Ptr)
+  basic_string& replace(size_type _Pos1,
+                        size_type _Num1,
+                        const value_type* _Ptr)
   {
-    return replace(begin()+Pos1, begin()+Pos1+Num1, 
-                   Ptr, Ptr+traits_type::length(Ptr));
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1, "basic_string replace");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1+1+_Num1, "basic_string replace");
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string replace");
+    return replace(begin()+_Pos1, begin()+_Pos1+_Num1,
+                   _Ptr, _Ptr+traits_type::length(_Ptr));
   }
     
-  basic_string& replace(size_type Pos1, size_type Num1, const basic_string& Str)
+  basic_string& replace(size_type _Pos1,
+                        size_type _Num1,
+                        const basic_string& _Str)
   {
-    return replace(begin()+Pos1, begin()+Pos1+Num1,
-                   Str.begin(), Str.end());
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1, "basic_string replace");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1+1+_Num1, "basic_string replace");
+    return replace(begin()+_Pos1,
+                   begin()+_Pos1+_Num1,
+                   _Str.begin(),
+                   _Str.end());
   }
     
-  basic_string& replace(size_type Pos1, size_type Num1, 
-                        const value_type* Ptr, size_type Num2)
+  basic_string& replace(size_type _Pos1,
+                        size_type _Num1,
+                        const value_type* _Ptr,
+                        size_type _Num2)
   {
-    return replace(begin()+Pos1, begin()+Pos1+Num1,
-                   Ptr, Ptr+Num2);
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1, "basic_string replace");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1+1+_Num1, "basic_string replace");
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string replace");
+    MINI_STL_DEBUG_CHECK_POS(traits_type::length(_Ptr) + 1, _Num2, "basic_string replace");
+    return replace(begin()+_Pos1,
+                   begin()+_Pos1+_Num1,
+                   _Ptr, _Ptr+_Num2);
   }
     
-  basic_string& replace(size_type Pos1, size_type Num1,
-                        const basic_string& Str,
-                        size_type Pos2, size_type Num2)
+  basic_string& replace(size_type _Pos1,
+                        size_type _Num1,
+                        const basic_string& _Str,
+                        size_type _Pos2,
+                        size_type _Num2)
   {
-    return replace(begin()+Pos1, begin()+Pos1+Num1,
-                   Str.begin()+Pos2, Str.begin()+Pos2+Num2);
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1, "basic_string replace");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1+1+_Num1, "basic_string replace");
+    MINI_STL_DEBUG_CHECK_POS(_Str.size()+1, _Pos2, "basic_string replace");
+    MINI_STL_DEBUG_CHECK_POS(_Str.size()+1, _Pos2+_Num2, "basic_string replace");
+    return replace(begin()+_Pos1,
+                   begin()+_Pos1+_Num1,
+                   _Str.begin()+_Pos2,
+                   _Str.begin()+_Pos2+_Num2);
   }
     
  /* basic_string& replace(
@@ -605,34 +687,35 @@ public:
     return replace(begin()+Pos1, begin()+Pos1+Num1,)
   }*/
     
-  basic_string& replace(
-       iterator First,
-       iterator Last,
-       const value_type* Ptr
-    )
+  basic_string& replace(iterator _First,
+                        iterator _Last,
+                        const value_type* _Ptr)
   {
-    return replace(First, Last, Ptr, Ptr+traits_type::length(Ptr));
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "basic_sting replace");
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string replace");
+    return replace(_First, _Last, _Ptr, _Ptr+traits_type::length(_Ptr));
   }
     
-  basic_string& replace(
-       iterator First,
-       iterator Last,
-       const basic_string& Str
-    )
+  basic_string& replace(iterator _First,
+                        iterator _Last,
+                        const basic_string& _Str)
   {
-    return replace(First, Last,
-                   Str.begin(), Str.end());
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "basic_sting replace");
+    return replace(_First, _Last,
+                   _Str.begin(), _Str.end());
   }
     
-  basic_string& replace(
-       iterator First,
-       iterator Last,
-       const value_type* Ptr,
-       size_type Num2
-    )
+  basic_string& replace(iterator _First,
+                        iterator _Last,
+                        const value_type* _Ptr,
+                        size_type _Num2)
   {
-    return replace(First, Last,
-                   Ptr+Num2, Ptr+traits_type::length(Ptr));
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "basic_sting replace");
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string replace");
+    MINI_STL_DEBUG_CHECK_POS(traits_type::length(_Ptr) + 1,_Num2, "basic_string assign");
+    return replace(_First, _Last,
+                   _Ptr + _Num2,
+                   _Ptr+traits_type::length(_Ptr));
   }
     
   /*basic_string& replace(
@@ -643,236 +726,197 @@ public:
     );*/
     
   template<class InputIterator>
-    basic_string& replace(
-      iterator First1,
-      iterator Last1,
-      InputIterator First2,
-      InputIterator Last2,
-      typename is_iterator<InputIterator>::ID = Identity()
-    );
+  basic_string& replace(iterator _First1,
+                        iterator _Last1,
+                        InputIterator __First2,
+                        InputIterator _Last2,
+                        typename is_iterator<InputIterator>::ID
+                        = Identity());
 
   reference front()
   {
-#ifdef MINI_STL_DEBUG
-    _check_range();
-#endif
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(), "basic_string front");
     _detach();
-    return *first_;
+    return *Myfirst_;
   }
 
   const_reference front() const
   {
-#ifdef MINI_STL_DEBUG
-    _check_range();
-#endif
-    return *first_;
+    MINI_STL_DEBUG_CHECK_SIZE(this->size(), "basic_string front");
+    return *Myfirst_;
   }
 
-  size_type length( ) const
+  size_type length() const
   {
     return size();
   }
 
-  int compare(const basic_string& Str) const
+  int compare(const basic_string& _Str) const
   {
-    return _compare_aux(this->begin(), this->end(), Str.begin(), Str.end());
+    return _compare_aux(this->begin(), this->end(),
+                        _Str.begin(), _Str.end());
   }
 
-  int compare(size_type Pos1, size_type Num1, const basic_string& Str) const
+  int compare(size_type _Pos1, size_type _Num1, const basic_string& _Str) const
   {
-    if (Pos1 > size())
-      MINI_STL_THROW_RANGE_ERROR("basic_string");
-    return _compare_aux(first_ + Pos1,
-                        first_ + Pos1 + min(Num1, size() - Pos1),
-                        Str.first_, Str.last_);
+    MINI_STL_DEBUG_CHECK_POS(_Str.size(), _Pos1, "basic_string compare");
+    MINI_STL_DEBUG_CHECK_POS(_Str.size(), _Pos1 + _Num1, "basic_string compare");
+    return _compare_aux(Myfirst_ + _Pos1,
+                        Myfirst_ + _Pos1 + min(_Num1, size() - _Pos1),
+                        _Str.begin(), _Str.end());
   }
 
-  int compare(size_type Pos1, size_type Num1,
-                const basic_string& Str,
-                size_type Pos2, size_type Num2) const
+  int compare(size_type _Pos1,
+              size_type _Num1,
+              const basic_string& _Str,
+              size_type _Pos2,
+              size_type _Num2) const
   {
-    if (Pos1 > size() || Pos2 > Str.size())
-      MINI_STL_THROW_RANGE_ERROR("basic_string");
-    return _compare_aux(first_ + Pos1,
-                        first_ + Pos1 + min(Num1, size() - Pos1),
-                        Str.first_ + Pos2,
-                        Str.first_ + Pos2 + min(Num2, size() - Pos2));
+    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos1, "basic_string compare");
+    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos1 + _Num1, "basic_string compare");
+    MINI_STL_DEBUG_CHECK_POS(_Str.size(), _Pos2, "basic_string compare");
+    MINI_STL_DEBUG_CHECK_POS(_Str.size(), _Pos2 + _Num2, "basic_string compare");
+    return _compare_aux(Myfirst_ + _Pos1,
+                        Myfirst_ + _Pos1 + min(_Num1, size() - _Pos1),
+                        _Str.Myfirst_ + _Pos2,
+                        _Str.Myfirst_ + _Pos2 + min(_Num2, _Str.size()-_Pos2));
   }
 
-  int compare(const value_type* Ptr) const
+  int compare(const value_type* _Ptr) const
   {
-    return _compare_aux(first_, last_, Ptr, Ptr + traits_type::length(Ptr));
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_sting compare");
+    return _compare_aux(Myfirst_, Mylast_, _Ptr, _Ptr + traits_type::length(Ptr));
   }
 
-  int compare(size_type Pos1, size_type Num1, const value_type* Ptr) const
+  int compare(size_type _Pos1, size_type _Num1, const value_type* _Ptr) const
   {
-    if (Pos1 > size())
-      MINI_STL_THROW_RANGE_ERROR("basic_string");
-    return _compare_aux(first_ + Pos1,
-                        first_ + Pos1 + min(Num1, size() - Pos1),
-                        Ptr, Ptr + traits_type::length(ptr));
+    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos1, "basic_string compare");
+    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos1 + _Num1, "basic_string compare");
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_sting compare");
+    return _compare_aux(Myfirst_ + _Pos1,
+                        Myfirst_ + _Pos1 + min(_Num1, size() - _Pos1),
+                        _Ptr, _Ptr + traits_type::length(_ptr));
   }
 
-  int compare(size_type Pos1, size_type Num1, const value_type* Ptr,
-                size_type Num2) const
+  int compare(size_type _Pos1, size_type _Num1, const value_type* _Ptr,
+                size_type _Num2) const
   {
-    if (__pos1 > size())
-      MINI_STL_THROW_RANGE_ERROR("basic_string");
-    return _compare_aux(first_ + Pos1,
-                        first_ + Pos1 + min(Num1, size() - Pos1),
-                        Ptr, Ptr + Num2);
+    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos1, "basic_string compare");
+    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos1 + _Num1, "basic_string compare");
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_sting compare");
+    MINI_STL_DEBUG_CHECK_POS(traits_type::length(_ptr)+1, _Num2, "basic_string compare");
+    return _compare_aux(Myfirst_ + _Pos1,
+                        Myfirst_ + _Pos1 + min(_Num1, size() - _Pos1),
+                        _Ptr, _Ptr + _Num2);
   }
     
-  void swap(basic_string& Str)
+  void swap(basic_string& _Str)
   {
-    _MY_STL::swap(this->first_, Str.first_);  
-    _MY_STL::swap(this->last_, Str.last_);
-    _MY_STL::swap(this->end_, Str.end_);
-    _MY_STL::swap(this->use_, Str.use_);
+    _MY_STL::swap(this->Myfirst_, _Str.Myfirst_);
+    _MY_STL::swap(this->Mylast_, _Str.Mylast_);
+    _MY_STL::swap(this->Myend_, _Str.Myend_);
+    _MY_STL::swap(this->Myuse_, _Str.Myuse_);
   }
     
-  basic_string substr(size_type Off = 0, size_type Count = npos) const
+  basic_string substr(size_type _Off = 0, size_type _Count = npos) const
   {
-    return basic_string(begin()+Off, 
-                        begin()+Off + min(Count, size() - Pos));    
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Off, "basic_string compare");
+    return basic_string(begin()+_Off,
+                        begin()+_Off + min(_Count, size() - _Pos));
   }
 
-  basic_string& operator+=(value_type Ch)
+  basic_string& operator+=(value_type _Ch)
   {
-    push_back(Ch);
+    push_back(_Ch);
     return *this;
   }
 
-  basic_string& operator+=(const value_type* Ptr)
+  basic_string& operator+=(const value_type* _Ptr)
   {
-    return insert(last_, Ptr);
+    return insert(Mylast_, _Ptr);
   }
 
-  basic_string& operator+=(const basic_string& Right)
+  basic_string& operator+=(const basic_string& _Right)
   {
-    return insert(last_, Right);
+    insert(end(), _Right.begin(), _Right.end());
+    return *this;
   }
 
 protected:
-  pointer _allocate(size_t n)
+  pointer _allocate(size_t _Count)
   {
-    return data_allocator_::allocate(n);
+    return data_allocator_::allocate(_Count);
   }
 
-  void _deallocate(pointer p, size_t n)
+  void _deallocate(pointer _Ptr, size_t _Count)
   {
-    if (p)
-      data_allocator_::deallocate(p, n);
+    if (_Ptr)
+      data_allocator_::deallocate(_Ptr, _Count);
   }
 
-  void _init_block(size_t n)
+  void _init_block(size_t _Count)
   {
-    first_ = _allocate(n);
-    last_ = first_;
-    end_ = first_ + n;
-    use_ = use_allocator_::allocate();
-    construct(use_, size_t(1));
+    Myfirst_ = _allocate(_Count);
+    Mylast_ = Myfirst_;
+    Myend_ = Myfirst_ + _Count;
+    Myuse_ = use_allocator_::allocate();
+    construct(Myuse_, size_t(1));
   }
 
   void _destroy_block()
   {
-    if (--*use_ == 0) {
-      _deallocate(first_, end_ - first_);
-      use_allocator_::deallocate(use_);
+    if (--*Myuse_ == 0) {
+      _deallocate(Myfirst_, Myend_ - Myfirst_);
+      use_allocator_::deallocate(Myuse_);
     }
   }
 
   void _make_terinate()
+  //on *Mylast make '\0'
   {
     MINI_STL_TRY {
-      _construct_null(last_);
+      _construct_null(Mylast_);
     }
-    MINI_STL_UNWIND(destroy(first_, last_));
+    MINI_STL_UNWIND(_MY_STL::destroy(Myfirst_, Mylast_));
   }
 
-  void _construct_null(pointer p)
+  void _construct_null(pointer _Ptr)
   {
-    construct(p);
+    _MY_STL::construct(_Ptr);
     MINI_STL_TRY {
-      *p = (value_type)(0);
+      *_Ptr = (value_type)(0);
     }
-    MINI_STL_UNWIND(destroy(p));
+    MINI_STL_UNWIND(_MY_STL::destroy(_Ptr));
   }
 
-  void _init_range(const_pointer first, const_pointer last)
+  void _init_range(const_pointer _first, const_pointer _last)
   {
-    size_type n = last - first;
+    size_type n = _last - _first;
     _init_block(n + 1);
-    last_ = uninitialized_copy(first, last, first_);
+    Mylast_ = _MY_STL::uninitialized_copy(_first, _last, Myfirst_);
     _make_terinate();
   }
 
   void _detach()
   {
-    if (*use_ == 1)
+    if (*Myuse_ == 1)
       return;
     else {
-      --*use_;
-      iterator old_first = first_;
-      iterator old_last = last_;
-      _init_block(old_last - old_first + 1);
-      insert(begin(), old_first, old_last);
+      --*Myuse_;
+      iterator old_first = Myfirst_;
+      iterator old_last = Mylast_;
+      _init_range(old_first, old_last);
     }
   }
 
-  int _compare_aux(const value_type* First1, const value_type* Last1,
-                   const value_type* First2, const value_type* Last2) const
+  int _compare_aux(const value_type* _First1, const value_type* _Last1,
+                   const value_type* _First2, const value_type* _Last2) const
   {
-    const difference_type n1 = Last1 - First1;
-    const difference_type n2 = Last2 - First2;
-    const int cmp = traits_type::compare(First1, First2, min(n1, (const difference_type)(2)));
+    const difference_type n1 = _Last1 - _First1;
+    const difference_type n2 = _Last2 - _First2;
+    const int cmp = traits_type::compare(_First1, _First2, min(n1, (const difference_type)(2)));
     return cmp != 0 ? cmp : (n1 < n2 ? -1 : (n1 > n2 ? 1 : 0));
   }
-#ifdef MINI_STL_DEBUG
-  void _check_range(size_t pos) const
-  {
-    if (pos<0 || pos>=size()) {
-      cerr << "basic_string:pos<0 || pos>=size()" << endl;
-      MINI_STL_THROW_RANGE_ERROR("basic_string");
-    }
-  }
-
-  void _check_range(size_t n, bool) const
-  {
-    if (n<0 || n>=max_size()) {
-      cerr << "basic_string:n<0" << endl;
-      MINI_STL_THROW_RANGE_ERROR("basic_string");
-    }
-  }
-
-  void _check_range(const_iterator position) const
-  {
-    if (position>last_ ||
-        position<first_) {
-      cerr << "basic_string:postion>=end() || position < begin()" << endl;
-      MINI_STL_THROW_RANGE_ERROR("basic_string");
-    }
-  }
-
-  template <class InputIterator>
-  void _check_range(InputIterator first,
-                   InputIterator last) const
-  {
-    difference_type n = DISTANCE(first, last);
-    if (n<0) {
-      cerr << "basic_string:InputIterator last - first < 0" << endl;
-      MINI_STL_THROW_RANGE_ERROR("basic_string");
-    }
-  }
-
-  void _check_range() const
-  {
-    if (this->empty()) {
-      cerr << "basic_string:is empty" << endl;
-      MINI_STL_THROW_RANGE_ERROR("basic_string");
-    }
-  }
-#endif //MINI_STL_DEBUG
 };
 
 template <class CharType,class Traits,class Alloc>
@@ -882,104 +926,99 @@ basic_string<CharType,Traits,Alloc>::npos = (basic_string<CharType,Traits,Alloc>
 
 template <class CharType,class Traits,class Alloc>
 template<class InputIterator>
-void basic_string<CharType,Traits,Alloc>::insert(
-    iterator Position,
-    InputIterator First,
-    InputIterator Last,
-    typename is_iterator<InputIterator>::ID
-  )
+void basic_string<CharType,Traits,Alloc>::
+insert(iterator _Position,
+       InputIterator _First,
+       InputIterator _Last,
+       typename is_iterator<InputIterator>::ID)
 {
-#ifdef MINI_STL_DEBUG
-  _check_range(Position);
-  _check_range(First, Last);
-#endif
-  if (*use_ == 1) {
-    if (First != Last) {
-      size_type n = Last - First;
-      if ((size_type)(end_ - last_) >= n) {
-        iterator oldLast = last_;
-        _MY_STL::copy_backward((iterator)Position, oldLast, oldLast + n);
-        _MY_STL::copy(First, Last, (iterator)Position);
-        last_ += n;
+  MINI_STL_DEBUG_CHECK_POS(this->size()+1, DISTANCE(begin(), _Position), "basic_sting insert");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "basic_sting insert");
+  if (*Myuse_ == 1) {
+    if (_First != _Last) {
+      size_type n = DISTANCE(_First, _Last);
+      if ((size_type)(Myend_ - Mylast_-1) >= n) {
+        iterator oldLast = Mylast_;
+        _MY_STL::copy_backward((iterator)_Position, oldLast, oldLast + n);
+        _MY_STL::copy(_First, _Last, (iterator)_Position);
+        Mylast_ += n;
       } else {
         const size_type oldSize = size();
         const size_type newSize = oldSize + max((size_type)oldSize, (size_type)n);
-        iterator newFirst = data_allocator_::allocate(newSize);
+        iterator newFirst = data_allocator_::allocate(newSize+1);
         iterator newLast = newFirst;
         MINI_STL_TRY {
-          newLast = uninitialized_copy(first_, (iterator)Position, newFirst);
-          newLast = uninitialized_copy(First, Last, newLast);
-          newLast = uninitialized_copy((iterator)Position, last_, newLast);
+          newLast = _MY_STL::uninitialized_copy(Myfirst_, (iterator)_Position, newFirst);
+          newLast = _MY_STL::uninitialized_copy(_First, _Last, newLast);
+          newLast = _MY_STL::uninitialized_copy((iterator)_Position, Mylast_, newLast);
         }
-        MINI_STL_UNWIND((destroy(newFirst,newLast),
+        MINI_STL_UNWIND((_MY_STL::destroy(newFirst,newLast),
                             data_allocator_::deallocate(newFirst, newSize)));
-        destroy(first_, last_);
-        _deallocate(first_, end_ - first_);
-        first_ = newFirst;
-        last_ = newLast;
-        end_ = newFirst + newSize;
+        _MY_STL::destroy(Myfirst_, Mylast_);
+        _deallocate(Myfirst_, Myend_ - Myfirst_);
+        Myfirst_ = newFirst;
+        Mylast_ = newLast;
+        Myend_ = newFirst + newSize;
       }
     }
     _make_terinate();
   } else {
-    --*use_;
+    --*Myuse_;
     size_type length = size();
-    size_type insert_length = DISTANCE(First, Last);
-    iterator old_first = first_;
-    iterator old_last = last_;
+    size_type insert_length = DISTANCE(_First, _Last);
+    iterator old_first = Myfirst_;
+    iterator old_last = Mylast_;
     _init_block(length + insert_length + 1);
-    last_ = uninitialized_copy(old_first, Position, first_);
-    last_ = uninitialized_copy(First, Last, last_);
-    last_ = uninitialized_copy(Position, old_last, last_);
+    Mylast_ = _MY_STL::uninitialized_copy(old_first, _Position, Myfirst_);
+    Mylast_ = _MY_STL::uninitialized_copy(_First, _Last, Mylast_);
+    Mylast_ = _MY_STL::uninitialized_copy(_Position, old_last, Mylast_);
     _make_terinate();
   }
 }
 
 template <class CharType,class Traits,class Alloc>
 basic_string<CharType,Traits,Alloc>&
-basic_string<CharType,Traits,Alloc>::insert(
-          size_type Off, size_type Count, value_type Ch)
+basic_string<CharType,Traits,Alloc>::
+insert(size_type _Off, size_type _Count, value_type _Ch)
 {
-#ifdef MINI_STL_DEBUG
-  _check_range(Off);
-#endif
-  iterator Position = first_ + Off;
-  if (*use_ == 1) {
-    if ((size_type)(end_ - last_) >= Count) {//还有空间
-      iterator oldLast = last_;
-      copy_backward((iterator)Position, oldLast, oldLast + Count);
-      traits_type::assign(Position, Count, Ch);
-      last_ += Count;
+  MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Off, "basic_sting insert");
+  iterator Position = Myfirst_ + _Off;
+  if (*Myuse_ == 1) {
+    if ((size_type)(Myend_ - Mylast_ - 1) >= _Count) {//has free space
+      iterator oldLast = Mylast_;
+      _MY_STL::copy_backward((iterator)Position, oldLast, oldLast + _Count);
+      traits_type::assign(Position, _Count, _Ch);
+      Mylast_ += _Count;
     } else {
       const size_type oldSize = size();
-      const size_type newSize = oldSize + max((size_type)oldSize, (size_type)Count);
-      iterator newFirst = data_allocator_::allocate(newSize);
+      const size_type newSize = oldSize + max((size_type)oldSize, (size_type)_Count);
+      iterator newFirst = data_allocator_::allocate(newSize+1);
       iterator newLast = newFirst;
       MINI_STL_TRY {
-        newLast = uninitialized_copy(first_, (iterator)Position, newFirst);
-        traits_type::assign(newLast, Count, Ch);
-        newLast += Count;
-        newLast = uninitialized_copy(Position, last_, newLast);
+        newLast = _MY_STL::uninitialized_copy(Myfirst_, (iterator)Position, newFirst);
+        traits_type::assign(newLast, _Count, _Ch);
+        newLast += _Count;
+        newLast = _MY_STL::uninitialized_copy(Position, Mylast_, newLast);
       }
-      MINI_STL_UNWIND((destroy(newFirst,newLast),
+      MINI_STL_UNWIND((_MY_STL::destroy(newFirst,newLast),
                             data_allocator_::deallocate(newFirst, newSize)));
-      destroy(first_, last_);
-      _deallocate(first_, end_ - first_);
-      first_ = newFirst;
-      last_ = newLast;
-      end_ = newFirst + newSize;
+      destroy(Myfirst_, Mylast_);
+      _deallocate(Myfirst_, Myend_ - Myfirst_);
+      Myfirst_ = newFirst;
+      Mylast_ = newLast;
+      Myend_ = newFirst + newSize;
     }
     _make_terinate();
-  } else {
-    --*use_;
+  } else {//no free space
+    --*Myuse_;
     size_type length = size();
-    iterator old_first = first_;
-    iterator old_last = last_;
-    _init_block(length + Count + 1);
-    last_ = uninitialized_copy(old_first, Position, first_);
-    traits_type::assign(last_, Count, Ch);
-    last_ += Count;
-    last_ = uninitialized_copy(Position, old_last, last_);
+    iterator old_first = Myfirst_;
+    iterator old_last = Mylast_;
+    _init_block(length + _Count + 1);
+    Mylast_ = _MY_STL::uninitialized_copy(old_first, Position, Myfirst_);
+    traits_type::assign(Mylast_, _Count, _Ch);
+    Mylast_ += _Count;
+    Mylast_ = _MY_STL::uninitialized_copy(Position, old_last, Mylast_);
     _make_terinate();
   }
   return *this;
@@ -988,39 +1027,37 @@ basic_string<CharType,Traits,Alloc>::insert(
 template <class CharType,class Traits,class Alloc>
 template<class InputIterator>
 basic_string<CharType,Traits,Alloc>&
-basic_string<CharType,Traits,Alloc>::replace(
-    iterator First1,
-    iterator Last1,
-    InputIterator First2,
-    InputIterator Last2,
-    typename is_iterator<InputIterator>::ID
-    )
+basic_string<CharType,Traits,Alloc>::
+replace(iterator _First1,
+        iterator _Last1,
+        InputIterator _First2,
+        InputIterator _Last2,
+        typename is_iterator<InputIterator>::ID)
 {
-#ifdef MINI_STL_DEBUG
-  _check_range(First1, Last1);
-  _check_range(First1);
-  _check_range(Last1);
-  _check_range(First2, Last2);
-#endif
-  size_type insert_num = DISTANCE(First2, Last2);
-  size_type replace_num = Last1 - First1;
-  if (*use_ == 1) {
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "basic_sting replace");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->begin(), _First1, "basic_sting replace");
+  MINI_STL_DEBUG_CHECK_POS(this->size(), DISTANCE(this->begin(), _Las1), "basic_sting replace");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First2, _Last2, "basic_sting replace");
+
+  size_type insert_num = DISTANCE(_First2, _Last2);
+  size_type replace_num = _Last1 - _First1;
+  if (*Myuse_ == 1) {
     if (replace_num >= insert_num) {
-      _MY_STL::copy(First2, Last2, First1);
-      erase(First1+insert_num, Last1);
+      _MY_STL::copy(_First2, _Last2, _First1);
+      erase(_First1+insert_num, _Last1);
     } else {
-      for ( ;First1!=Last1; ++First1,++First2)
-        *First1 = *First2;
-      insert(Last1, First2, Last2);
+      for ( ;_First1!=Last1; ++_First1,++_First2)
+        *_First1 = *_First2;
+      insert(_Last1, _First2, _Last2);
     }
   } else {
-    --*use_;
-    iterator old_first = first_;
-    iterator old_last_ = last_;
+    --*Myuse_;
+    iterator old_first = Myfirst_;
+    iterator old_Mylast_ = Mylast_;
     _init_block(size()-replace_num+insert_num+1);
-    last_ = uninitialized_copy(old_first, First1, first_);
-    last_ = uninitialized_copy(First2, Last2, last_);
-    last_ = uninitialized_copy(Last1, old_last_, last_);
+    Mylast_ = _MY_STL::uninitialized_copy(old_first, _First1, Myfirst_);
+    Mylast_ = _MY_STL::uninitialized_copy(_First2, _Last2, Mylast_);
+    Mylast_ = _MY_STL::uninitialized_copy(_Last1, old_Mylast_, Mylast_);
     _make_terinate();
   }
   return *this;
@@ -1028,71 +1065,65 @@ basic_string<CharType,Traits,Alloc>::replace(
 
 
 template <class CharType,class Traits,class Alloc>
-   void swap(
-      basic_string<CharType,Traits,Alloc>& Left,
-      basic_string<CharType,Traits,Alloc>& Right
-   )
+inline void
+swap(basic_string<CharType,Traits,Alloc>& _Left,
+     basic_string<CharType,Traits,Alloc>& _Right)
 {
-  Left.swap(Right);     
+  _Left.swap(_Right);
 }
    
 template<class CharType, class Traits, class Allocator>
-   basic_string<CharType, Traits, Allocator> operator+(
-       const basic_string<CharType, Traits, Allocator>& Left,
-       const basic_string<CharType, Traits, Allocator>& Right
-       )
+inline basic_string<CharType, Traits, Allocator>
+operator+(const basic_string<CharType, Traits, Allocator>& _Left,
+          const basic_string<CharType, Traits, Allocator>& _Right)
 {
   typedef basic_string<CharType, Traits, Allocator> Str;
-  Str result(Left);
-  result.append(Right);
+  Str result(_Left);
+  result.append(_Right);
   return result;
 }
 
 template<class CharType, class Traits, class Allocator>
-   basic_string<CharType, Traits, Allocator> operator+(
-       const basic_string<CharType, Traits, Allocator>& Left,
-       const CharType* Right
-       )
+inline basic_string<CharType, Traits, Allocator>
+operator+(const basic_string<CharType, Traits, Allocator>& _Left,
+          const CharType* _Right)
 {
   typedef basic_string<CharType, Traits, Allocator> Str;
-  Str result(Left); 
-  result.append(Right);
+  Str result(_Left);
+  result.append(_Right);
   return result;  
 }
 
 template<class CharType, class Traits, class Allocator>
-   basic_string<CharType, Traits, Allocator> operator+(
-       const basic_string<CharType, Traits, Allocator>& Left,
-       const CharType Right
-       )
+inline basic_string<CharType, Traits, Allocator>
+operator+(const basic_string<CharType, Traits, Allocator>& _Left,
+          const CharType _Right)
 {
   typedef basic_string<CharType, Traits, Allocator> Str;
-  Str result(Left);  
-  result.push_back(Right);
+  Str result(_Left);
+  result.push_back(_Right);
   return result;
 }
 
 template<class CharType, class Traits, class Allocator>
-   basic_string<CharType, Traits, Allocator> operator+(
-       const CharType* Left,
-       const basic_string<CharType, Traits, Allocator>& Right
-       )
+inline basic_string<CharType, Traits, Allocator>
+operator+(const CharType* _Left,
+          const basic_string<CharType, Traits, Allocator>& _Right)
 {
   typedef basic_string<CharType, Traits, Allocator> Str;
-  Str result(Left);
-  result.append(Right);
+  Str result(_Left);
+  result.append(_Right);
   return result;
 }
    
 template<class CharType, class Traits, class Allocator>
-   basic_string<CharType, Traits, Allocator> operator+(
-       const CharType Left,
-       const basic_string<CharType, Traits, Allocator>& Right
-       )
+inline basic_string<CharType, Traits, Allocator>
+operator+(const CharType _Left,
+          const basic_string<CharType, Traits, Allocator>& _Right)
 {
   typedef basic_string<CharType, Traits, Allocator> Str;
-  Str result(Left);
-  result.append(Right);
+  Str result(_Left);
+  result.append(_Right);
   return result;
 }
 #ifdef MINI_STL_RVALUE_REFS
@@ -1134,157 +1165,157 @@ template<class CharType, class Traits, class Allocator>
 #endif
 template<class CharType, class Traits, class Allocator>
 inline bool
-operator==(const basic_string<CharType, Traits, Allocator>& lhs,
+operator==(const basic_string<CharType, Traits, Allocator>& _Left,
+           const basic_string<CharType, Traits, Allocator>& _Right)
+{
+  return _Left.size() == _Right.size() &&
+      Traits::compare(_Left.data(), _Right.data(), _Left.size()) == 0;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator==(const CharType* _Left,
+           const basic_string<CharType, Traits, Allocator>& _Right)
+{
+  size_t n = Traits::length(_Left);
+  return n == _Right.size() && Traits::compare(_Left, _Right.data(), n) == 0;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator==(const basic_string<CharType, Traits, Allocator>& _Left,
+           const CharType* _Right)
+{
+  size_t n = Traits::length(_Right);
+  return _Right.size() == n && Traits::compare(_Left.data(), _Right, n) == 0;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator!=(const basic_string<CharType, Traits, Allocator>& _Left,
+           const basic_string<CharType, Traits, Allocator>& _Right)
+{
+  return !(_Left == _Right);
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator!=(const CharType* _Left,
+           const basic_string<CharType, Traits, Allocator>& _Right)
+{
+  return !(_Left == _Right);
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator!=(const basic_string<CharType, Traits, Allocator>& _Left,
+           const CharType* _Right)
+{
+  return !(_Left == _Right);
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator<(const basic_string<CharType, Traits, Allocator>& _Left,
+          const basic_string<CharType, Traits, Allocator>& _Right)
+{
+  return _Left.compare(_Right) < 0;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator<(const CharType* _Left,
+          const basic_string<CharType, Traits, Allocator>& _Right)
+{
+  return _Right.compare(_Left) > 0;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator<(const basic_string<CharType, Traits, Allocator>& _Left,
+          const CharType* _Right)
+{
+  return _Left.compare(_Right) < 0;
+}
+
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator>(const basic_string<CharType, Traits, Allocator>& _Left,
+          const basic_string<CharType, Traits, Allocator>& _Right)
+{
+  return _Right < _Left;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator>(const CharType* _Left,
+          const basic_string<CharType, Traits, Allocator>& _Right)
+{
+  return _Left < _Right;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator>(const basic_string<CharType, Traits, Allocator>& _Left,
+          const CharType* _Right)
+{
+  return _Right < _Left;
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator<=(const basic_string<CharType, Traits, Allocator>& _Left,
+           const basic_string<CharType, Traits, Allocator>& _Right)
+{
+  return !(_Right < _Left);
+}
+
+template<class CharType, class Traits, class Allocator>
+inline bool
+operator<=(const CharType* _Left,
            const basic_string<CharType, Traits, Allocator>& rhs)
 {
-  return lhs.size() == rhs.size() &&
-      Traits::compare(lhs.data(), rhs.data(), lhs.size()) == 0;
+  return !(_Right < _Left);
 }
 
 template<class CharType, class Traits, class Allocator>
 inline bool
-operator==(const CharType* ptr,
-           const basic_string<CharType, Traits, Allocator>& rhs)
+operator<=(const basic_string<CharType, Traits, Allocator>& _Left,
+           const CharType* _Right)
 {
-  size_t n = Traits::length(ptr);
-  return n == rhs.size() && Traits::compare(ptr, rhs.data(), n) == 0;
+  return !(_Right < _Left);
 }
 
 template<class CharType, class Traits, class Allocator>
 inline bool
-operator==(const basic_string<CharType, Traits, Allocator>& lhs,
-           const CharType* ptr)
+operator>=(const basic_string<CharType, Traits, Allocator>& _Left,
+           const basic_string<CharType, Traits, Allocator>& _Right)
 {
-  size_t n = Traits::length(ptr);
-  return lhs.size() == n && Traits::compare(lhs.data(), ptr, n) == 0;
+  return !(_Right > _Left);
 }
 
 template<class CharType, class Traits, class Allocator>
 inline bool
-operator!=(const basic_string<CharType, Traits, Allocator>& lhs,
-           const basic_string<CharType, Traits, Allocator>& rhs)
+operator>=(const CharType* _Left,
+           const basic_string<CharType, Traits, Allocator>& _Right )
 {
-  return !(lhs == rhs);
+  return !(_Right  > _Left);
 }
 
 template<class CharType, class Traits, class Allocator>
 inline bool
-operator!=(const CharType* ptr,
-           const basic_string<CharType, Traits, Allocator>& rhs)
+operator>=(const basic_string<CharType, Traits, Allocator>& _Left,
+           const CharType* _Right)
 {
-  return !(ptr == rhs);
-}
-
-template<class CharType, class Traits, class Allocator>
-inline bool
-operator!=(const basic_string<CharType, Traits, Allocator>& lhs,
-           const CharType* ptr)
-{
-  return !(lhs == ptr);
-}
-
-template<class CharType, class Traits, class Allocator>
-inline bool
-operator<(const basic_string<CharType, Traits, Allocator>& lhs,
-          const basic_string<CharType, Traits, Allocator>& rhs)
-{
-  return lhs.compare(rhs) < 0;
-}
-
-template<class CharType, class Traits, class Allocator>
-inline bool
-operator<(const CharType* ptr,
-          const basic_string<CharType, Traits, Allocator>& rhs)
-{
-  return rhs.compare(ptr) > 0;
-}
-
-template<class CharType, class Traits, class Allocator>
-inline bool
-operator<(const basic_string<CharType, Traits, Allocator>& lhs,
-          const CharType* ptr)
-{
-  return lhs.compare(ptr) < 0;
-}
-
-
-template<class CharType, class Traits, class Allocator>
-inline bool
-operator>(const basic_string<CharType, Traits, Allocator>& lhs,
-          const basic_string<CharType, Traits, Allocator>& rhs)
-{
-  return rhs < lhs;
-}
-
-template<class CharType, class Traits, class Allocator>
-inline bool
-operator>(const CharType* ptr,
-          const basic_string<CharType, Traits, Allocator>& rhs)
-{
-  return ptr < rhs;
-}
-
-template<class CharType, class Traits, class Allocator>
-inline bool
-operator>(const basic_string<CharType, Traits, Allocator>& lhs,
-          const CharType* ptr)
-{
-  return ptr < lhs;
-}
-
-template<class CharType, class Traits, class Allocator>
-inline bool
-operator<=(const basic_string<CharType, Traits, Allocator>& lhs,
-           const basic_string<CharType, Traits, Allocator>& rhs)
-{
-  return !(rhs < lhs);
-}
-
-template<class CharType, class Traits, class Allocator>
-inline bool
-operator<=(const CharType* ptr,
-           const basic_string<CharType, Traits, Allocator>& rhs)
-{
-  return !(rhs < ptr);
-}
-
-template<class CharType, class Traits, class Allocator>
-inline bool
-operator<=(const basic_string<CharType, Traits, Allocator>& lhs,
-           const CharType* ptr)
-{
-  return !(ptr < lhs);
-}
-
-template<class CharType, class Traits, class Allocator>
-inline bool
-operator>=(const basic_string<CharType, Traits, Allocator>& lhs,
-           const basic_string<CharType, Traits, Allocator>& rhs)
-{
-  return !(rhs > lhs);
-}
-
-template<class CharType, class Traits, class Allocator>
-inline bool
-operator>=(const CharType* ptr,
-           const basic_string<CharType, Traits, Allocator>& rhs)
-{
-  return !(rhs > ptr);
-}
-
-template<class CharType, class Traits, class Allocator>
-inline bool
-operator>=(const basic_string<CharType, Traits, Allocator>& lhs,
-           const CharType* ptr)
-{
-  return !(ptr > lhs);
+  return !(_Right > _Left);
 }
 
 template <class CharType,class Traits,class Alloc>
-std::ostream& operator <<(std::ostream& os, const basic_string<CharType,Traits,Alloc>& Str)
+std::ostream& operator <<(std::ostream& _Os, const basic_string<CharType,Traits,Alloc>& _Str)
 {
-  os << Str.c_str();
-  return os;
+  _Os << _Str.c_str();
+  return _Os;
 }
 
 typedef basic_string<char, char_traits<char>, default_allocator> string;

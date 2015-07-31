@@ -3,7 +3,7 @@
 #include "mini_stl_deque.h"
 MINI_STL_BEGIN
 
-template <class Type, class Container = deque<Type> >
+template <class Type, class Container = _MY_STL::deque<Type> >
 class queue
 {
 public:
@@ -12,85 +12,85 @@ public:
   typedef typename Container::reference  reference;
   typedef typename Container::const_reference const_reference;
   typedef typename Container container_type;
+private:
+  Container Myc_;
 public:
-  explicit queue() : c_() {}
-  explicit queue(const container_type& rhs) : c_(rhs) {}
+  explicit queue() : Myc_() {}
+  explicit queue(const container_type& _Right) : Myc_(_Right) {}
 public:
   void push(const Type& val)
   {
-    c_.push_back(val);
+    Myc_.push_back(val);
   }
 
   void pop()
   {
-    c_.pop_front();
+    Myc_.pop_front();
   }
 
   bool empty() const
   {
-    return c_.empty();
+    return Myc_.empty();
   }
 
   size_type size() const
   {
-    return c_.size();
+    return Myc_.size();
   }
 
   reference front()
   {
-    return c_.front();
+    return Myc_.front();
   }
 
   const_reference front() const
   {
-    return c_.front();
+    return Myc_.front();
   }
 
   reference back()
   {
-    return c_.back();
+    return Myc_.back();
   }
 
   const_reference back() const
   {
-    return c_.back();
+    return Myc_.back();
   }
 
-  bool operator!=(const queue& rhs)
+  bool operator!=(const queue& _Right)
   {
-    return this->c_ != rhs.c_;
+    return this->Myc_ != _Right.Myc_;
   }
 
-  bool operator<(const queue& rhs)
+  bool operator<(const queue& _Right)
   {
-    return this->c_ < rhs.c_;
+    return this->Myc_ < _Right.Myc_;
   }
 
-  bool operator<=(const queue& rhs)
+  bool operator<=(const queue& _Right)
   {
-    return this->c_ <= rhs.c_;
+    return this->Myc_ <= _Right.Myc_;
   }
 
-  bool operator==(const queue& rhs)
+  bool operator==(const queue& _Right)
   {
-    return this->c_ == rhs.c_;
+    return this->Myc_ == _Right.Myc_;
   }
 
-  bool operator>(const queue& rhs)
+  bool operator>(const queue& _Right)
   {
-    return this->c_ > rhs.c_;
+    return this->Myc_ > _Right.Myc_;
   }
 
-  bool operator>=(const queue& rhs)
+  bool operator>=(const queue& _Right)
   {
-    return this->c_ >= rhs.c_;
+    return this->Myc_ >= _Right.Myc_;
   }
-private:
-  Container c_;
 };
 
-template <class Type, class Container = vector<Type>,
-          class Compare = less<typename Container::value_type> >
+template <class Type, class Container = _MY_STL::vector<Type>,
+          class Compare = _MY_STL::less<typename Container::value_type> >
 class priority_queue
 {
 public:
@@ -100,53 +100,59 @@ public:
   typedef typename Container::reference   reference;
   typedef typename Container::const_reference const_reference;
 private:
-  Container c;
-  Compare comp;
+  Container Myc_;
+  Compare Mycomp_;
 public:
-  explicit priority_queue() : c() {}
-  explicit priority_queue(const Compare& cmp)
-    : c(), comp(cmp)
+  explicit priority_queue() : Myc_() {}
+  explicit priority_queue(const Compare& _Comp)
+    : Myc_(), Mycomp_(_Comp)
   {}
 
   template <class InputIterator>
-  priority_queue(InputIterator first,
-                 InputIterator last,
-                 const Compare& cmp)
-    : c(first,last), comp(cmp)
+  priority_queue(InputIterator _First,
+                 InputIterator _Last,
+                 const Compare& _Comp)
+    : Myc_(_First, _Last), Mycomp_(_Comp)
   {
-    make_heap(c.begin(), c.end(), comp);
+    _MY_STL::make_heap(Myc_.begin(), Myc_.end(), Mycomp_);
   }
 
   bool empty() const
   {
-    return c.empty();
+    return Myc_.empty();
   }
 
   size_type size() const
   {
-    return c.size();
+    return Myc_.size();
   }
 
   reference top()
   {
-    return c.front();
+    return Myc_.front();
   }
 
   const_reference top() const
   {
-    return c.front();
+    return Myc_.front();
   }
 
-  void push(const value_type& val)
+  void push(const value_type& _Val)
   {
-    c.push_back(val);
-    push_heap(c.begin(), c.end(), comp);
+    Myc_.push_back(_Val);
+    push_heap(Myc_.begin(), Myc_.end(), Mycomp_);
+  }
+
+  void push(value_type&& _Val)
+  {
+    Myc_.push_back(_MY_STL::move(_Val));
+    _MY_STL::push_heap(Myc_.begin(), Myc_.end(), Mycomp_);
   }
 
   void pop()
   {
-    pop_heap(c.begin(), c.end(), comp);
-    c.pop_back();
+    _MY_STL::pop_heap(Myc_.begin(), Myc_.end(), Mycomp_);
+    Myc_.pop_back();
   }
 };
 
