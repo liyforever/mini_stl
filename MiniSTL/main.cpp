@@ -45,35 +45,114 @@ using namespace std;
 #include "mini_stl_unordered_map.h"
 #include "mini_stl_unordered_multimap.h"
 #include <algorithm>
-
 //#include <functional>
 //#include <vector>
 //#include <deque>
+
 using namespace Mini_STL;
 
-void show(const string& _Str)
-{
-  cout << "str data:" << _Str << " str use:"
-          << _Str.get_use() << endl;
-}
+
 
 int main()
 {try{
-    string str1 ( "quintillion" );
+
+    string str1 ( "Hello Everyone" );
       cout << "The original string str1 is: " << str1 << endl;
-      basic_string <char>::size_type indexChFi, indexChLi;
+      basic_string <char>::size_type indexCh1a, indexCh1b;
+      static const basic_string <char>::size_type npos = -1;
 
-      indexChFi = str1.find_first_of ( "i" );
-      indexChLi = str1.find_last_of ( "i" );
-      basic_string<char>::difference_type diffi = indexChLi - indexChFi;
+      indexCh1a = str1.rfind ( "e" , 9 );
+      if ( indexCh1a != npos )
+         cout << "The index of the 1st 'e' found before the 9th"
+              << " position in str1 is: " << indexCh1a << endl;
+      else
+         cout << "The character 'e' was not found in str1 ." << endl;
 
-      cout << "The first character i is at position: "
-           << indexChFi << "." << endl;
-      cout << "The last character i is at position: "
-           << indexChLi << "." << endl;
-      cout << "The difference is: " << diffi << "." << endl;
+      indexCh1b = str1.rfind ( "x" );
+      if ( indexCh1b != npos )
+         cout << "The index of the 'x' found in str1 is: "
+              << indexCh1b << endl << endl;
+      else
+         cout << "The character 'x' was not found in str1."
+              << endl << endl;
 
-  }
+      // The second member function searches a string
+      // for a substring as specified by a C-string
+      string str2 ( "Let me make this perfectly clear." );
+      cout << "The original string str2 is: " << str2 << endl;
+      basic_string <char>::size_type indexCh2a, indexCh2b;
+
+      const char *cstr2 = "perfect";
+      indexCh2a = str2.rfind ( cstr2 , 30 );
+      if ( indexCh2a != npos )
+         cout << "The index of the 1st element of 'perfect' "
+              << "before\n the 30th position in str2 is: "
+              << indexCh2a << endl;
+      else
+         cout << "The substring 'perfect' was not found in str2 ."
+              << endl;
+
+      const char *cstr2b = "imperfectly";
+      indexCh2b = str2.rfind ( cstr2b , 30 );
+      if ( indexCh2b != npos )
+         cout << "The index of the 1st element of 'imperfect' "
+              << "before\n the 5th position in str3 is: "
+              << indexCh2b << endl;
+      else
+         cout << "The substring 'imperfect' was not found in str2 ."
+              << endl << endl;
+
+      // The third member function searches a string
+      // for a substring as specified by a C-string
+      string str3 ( "It is a nice day. I am happy." );
+      cout << "The original string str3 is: " << str3 << endl;
+      basic_string <char>::size_type indexCh3a, indexCh3b;
+
+      const char *cstr3a = "nice";
+      indexCh3a = str3.rfind ( cstr3a );
+      if ( indexCh3a != npos )
+         cout << "The index of the 1st element of 'nice' "
+              << "in str3 is: " << indexCh3a << endl;
+      else
+         cout << "The substring 'nice' was not found in str3 ."
+              << endl;
+
+      const char *cstr3b = "am";
+      indexCh3b = str3.rfind ( cstr3b , indexCh3a + 25 , 2 );
+      if ( indexCh3b != npos )
+         cout << "The index of the next occurrance of 'am' in "
+              << "str3 begins at: " << indexCh3b << endl << endl;
+      else
+         cout << "There is no next occurrence of 'am' in str3 ."
+              << endl << endl;
+
+      // The fourth member function searches a string
+      // for a substring as specified by a string
+      string str4 ( "This perfectly unclear." );
+      cout << "The original string str4 is: " << str4 << endl;
+      basic_string <char>::size_type indexCh4a, indexCh4b;
+
+      string str4a ( "clear" );
+      indexCh4a = str4.rfind ( str4a , 15 );
+      if (indexCh4a != npos )
+         cout << "The index of the 1st element of 'clear' "
+              << "before\n the 15th position in str4 is: "
+              << indexCh4a << endl;
+      else
+         cout << "The substring 'clear' was not found in str4 "
+              << "before the 15th position." << endl;
+
+      string str4b ( "clear" );
+      indexCh4b = str4.rfind ( str4b );
+      if ( indexCh4b != npos )
+         cout << "The index of the 1st element of 'clear' "
+              << "in str4 is: "
+              << indexCh4b << endl;
+      else
+         cout << "The substring 'clear' was not found in str4 ."
+              << endl << endl;
+
+   }
   catch (std::exception & e)
   {
     cout << "---------------------------------------" << endl;

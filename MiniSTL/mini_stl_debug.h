@@ -131,7 +131,7 @@ mini_stl_debug_check_pos(Size _Count,
                          PosType _Pos,
                          const char* _Msg)
 {
-  if (_Count == 0 || _Pos < 0 || _Count <= _Pos)
+  if (_Count == 0 || _Pos < 0 || _Count <= (Size)(_Pos))
     MINI_STL_THROW_RANGE_ERROR(_Msg);
 }
 

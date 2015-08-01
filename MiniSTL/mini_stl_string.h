@@ -144,7 +144,7 @@ public:
   {
     MINI_STL_DEBUG_POINTER(_Ptr, "basic_string operator=");
     clear();
-    insert(begin, _Ptr, _Ptr+traits_type::length(_Ptr));
+    insert(begin(), _Ptr, _Ptr+traits_type::length(_Ptr));
     return *this;
   }
 
@@ -364,7 +364,7 @@ public:
     MINI_STL_DEBUG_RANGE_OF_ITERATOR(Myfirst_, _Position, "basic_string insert");
     size_type off = _Position - Myfirst_;
     insert(off, 1, _Ch);
-    return Myfirst_ + _off;
+    return Myfirst_ + off;
   }
 
   void insert(iterator _Position,size_type _Count, value_type _Ch)
@@ -499,6 +499,7 @@ public:
         destroy(new_last + 1, _Last + 1);
         Mylast_ = new_last;
       }
+      _make_terinate();
       return _First;
     } else {
       --*Myuse_;
@@ -525,9 +526,33 @@ public:
     insert(end(), 1, Ch);
   }
 
+  void reserve(size_type _Count = 0)
+  {
+    if (this->capacity() > _Count)
+      return;
+    const_iterator old_first = begin();
+    const_iterator old_last = end();
+    _init_block(_Count + 1);
+    _MY_STL::uninitialized_copy(old_first, old_last, Myfirst_);
+    _destroy_block();
+    _make_terinate();
+  }
+
+  void resize(size_type _Count)
+  {
+    resize(_Count, value_type());
+  }
+
+  void resize(size_type _Count, value_type _Ch)
+  {
+    if (_Count < size())
+      erase(begin() + _Count, end());
+    else
+      insert(end(), _Count - size(), _Ch);
+  }
+
   size_type find(const basic_string& _Str, size_type _Off = 0) const
   {
-    MINI_STL_DEBUG_CHECK_POS(_Str.size() + 1, _Off, "basic_string find");
     return find(_Str.begin(), _Off, _Str.size());
   }
 
@@ -550,12 +575,40 @@ public:
                  size_type _Off,
                  size_type _Count) const
   {
-    if (_Off + _Count > size());
+    if (_Off + _Count > size())
       return npos;
     const const_iterator result = _MY_STL::search(begin() + _Off, end(),
                                                   _Ptr, _Ptr + _Count);
     return result != end() ? result - begin()
                            : npos;
+  }
+
+  size_type find_first_of(value_type _Ch, size_type _Off = 0) const
+  {
+    this->find(_Ch, _Off);
+  }
+
+  size_type find_first_of(const value_type* _Ptr,size_type _Off = 0) const
+  {
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_stirng find_first_of");
+    return find_first_of(_Ptr, _Off, traits_type::length(_Ptr));
+  }
+
+  size_type find_first_of(const value_type* _Ptr,
+                          size_type _Off,
+                          size_type _Count) const
+  {
+    if (_Off >= size())
+      return npos;
+    const_iterator result = _MY_STL::find_first_of(begin() + _Off, end(),
+                                                   _Ptr, _Ptr + _Count);
+    return result != end() ? result - begin()
+                           : npos;
+  }
+
+  size_type find_first_of(const basic_string& _Str,size_type _Off = 0) const
+  {
+    return find_first_of(_Str.begin(), _Off, _Str.size());
   }
 
   size_type find_first_not_of(const basic_string& _Str,
@@ -575,14 +628,130 @@ public:
                               size_type _Off,
                               size_type _Count) const
   {
-
+     MINI_STL_DEBUG_POINTER(_Ptr, "basic_string find_first_not_of");
+     if (_Off > size())
+       return npos;
+     const_iterator result =
+         _MY_STL::search(begin()+_Off, end(),
+                         _Ptr, _Ptr + _Count,
+                         _MY_STL::not_equal_to<value_type>());
+     return result != end() ? result - begin()
+                            : npos;
   }
 
   size_type find_first_not_of(value_type _Ch, size_type _Off = 0) const
   {
+    if (_Off > size())
+      return npos;
+    const_iterator result =
+        _MY_STL::find_if(begin()+_Off, end(),
+                         _MY_STL::bind2nd(_MY_STL::not_equal_to<value_type>(),
+                                                        _Ch));
+    return result =! end() ? result - begin()
+                           : npos;
 
   }
 
+  size_type find_last_not_of(const basic_string& _Str, size_type _Off = npos) const
+  {
+    return find_last_not_of(_Str.begin(), _Off, _Str.size());
+  }
+
+  size_type find_last_not_of(const value_type* _Ptr, size_type _Off = npos) const
+  {
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string find_last_not_of");
+    return find_last_not_of(_Ptr, _Off, traits_type::length(_Ptr));
+  }
+
+  size_type find_last_not_of(const value_type* _Ptr,
+                             size_type _Off,
+                             size_type _Count) const
+  {
+    if (size() < 1)
+      return npos;
+    typedef _MY_STL::reverse_iterator<const value_type*> VTR;
+    const_iterator last = begin() + _MY_STL::min(size() - 1, _Off) + 1;
+    //use rbeing.base()
+    const_reverse_iterator Rresult =
+        _MY_STL::find_first_of(const_reverse_iterator(last), rend(),
+                               _Ptr, _Ptr + _Count,
+                              _MY_STL::not2(_MY_STL::equal_to<value_type>()));
+   return Rresult != rend() ? (Rresult.base() - 1) - begin()
+                            : npos;
+  }
+
+  size_type find_last_of(value_type _Ch, size_type _Off = npos) const
+  {
+    if (_Off > size())
+      return npos;
+    const_iterator result =
+        find_if(begin() + _Off, end(),
+                _MY_STL::not1(_MY_STL::bind2nd(_MY_STL::equal_to<value_type>(), _Ch)));
+    return result != end() ? result - begin()
+                           : npos;
+  }
+
+  size_type find_last_of(const basic_string& _Str, size_type _Off = npos) const
+  {
+    return find_last_of(_Str.begin(), _Off, _Str.size());
+  }
+
+  size_type find_last_of(const value_type* _Ptr,size_type _Off = npos) const
+  {
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string find_last_of");
+    return find_last_of(_Ptr, _Off, traits_type::length(_Ptr));
+  }
+  size_type find_last_of(const value_type* _Ptr,
+                         size_type _Off,
+                         size_type _Count) const
+  {
+    if (size() < 1)
+      return npos;
+    const_iterator last = begin() + _MY_STL::min(size() - 1, _Off) + 1;
+    const_reverse_iterator Rresult =
+        _MY_STL::find_first_of(const_reverse_iterator(last), rend(),
+                               _Ptr, _Ptr + _Count);
+    return Rresult != rend() ? (Rresult.base() - 1) - begin()
+                             : npos;
+  }
+
+  size_type rfind(const basic_string& _Str, size_type _Off = npos) const
+  {
+    return rfind(_Str.begin(), _Off, _Str.size());
+  }
+
+  size_type rfind(const value_type* _Ptr,size_type _Off = npos) const
+  {
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string rfind");
+    return rfind(_Ptr, _Off, traits_type::length(_Ptr));
+  }
+
+  size_type rfind(value_type _Ch, size_type _Off = npos) const
+  {
+    if (size() < 1)
+      return npos;
+    const_iterator last = begin() + _MY_STL::min(size() - 1, _Off) + 1;
+    const_reverse_iterator Rresult =
+        _MY_STL::find_if(const_reverse_iterator(last), rend(),
+                         _MY_STL::bind2nd(_MY_STL::equal_to<value_type>(), _Ch));
+    return Rresult != rend() ? (Rresult.base() - 1) - begin()
+                             : npos;
+  }
+
+  size_type rfind(const value_type* _Ptr,
+                  size_type _Off,
+                  size_type _Count) const
+  {
+    if (_Count > size())
+      return npos;
+    else if (_Count == 0)
+      return _MY_STL::min(size(), _Off);
+    const_iterator last = begin() + _MY_STL::min(size()-_Count, _Off) + _Count;
+    const_iterator result = _MY_STL::find_end(begin(), last,
+                                              _Ptr, _Ptr + _Count);
+    return result != last ? result - begin()
+                          : npos;
+  }
 
   void clear()
   {
@@ -617,11 +786,9 @@ public:
   size_type copy(value_type* _Ptr, size_type _Count, size_type _Off = 0) const
   {\
     MINI_STL_DEBUG_POINTER(_Ptr, "basic_string copy");
-    size_type len = traits_type::length(_Ptr);
-    MINI_STL_DEBUG_CHECK_POS(len, _Off, "basic_string copy");
-    MINI_STL_DEBUG_CHECK_POS(len, _Off + _Count, "basic_string copy");
-    traits_type::copy(_Ptr, Myfirst_+_Off, _Count);
-    return _Count;
+    const size_type len = _MY_STL::min(_Count, size() - _Off);
+    traits_type::copy(_Ptr, Myfirst_+_Off, len);
+    return len;
   }
 
   basic_string& replace(size_type _Pos1,
@@ -629,7 +796,7 @@ public:
                         const value_type* _Ptr)
   {
     MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1, "basic_string replace");
-    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1+1+_Num1, "basic_string replace");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1+_Num1, "basic_string replace");
     MINI_STL_DEBUG_POINTER(_Ptr, "basic_string replace");
     return replace(begin()+_Pos1, begin()+_Pos1+_Num1,
                    _Ptr, _Ptr+traits_type::length(_Ptr));
@@ -640,7 +807,7 @@ public:
                         const basic_string& _Str)
   {
     MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1, "basic_string replace");
-    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1+1+_Num1, "basic_string replace");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1+_Num1, "basic_string replace");
     return replace(begin()+_Pos1,
                    begin()+_Pos1+_Num1,
                    _Str.begin(),
@@ -652,10 +819,10 @@ public:
                         const value_type* _Ptr,
                         size_type _Num2)
   {
-    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1, "basic_string replace");
-    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1+1+_Num1, "basic_string replace");
-    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string replace");
-    MINI_STL_DEBUG_CHECK_POS(traits_type::length(_Ptr) + 1, _Num2, "basic_string replace");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1, "basic_string replace1");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1+_Num1, "basic_string replace2");
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string replace3");
+    MINI_STL_DEBUG_CHECK_POS(traits_type::length(_Ptr) + 1, _Num2, "basic_string replace4");
     return replace(begin()+_Pos1,
                    begin()+_Pos1+_Num1,
                    _Ptr, _Ptr+_Num2);
@@ -667,32 +834,52 @@ public:
                         size_type _Pos2,
                         size_type _Num2)
   {
-    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1, "basic_string replace");
-    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1+1+_Num1, "basic_string replace");
-    MINI_STL_DEBUG_CHECK_POS(_Str.size()+1, _Pos2, "basic_string replace");
-    MINI_STL_DEBUG_CHECK_POS(_Str.size()+1, _Pos2+_Num2, "basic_string replace");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1, "basic_string replace5");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1+_Num1, "basic_string replace6");
+    MINI_STL_DEBUG_CHECK_POS(_Str.size()+1, _Pos2, "basic_string replace7");
+    MINI_STL_DEBUG_CHECK_POS(_Str.size()+1, _Pos2+_Num2, "basic_string replace8");
     return replace(begin()+_Pos1,
                    begin()+_Pos1+_Num1,
                    _Str.begin()+_Pos2,
                    _Str.begin()+_Pos2+_Num2);
   }
     
- /* basic_string& replace(
-       size_type Pos1,
-       size_type Num1,
-       size_type Count,
-       value_type Ch
+  basic_string& replace(
+       size_type _Pos1,
+       size_type _Num1,
+       size_type _Count,
+       value_type _Ch
     )
   {
-    return replace(begin()+Pos1, begin()+Pos1+Num1,)
-  }*/
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1, "basic_string replace9");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1+_Num1, "basic_string replace10");
+    if (*Myuse_ == 1) {
+      if (_Num1 >= _Count) { //replace num >= insert num
+        traits_type::assign(begin()+_Pos1, _Count, _Ch);
+        erase(begin()+_Pos1+_Count, begin()+_Pos1+_Num1);
+      } else {
+        traits_type::assign(begin()+_Pos1, _Count, _Ch);
+        insert(begin()+_Pos1+_Num1, _Count-_Num1, _Ch);
+      }
+    } else {
+      --*Myuse_;
+      const_iterator old_first = Myfirst_;
+      const_iterator old_Mylast_ = Mylast_;
+      _init_block(size()-_Num1+_Count+1);
+      Mylast_ = _MY_STL::uninitialized_copy(old_first+_Pos1, old_first+_Pos1+_Num1, Myfirst_);
+      Mylast_ = _MY_STL::uninitialized_fill_n(Myfirst_, _Count, _Ch);
+      Mylast_ = _MY_STL::uninitialized_copy(old_first+_Pos1+_Num1, old_Mylast_, Mylast_);
+      _make_terinate();
+    }
+    return *this;
+  }
     
   basic_string& replace(iterator _First,
                         iterator _Last,
                         const value_type* _Ptr)
   {
-    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "basic_sting replace");
-    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string replace");
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "basic_sting replace11");
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string replace12");
     return replace(_First, _Last, _Ptr, _Ptr+traits_type::length(_Ptr));
   }
     
@@ -700,7 +887,7 @@ public:
                         iterator _Last,
                         const basic_string& _Str)
   {
-    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "basic_sting replace");
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "basic_sting replace13");
     return replace(_First, _Last,
                    _Str.begin(), _Str.end());
   }
@@ -710,20 +897,21 @@ public:
                         const value_type* _Ptr,
                         size_type _Num2)
   {
-    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "basic_sting replace");
-    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string replace");
-    MINI_STL_DEBUG_CHECK_POS(traits_type::length(_Ptr) + 1,_Num2, "basic_string assign");
+    MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "basic_sting replace1");
+    MINI_STL_DEBUG_POINTER(_Ptr, "basic_string replace15");
+    MINI_STL_DEBUG_CHECK_POS(traits_type::length(_Ptr) + 1,_Num2, "basic_string assign16");
     return replace(_First, _Last,
                    _Ptr + _Num2,
                    _Ptr+traits_type::length(_Ptr));
   }
     
-  /*basic_string& replace(
-       iterator _First0,
-       iterator _Last0,
-       size_type _Num2,
-       value_type _Ch
-    );*/
+  basic_string& replace(iterator _First,
+                        iterator _Last,
+                        size_type _Count,
+                        value_type _Ch)
+  {
+    return replace(_First - begin(), _Last - _First, _Count, _Ch);
+  }
     
   template<class InputIterator>
   basic_string& replace(iterator _First1,
@@ -759,8 +947,7 @@ public:
 
   int compare(size_type _Pos1, size_type _Num1, const basic_string& _Str) const
   {
-    MINI_STL_DEBUG_CHECK_POS(_Str.size(), _Pos1, "basic_string compare");
-    MINI_STL_DEBUG_CHECK_POS(_Str.size(), _Pos1 + _Num1, "basic_string compare");
+    MINI_STL_DEBUG_CHECK_POS(_Str.size()+1, _Pos1, "basic_string compare");
     return _compare_aux(Myfirst_ + _Pos1,
                         Myfirst_ + _Pos1 + min(_Num1, size() - _Pos1),
                         _Str.begin(), _Str.end());
@@ -772,10 +959,8 @@ public:
               size_type _Pos2,
               size_type _Num2) const
   {
-    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos1, "basic_string compare");
-    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos1 + _Num1, "basic_string compare");
-    MINI_STL_DEBUG_CHECK_POS(_Str.size(), _Pos2, "basic_string compare");
-    MINI_STL_DEBUG_CHECK_POS(_Str.size(), _Pos2 + _Num2, "basic_string compare");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1, "basic_string compare");
+    MINI_STL_DEBUG_CHECK_POS(_Str.size()+1, _Pos2, "basic_string compare");
     return _compare_aux(Myfirst_ + _Pos1,
                         Myfirst_ + _Pos1 + min(_Num1, size() - _Pos1),
                         _Str.Myfirst_ + _Pos2,
@@ -785,13 +970,12 @@ public:
   int compare(const value_type* _Ptr) const
   {
     MINI_STL_DEBUG_POINTER(_Ptr, "basic_sting compare");
-    return _compare_aux(Myfirst_, Mylast_, _Ptr, _Ptr + traits_type::length(Ptr));
+    return _compare_aux(Myfirst_, Mylast_, _Ptr, _Ptr + traits_type::length(_Ptr));
   }
 
   int compare(size_type _Pos1, size_type _Num1, const value_type* _Ptr) const
   {
-    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos1, "basic_string compare");
-    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos1 + _Num1, "basic_string compare");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1, "basic_string compare");
     MINI_STL_DEBUG_POINTER(_Ptr, "basic_sting compare");
     return _compare_aux(Myfirst_ + _Pos1,
                         Myfirst_ + _Pos1 + min(_Num1, size() - _Pos1),
@@ -801,10 +985,9 @@ public:
   int compare(size_type _Pos1, size_type _Num1, const value_type* _Ptr,
                 size_type _Num2) const
   {
-    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos1, "basic_string compare");
-    MINI_STL_DEBUG_CHECK_POS(this->size(), _Pos1 + _Num1, "basic_string compare");
+    MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Pos1, "basic_string compare");
     MINI_STL_DEBUG_POINTER(_Ptr, "basic_sting compare");
-    MINI_STL_DEBUG_CHECK_POS(traits_type::length(_ptr)+1, _Num2, "basic_string compare");
+    MINI_STL_DEBUG_CHECK_POS(traits_type::length(_Ptr)+1, _Num2, "basic_string compare");
     return _compare_aux(Myfirst_ + _Pos1,
                         Myfirst_ + _Pos1 + min(_Num1, size() - _Pos1),
                         _Ptr, _Ptr + _Num2);
@@ -822,7 +1005,7 @@ public:
   {
     MINI_STL_DEBUG_CHECK_POS(this->size()+1, _Off, "basic_string compare");
     return basic_string(begin()+_Off,
-                        begin()+_Off + min(_Count, size() - _Pos));
+                        begin()+_Off + min(_Count, size() - _Off));
   }
 
   basic_string& operator+=(value_type _Ch)
@@ -833,7 +1016,7 @@ public:
 
   basic_string& operator+=(const value_type* _Ptr)
   {
-    return insert(Mylast_, _Ptr);
+    return insert(size(), _Ptr);
   }
 
   basic_string& operator+=(const basic_string& _Right)
@@ -1034,10 +1217,10 @@ replace(iterator _First1,
         InputIterator _Last2,
         typename is_iterator<InputIterator>::ID)
 {
-  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "basic_sting replace");
-  MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->begin(), _First1, "basic_sting replace");
-  MINI_STL_DEBUG_CHECK_POS(this->size(), DISTANCE(this->begin(), _Las1), "basic_sting replace");
-  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First2, _Last2, "basic_sting replace");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First1, _Last1, "basic_sting replace17");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->begin(), _First1, "basic_sting replace18");
+  MINI_STL_DEBUG_CHECK_POS(this->size()+1, DISTANCE(this->begin(), _Last1), "basic_sting replace19");
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First2, _Last2, "basic_sting replace20");
 
   size_type insert_num = DISTANCE(_First2, _Last2);
   size_type replace_num = _Last1 - _First1;
@@ -1046,7 +1229,7 @@ replace(iterator _First1,
       _MY_STL::copy(_First2, _Last2, _First1);
       erase(_First1+insert_num, _Last1);
     } else {
-      for ( ;_First1!=Last1; ++_First1,++_First2)
+      for ( ;_First1!=_Last1; ++_First1,++_First2)
         *_First1 = *_First2;
       insert(_Last1, _First2, _Last2);
     }

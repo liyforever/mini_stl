@@ -482,7 +482,7 @@ find_first_of(ForwardIterator1 _First1, ForwardIterator1 _Last1,
   MINI_STL_DEBUG_POINTER(_Comp, "find_first_of_comp");
   for (; _First1!=_Last1; ++_First1)
     for (ForwardIterator2 i=_First2; i!=_Last2; ++i)
-      if (MINI_STL_DEBUG_COMP(_Comp, *_First1, *i))
+      if (_Comp(*_First1, *i))
         return _First1;
   return _Last1;
 }
@@ -1886,7 +1886,7 @@ _search_aux(ForwardIterator1 _First1, ForwardIterator1 _Last1,
   while (true) {
     if (_Comp(*cur1, *cur2)) {
       for (; cur2!=_Last2 && cur1!= _Last1 &&
-           _Comp( *cur1, *cur2);
+           _Comp(*cur1, *cur2);
            ++cur1, ++cur2)
         {}
       if (cur2 == _Last2)
