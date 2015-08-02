@@ -128,17 +128,17 @@ MiniSTL性能测试:
 ----------
 ###(1):vector<int>
 
-int main()
-{
-  Mini_STL::vector<int> Vec;
-  //std::vector<int> Vec;
-  ULONGLONG startTime;
-  startTime = GetTickCount64();
-  for (int i=0; i!=10000000; ++i)
-    Vec.push_back(i);
-  std::cout << "Total time:"
-            << GetTickCount() - startTime
-            << std::endl;
+int main()<br>
+{<br>
+  Mini_STL::vector<int> Vec;<br>
+  //std::vector<int> Vec;<br>
+  ULONGLONG startTime;<br>
+  startTime = GetTickCount64();<br>
+  for (int i=0; i!=10000000; ++i)<br>
+    Vec.push_back(i);<br>
+  std::cout << "Total time:"<br>
+            << GetTickCount() - startTime<br>
+            << std::endl;<br>
 }
 
 |container|quantity|debug time(ms)|release time(ms)|  
@@ -152,20 +152,20 @@ int main()
 
 ###(2):deque<int>
 
-int main()
-{
-  Mini_STL::deque<int> idq;
-  //std::deque<int> idq;
-  ULONGLONG startTime;
-  startTime = GetTickCount64();
-  const int max = 10000000;
-  for (int i=0; i!=max/2; ++i)
-    idq.push_front(i);
-  for (int i=0; i!=max/2; ++i)
-    idq.push_back(i);
-  std::cout << "Total time:"
-            << GetTickCount() - startTime
-            << std::endl;
+int main()<br>
+{<br>
+  Mini_STL::deque<int> idq;<br>
+  //std::deque<int> idq;<br>
+  ULONGLONG startTime;<br>
+  startTime = GetTickCount64();<br>
+  const int max = 10000000;<br>
+  for (int i=0; i!=max/2; ++i)<br>
+    idq.push_front(i);<br>
+  for (int i=0; i!=max/2; ++i)<br>
+    idq.push_back(i);<br>
+  std::cout << "Total time:"<br>
+            << GetTickCount() - startTime<br>
+            << std::endl;<br>
 }
 
 |container|quantity|debug time(ms)|release time(ms)|  
@@ -180,18 +180,18 @@ int main()
 
 ###(3):list<int>
 
-int main()
-{
-  Mini_STL::list<int> iList;
-  //std::list<int> iList;
-  ULONGLONG startTime;
-  startTime = GetTickCount64();
-  for (int i=0; i!=100000; ++i)
-    iList.push_back(i);
-  std::cout << "Total time:"
-            << GetTickCount() - startTime
-            << std::endl;
-}
+int main()<br>
+{<br>
+  Mini_STL::list<int> iList;<br>
+  //std::list<int> iList;<br>
+  ULONGLONG startTime;<br>
+  startTime = GetTickCount64();<br>
+  for (int i=0; i!=100000; ++i)<br>
+    iList.push_back(i);<br>
+  std::cout << "Total time:"<br>
+            << GetTickCount() - startTime<br>
+            << std::endl;<br>
+}<br>
 
 |container|quantity|debug time(ms)|release time(ms)|  
 |---------|--------|--------|--------|  
@@ -204,23 +204,23 @@ int main()
 
 ###(4):unordered_set<int>
 
-int main()
-{
-  Mini_STL::unordered_set<int> iset;
-  //std::unordered_set<int> iset;
-  ULONGLONG startTime;
-  startTime = GetTickCount64();
-  for (size_t i=0; i!=10000; ++i)
-    iset.insert(rand());
-  std::cout << "insert time:"
-            << GetTickCount64() - startTime
-            << std::endl;
-  startTime = GetTickCount64();
-  for (size_t i=0; i!=100000000; ++i)
-    iset.find(rand());
-  std::cout << "find time:"
-            << GetTickCount64() - startTime
-            << std::endl;
+int main()<br>
+{<br>
+  Mini_STL::unordered_set<int> iset;<br>
+  //std::unordered_set<int> iset;<br>
+  ULONGLONG startTime;<br>
+  startTime = GetTickCount64();<br>
+  for (size_t i=0; i!=10000; ++i)<br>
+    iset.insert(rand());<br>
+  std::cout << "insert time:"<br>
+            << GetTickCount64() - startTime<br>
+            << std::endl;<br>
+  startTime = GetTickCount64();<br>
+  for (size_t i=0; i!=100000000; ++i)<br>
+    iset.find(rand());<br>
+  std::cout << "find time:"<br>
+            << GetTickCount64() - startTime<br>
+            << std::endl;<br>
 }
 
 |container|quantity|insert time(ms)|query time(ms)|  
