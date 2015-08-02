@@ -177,4 +177,59 @@ int main()
 |std::deque&lt;int>|100万|141|16| 
 |std::deque&lt;int>|1000万|1328|203|   
 
-###ps : 因为采用内存池所以效率提高,但是内存池只实现了linux下加锁,故windows下不是现成安全,翻看VCstl是封装new所以是线程安全.
+
+###(3):list<int>
+
+int main()
+{
+  Mini_STL::list<int> iList;
+  //std::list<int> iList;
+  ULONGLONG startTime;
+  startTime = GetTickCount64();
+  for (int i=0; i!=100000; ++i)
+    iList.push_back(i);
+  std::cout << "Total time:"
+            << GetTickCount() - startTime
+            << std::endl;
+}
+
+|container|quantity|debug time(ms)|release time(ms)|  
+|---------|--------|--------|--------|  
+|MiniSTL::listr&lt;int>|10万|15|0|  
+|MiniSTL::list&lt;int>|100万|62|16|  
+|MiniSTL::list&lt;int>|1000万|703|93|  
+|std::list&lt;int>|10万|31|16|  
+|std::list&lt;int>|100万|312|63| 
+|std::list&lt;int>|1000万|3140|750|   
+
+###(4):unordered_set<int>
+
+int main()
+{
+  Mini_STL::unordered_set<int> iset;
+  //std::unordered_set<int> iset;
+  ULONGLONG startTime;
+  startTime = GetTickCount64();
+  for (size_t i=0; i!=10000; ++i)
+    iset.insert(rand());
+  std::cout << "insert time:"
+            << GetTickCount64() - startTime
+            << std::endl;
+  startTime = GetTickCount64();
+  for (size_t i=0; i!=100000000; ++i)
+    iset.find(rand());
+  std::cout << "find time:"
+            << GetTickCount64() - startTime
+            << std::endl;
+}
+
+|container|quantity|insert time(ms)|query time(ms)|  
+|---------|--------|--------|--------|  
+|MiniSTL::unordered_set&lt;int>|1万/1亿|0|5390|  
+|MiniSTL::unordered_set&lt;int>|10万/10亿|31|49360|  
+|MiniSTL::unordered_set&lt;int>|100万/10亿|125|46281|  
+|std::unordered_set&lt;int>|1万/1亿|0|4141|  
+|std::unordered_set&lt;int>|10万/10亿|15|45110| 
+|std::unordered_set&lt;int>|100万/10亿|93|42797|   
+
+####ps : 因为采用内存池所以效率提高,但是内存池只实现了linux下加锁,故windows下不是现成安全,翻看VCstl是封装new所以是线程安全.
