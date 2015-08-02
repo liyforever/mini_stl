@@ -232,7 +232,7 @@ int main()<br>
 |std::unordered_set&lt;int>|10万/10亿|15|45110| 
 |std::unordered_set&lt;int>|100万/10亿|93|42797|   
 
-###(4):unordered_set<int>
+###(5):set<int>
 
 int main()<br>
 {<br>
@@ -263,3 +263,12 @@ int main()<br>
 |std::unordered_set&lt;int>|100万/10亿|281|21094|   
 
 ####ps : 因为采用内存池所以效率提高,但是内存池只实现了linux下加锁,故windows下不是现成安全,翻看VCstl是封装new所以是线程安全.
+
+###(6):sort
+
+|algorithm|quantity|debug time(ms)|release time(ms)|  
+|---------|--------|--------|--------|  
+|MiniSTL::sort|10万|31|16|  
+|MiniSTL::sort|100万|219|47|  
+|std::sort|10万|15|0|  
+|std::sort|100万|141|47| 
