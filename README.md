@@ -15,15 +15,15 @@ MiniSTL
 
 完成进度:
 ==========
-*STL的极大基本组建
+*STL的极大基本组建<br>
   *type_traits : 100% <br> 
   *pool_allocator : 100% <br>
-  *iterator_traits : 100%
-  *reverse_iterator : 100%
-  *vector : 100%
-  *string : 100%
-  *deque : 100%
-  *priority_queue : 100%
+  *iterator_traits : 100% <br>
+  *reverse_iterator : 100% <br>
+  *vector : 100% <br>
+  *string : 100% <br>
+  *deque : 100% <br>
+  *priority_queue : 100% <br>
   *stack : 100%
   *pair : 100%
   *set : 100%
