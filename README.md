@@ -128,11 +128,11 @@ MiniSTL性能测试:
 ----------
 ###(1):vector<int>
 
-|container|quantity|time(ms)|  
-|---------|--------|--------|  
-|MiniSTL::vector&lt;int>|10万|2|  
-|MiniSTL::vector&lt;int>|100万|11|  
-|MiniSTL::vector&lt;int>|1000万|129|  
-|std::vector&lt;int>|10万|6|  
-|std::vector&lt;int>|100万|16|  
-|std::vector&lt;int>|1000万|210|   
+|container|quantity|debug time(ms)|release time(ms)|  
+|---------|--------|--------|--------|  
+|MiniSTL::vector&lt;int>|10万|0|0|  
+|MiniSTL::vector&lt;int>|100万|30|16|  
+|MiniSTL::vector&lt;int>|1000万|203|62|  
+|std::vector&lt;int>|10万|0|0|  
+|std::vector&lt;int>|100万|62|16| 
+|std::vector&lt;int>|1000万|781|78|   
