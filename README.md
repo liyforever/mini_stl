@@ -232,4 +232,34 @@ int main()<br>
 |std::unordered_set&lt;int>|10万/10亿|15|45110| 
 |std::unordered_set&lt;int>|100万/10亿|93|42797|   
 
+###(4):unordered_set<int>
+
+int main()<br>
+{<br>
+  Mini_STL::set<int> iset;<br>
+  //std::set<int> iset;<br>
+  ULONGLONG startTime;<br>
+  startTime = GetTickCount64();<br>
+  for (size_t i=0; i!=10000; ++i)<br>
+    iset.insert(rand());<br>
+  std::cout << "insert time:"<br>
+            << GetTickCount64() - startTime<br>
+            << std::endl;<br>
+  startTime = GetTickCount64();<br>
+  for (size_t i=0; i!=100000000; ++i)<br>
+    iset.find(rand());<br>
+  std::cout << "find time:"<br>
+            << GetTickCount64() - startTime<br>
+            << std::endl;<br>
+}
+
+|container|quantity|insert time(ms)|query time(ms)|  
+|---------|--------|--------|--------|  
+|MiniSTL::unordered_set&lt;int>|1万/1亿|0|12937|  
+|MiniSTL::unordered_set&lt;int>|10万/1亿|15|19328|  
+|MiniSTL::unordered_set&lt;int>|100万/1亿|125|19625|  
+|std::unordered_set&lt;int>|1万/1亿|0|14062|  
+|std::unordered_set&lt;int>|10万/10亿|15|20641| 
+|std::unordered_set&lt;int>|100万/10亿|281|21094|   
+
 ####ps : 因为采用内存池所以效率提高,但是内存池只实现了linux下加锁,故windows下不是现成安全,翻看VCstl是封装new所以是线程安全.
