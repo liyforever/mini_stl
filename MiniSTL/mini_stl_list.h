@@ -360,7 +360,7 @@ public:
 
   iterator insert(iterator _Position, const Type& _Val)
   {
-    MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->begin(), _Position, "list insert");
+    //MINI_STL_DEBUG_RANGE_OF_ITERATOR(this->begin(), _Position, "list insert");
     node_ptr tmp = _create_node(_Val);
     tmp->prev = _Position.node->prev;
     tmp->next = _Position.node;

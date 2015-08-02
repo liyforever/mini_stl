@@ -7,10 +7,6 @@
 #include <stdexcept>
 #include <bitset>
 #include <iostream>
-using std::cout;
-using std::endl;
-#define private public
-#define protected public
 MINI_STL_BEGIN
 #define _WORD_BIT_NUM  ((CHAR_BIT)*sizeof(size_t))
 
@@ -74,47 +70,364 @@ static unsigned char _COUNT_TABLE[256] =
 };
 
 template <size_t Num>
-class bitset
+struct bitset_base
 {
-private:
-  enum : size_t{BIT_NUM = Num,
-               ARRAY_SIZE_ = _GET_ARRAY_SIZE(Num),
-               HIGH_OFF_SET_ = Num % _WORD_BIT_NUM};
-  typedef size_t  value_type;
-  value_type c_[ARRAY_SIZE_];
-public:
+  typedef size_t value_type;
   typedef bool element_type;
-public:
-  bitset()
+  enum:size_t{ARRAY_SIZE_ = Num};
+  value_type Myc_[ARRAY_SIZE_];
+  bitset_base()
   {
-    cout << "ARRAY_SIZE:" << ARRAY_SIZE_ << endl;
     _do_reset();
   }
 
-  bitset(size_t Val)
+  bitset_base(size_t _Val)
   {
     _do_reset();
-    c_[0] = Val;
+    Myc_[0] = _Val;
   }
+
+  bool all_impl() const
+  {
+    for (size_t i=0; i<ARRAY_SIZE_; ++i)
+        if (Myc_[i]!=~static_cast<value_type>(0))
+          return false;
+      return true;
+  }
+
+  bool any_impl() const
+  {
+    for (size_t i=0; i<ARRAY_SIZE_; ++i)
+      if (Myc_[i])
+        return true;
+    return false;
+  }
+
+  bool none_impl() const
+  {
+    return !any_impl();
+  }
+
+  size_t count_impl() const
+  {
+    size_t result = 0;
+    const unsigned char* begin = (const unsigned char*)(Myc_);
+    const unsigned char* end = begin + ARRAY_SIZE_ * sizeof(value_type);
+    for (; begin != end; ++begin)
+      result += _COUNT_TABLE[*begin];
+    return result;
+  }
+
+  void set_impl()
+  {
+    _do_reset();
+    flip_impl();
+  }
+
+  void set_impl(size_t _Pos)
+  {
+    _get_word(_Pos) |= _get_mask(_Pos);
+  }
+
+  void reset_impl(size_t _Pos)
+  {
+    _get_word(_Pos) &= ~_get_mask(_Pos);
+  }
+
+  void flip_impl()
+  {
+    for (int i=0; i!=ARRAY_SIZE_; ++i)
+      Myc_[i] = ~Myc_[i];
+  }
+
+  void flip_impl(size_t _Pos)
+  {
+    _get_word(_Pos) ^= _get_mask(_Pos);
+  }
+
+  bool test_impl(size_t _Pos) const
+  {
+    return (_get_word(_Pos) & _get_mask(_Pos)) == 1;
+  }
+
+  unsigned long long to_ullong_impl() const
+  {
+    for (size_t i=1; i<ARRAY_SIZE_; ++i)
+      if (Myc_[i])
+        MINI_STL_THROW_OVERFLOW_ERROR("bitset");
+    return Myc_[0];
+  }
+
+  unsigned long to_ulong_impl() const
+  {
+    return to_ullong_impl();
+  }
+
+  void and_impl(const bitset_base& _Right)
+  {
+    for (int i=0; i!=ARRAY_SIZE_; ++i)
+      Myc_[i] &= _Right.Myc_[i];
+  }
+
+  void xor_impl(const bitset_base& _Right)
+  {
+    for (int i=0; i!=ARRAY_SIZE_; ++i)
+      Myc_[i] ^= _Right.Myc_[i];
+  }
+
+  void or_impl(const bitset_base& _Right)
+  {
+    for (int i=0; i!=ARRAY_SIZE_; ++i)
+      Myc_[i] |= _Right.Myc_[i];
+  }
+
+  void shl_impl(size_t _Pos);
+
+  void shr_impl(size_t _Pos);
+
+  bool equal_impl(const bitset_base& _Right) const
+  {
+    return _MY_STL::equal(Myc_, &Myc_[ARRAY_SIZE_], _Right.Myc_);
+  }
+
+  void _do_reset()
+  {
+    memset(Myc_,0,ARRAY_SIZE_*sizeof(size_t));
+  }
+
+  value_type& _get_high()
+  {
+    return Myc_[ARRAY_SIZE_-1];
+  }
+
+  size_t _get_offset(size_t _Pos) const
+  {
+    return _Pos % _WORD_BIT_NUM;
+  }
+
+  size_t _get_index(size_t _Pos) const
+  {
+    return _GET_ARRAY_SIZE(_Pos) - 1;
+  }
+
+  size_t _get_mask(size_t _Pos) const
+  {
+    return (static_cast<value_type>(1)) << _get_offset(_Pos);
+  }
+
+  size_t& _get_word(size_t _Pos)
+  {
+    return Myc_[_get_index(_Pos)];
+  }
+
+  size_t _get_word(size_t _Pos) const
+  {
+    return Myc_[_get_index(_Pos)];
+  }
+};
+
+template <size_t Num>
+void bitset_base<Num>::shl_impl(size_t _Pos)
+{
+  const size_t offset = _get_offset(_Pos);
+  const size_t move_limit = _Pos / _WORD_BIT_NUM;
+  if (offset == 0) {
+    for (int n=ARRAY_SIZE_-1; n>=move_limit; --n)
+      Myc_[n] = Myc_[n - move_limit];
+  } else {
+    const size_t sub_offset = _WORD_BIT_NUM - offset;
+    for (int n=ARRAY_SIZE_-1; n>move_limit; --n)
+      Myc_[n] = (Myc_[n-move_limit] << offset) |
+              (Myc_[n-move_limit-1] >> sub_offset);
+    Myc_[move_limit] = Myc_[0] << offset;
+  }
+}
+
+template <size_t Num>
+void bitset_base<Num>::shr_impl(size_t _Pos)
+{
+  const size_t offset = _get_offset(_Pos);
+  const size_t move_limit = _Pos / _WORD_BIT_NUM;
+  if (offset == 0) {
+    for (int n = 0; n <= move_limit; ++n)
+      Myc_[n] = Myc_[n + move_limit];
+  } else {
+    const size_t sub_offset = _WORD_BIT_NUM - offset;
+    for (int n = 0; n<move_limit; ++n)
+      Myc_[n] = (Myc_[n+move_limit] >> offset) |
+              (Myc_[n+move_limit+1] << sub_offset);
+    Myc_[move_limit] = Myc_[0] >> offset;
+  }
+}
+
+template<>
+struct bitset_base<1>
+{
+  typedef size_t value_type;
+  typedef bool element_type;
+  value_type Myc_;
+
+  bitset_base()
+  {
+    Myc_ = 0;
+  }
+
+  bitset_base(size_t _Val)
+  {
+    Myc_ = _Val;
+  }
+
+  bool all_impl() const
+  {
+    return Myc_ != ~static_cast<value_type>(0);
+  }
+
+  bool any_impl() const
+  {
+    return Myc_ != 0;
+  }
+
+  bool none_impl() const
+  {
+    return !any_impl();
+  }
+
+  size_t count_impl() const
+  {
+    size_t result = 0;
+    const unsigned char* begin = (const unsigned char*)(Myc_);
+    const unsigned char* end = begin + sizeof(value_type);
+    for (; begin != end; ++begin)
+      result += _COUNT_TABLE[*begin];
+    return result;
+  }
+
+  void set_impl()
+  {
+    _do_reset();
+    flip_impl();
+  }
+
+  void set_impl(size_t _Pos)
+  {
+    Myc_ |= _get_mask(_Pos);
+  }
+
+  void reset_impl(size_t _Pos)
+  {
+    Myc_ &= ~_get_mask(_Pos);
+  }
+
+  void flip_impl()
+  {
+      Myc_ = ~Myc_;
+  }
+
+  void flip_impl(size_t _Pos)
+  {
+    Myc_ ^= _get_mask(_Pos);
+  }
+
+  bool test_impl(size_t _Pos) const
+  {
+    return (Myc_ & _get_mask(_Pos)) == 1;
+  }
+
+  unsigned long long to_ullong_impl() const
+  {
+    return Myc_;
+  }
+
+  unsigned long to_ulong_impl() const
+  {
+    return to_ullong_impl();
+  }
+
+  void and_impl(const bitset_base& _Right)
+  {
+      Myc_ &= _Right.Myc_;
+  }
+
+  void xor_impl(const bitset_base& _Right)
+  {
+      Myc_ ^= _Right.Myc_;
+  }
+
+  void or_impl(const bitset_base& _Right)
+  {
+      Myc_ |= _Right.Myc_;
+  }
+
+  void shl_impl(size_t _Pos)
+  {
+    Myc_ <<= _Pos;
+  }
+
+  void shr_impl(size_t _Pos)
+  {
+    Myc_ >>= _Pos;
+  }
+
+  bool equal_impl(const bitset_base& _Right) const
+  {
+    return Myc_ == _Right.Myc_;
+  }
+
+  void _do_reset()
+  {
+    Myc_ = 0;
+  }
+
+  size_t _get_offset(size_t _Pos) const
+  {
+    return _Pos % _WORD_BIT_NUM;
+  }
+
+  size_t _get_mask(size_t _Pos) const
+  {
+    return (static_cast<value_type>(1)) << _get_offset(_Pos);
+  }
+  size_t _get_high() const
+  {
+    return Myc_;
+  }
+
+  size_t& _get_high()
+  {
+    return Myc_;
+  }
+};
+
+
+template <size_t Num>
+class bitset : public bitset_base<_GET_ARRAY_SIZE(Num)>
+{
+private:
+  enum MYE:size_t{BIT_NUM_ = Num,
+                  HIGH_OFF_SET_ = Num % _WORD_BIT_NUM};
+public:
+  bitset()
+    : bitset_base()
+  {}
+
+  bitset(size_t _Val)
+    : bitset_base(_Val)
+  {}
 
   explicit bitset(const char * _CStr)
   {
     _do_reset();
-    cout << "_do_reset" << endl;
-    for (size_t index=0; _CStr[index]!='\0' && index!=BIT_NUM; ++index)
+    for (size_t index=0; _CStr[index]!='\0' && index!=BIT_NUM_; ++index)
       switch (_CStr[index]-'0') {
         case 0:
-          cout << "for0 index:" << index << endl;
           break;
         case 1:
-          this->flip(index);
-          cout << "for1 index:" << index << endl;
+          flip_impl(BIT_NUM_-index-1);
           break;
         default:
           MINI_STL_THROW_INVALID_ERROR("bitset");
           break;
-        }
-    cout << "my explicit" << endl;
+      }
   }
 
   template<class CharType,class Traits,class Allocator>
@@ -135,37 +448,37 @@ public:
     _do_reset();
     _copy_for_Str(_Str, _Pos, _Count);
   }
-
 public:
   bool all() const
   {
-    for (int i=0; i<ARRAY_SIZE_; ++i)
-      if (c_[i]!=~static_cast<value_type>(0))
-        return false;
-    return true;
+    return all_impl();
   }
 
   bool any() const
   {
-    for (int i=0; i<ARRAY_SIZE_; ++i)
-      if (c_[i])
-        return true;
-    return false;
+    return any_impl();
   }
 
   bool none() const
   {
-    return !any();
+    return none_impl();
   }
 
   size_t count() const
   {
-    size_t result = 0;
-    const unsigned char* begin = (const unsigned char*)(c_);
-    const unsigned char* end = begin + sizeof(value_type);
-    for (; begin != end; ++begin)
-      result += _COUNT_TABLE[*begin];
-    return result;
+    return count_impl();
+  }
+
+  bitset& set()
+  {
+    set_impl();
+    return *this;
+  }
+
+  bitset& set(size_t _Pos)
+  {
+    set_impl(_Pos);
+    return *this;
   }
 
   bitset& reset()
@@ -174,95 +487,99 @@ public:
     return *this;
   }
 
-  bitset& reset(size_t Pos)
+  bitset& reset(size_t _Pos)
   {
-    _get_word(pos) & ~_get_mask(Pos);
+    reset_impl(_Pos);
+    return *this;
   }
 
   bitset& flip()
   {
-    for (int i=0; i!=ARRAY_SIZE_; ++i)
-      c_[i] = ~c_[i];
+    flip_impl();
     _adjust();
     return *this;
   }
 
-  bitset& flip(size_t pos)
+  bitset& flip(size_t _Pos)
   {
-    if(pos >= BIT_NUM)
-      MINI_STL_THROW_RANGE_ERROR("bitset");
-    cout << "_get_index(pos):" << _get_index(pos) << endl;
-    _get_word(pos) ^= _get_mask(pos);
+    if(_Pos >= BIT_NUM_)
+      MINI_STL_THROW_RANGE_ERROR("bitset flip");
+    flip_impl(_Pos);
     return *this;
   }
 
   size_t size() const
   {
-    return BIT_NUM;
+    return BIT_NUM_;
   }
 
-  bool test(size_t pos) const
+  bool test(size_t _Pos) const
   {
-    if (pos >= BIT_NUM)
-      MINI_STL_THROW_RANGE_ERROR("bitset");
-    return bool(_get_word(pos) & _get_mask(pos));
+    if (_Pos >= BIT_NUM_)
+      MINI_STL_THROW_RANGE_ERROR("bitset test");
+    return test_impl(_Pos);
   }
 
   template<class CharType, class Traits, class Alloc>
   basic_string<CharType, Traits, Alloc> to_string() const
   {
-    basic_string<CharType, Traits, Alloc> tmp(BIT_NUM, '0');
-    for (int i=0; i!=BIT_NUM; ++i)
+    basic_string<CharType, Traits, Alloc> tmp(BIT_NUM_, '0');
+    for (int i=0; i!=BIT_NUM_; ++i)
       if (test(i))
-        tmp[BIT_NUM-i-1] = '1';
+        tmp[BIT_NUM_-i-1] = '1';
     return tmp;
   }
 
   string to_string() const
   {
-    return to_string<char, _MY_STL::char_traits<char>,_MY_STL::default_allocator>();
+    return to_string<char, _MY_STL::char_traits<char>,
+        _MY_STL::default_allocator>();
   }
 
   unsigned long long to_ullong() const
   {
-    for (int i=0; i!=ARRAY_SIZE_; ++i)
-      if (c_[i])
-        MINI_STL_THROW_OVERFLOW_ERROR("bitset");
-    return to_ullong();
+    return to_ullong_impl();
   }
 
   unsigned long to_ulong() const
   {
-    return to_ullong();
+    return to_ulong_impl();
   }
 
   bitset& operator&=(const bitset& _Right)
   {
-    for (int i=0; i!=ARRAY_SIZE_; ++i)
-      c_[i] &= _Right.c_[i];
+    and_impl(_Right);
     _adjust();
     return *this;
   }
 
   bitset& operator^=(const bitset& _Right)
   {
-    for (int i=0; i!=ARRAY_SIZE_; ++i)
-      c_[i] ^= _Right.c_[i];
+    xor_impl(_Right);
     _adjust();
     return *this;
   }
 
   bitset& operator|=(const bitset& _Right)
   {
-    for (int i=0; i!=ARRAY_SIZE_; ++i)
-      c_[i] |= _Right.c_[i];
+    or_impl(_Right);
     _adjust();
     return *this;
   }
 
-  bitset& operator<<=(size_t _Pos);
+  bitset& operator<<=(size_t _Pos)
+  {
+    shl_impl(_Pos);
+    _adjust();
+    return *this;
+  }
 
-  bitset& operator>>=(size_t _Pos);
+  bitset& operator>>=(size_t _Pos)
+  {
+    shr_impl(_Pos);
+    _adjust();
+    return *this;
+  }
 
   bitset operator<<(size_t _Pos) const
   {
@@ -281,63 +598,27 @@ public:
 
   bitset operator~()
   {
-    return bitset<BIT_NUM>(*this).flip();
+    return bitset<BIT_NUM_>(*this).flip();
   }
 
   bool operator ==(const bitset& _Right) const
   {
-    return _MY_STL::equal(c_, &c_[ARRAY_SIZE_], _Right.c_);
+    return equal_impl(_Right);
   }
 
   bool operator !=(const bitset& _Right)
   {
     return !(*this == _Right);
   }
-
 private:
-  void _do_reset()
-  {
-    memset(c_,0,ARRAY_SIZE_*sizeof(size_t));
-  }
-
-  value_type& _get_high()
-  {
-    return c_[ARRAY_SIZE_-1];
-  }
-
-  void _adjust()
-  {
-    _get_high() &= (~((~static_cast<value_type>(0))<<HIGH_OFF_SET_));
-  }
-
-  size_t _get_offset(size_t pos) const
-  {
-    return pos % _WORD_BIT_NUM;
-  }
-
-  size_t _get_index(size_t pos) const
-  {
-    return _GET_ARRAY_SIZE(pos) - 1;
-  }
-
-  size_t _get_mask(size_t pos) const
-  {
-    return (static_cast<value_type>(1)) << _get_offset(pos);
-  }
-
-  size_t& _get_word(size_t pos)
-  {
-    return c_[_get_index(pos)];
-  }
-
-  size_t _get_word(size_t pos) const
-  {
-    return c_[_get_index(pos)];
-  }
   template <class CharType, class Traits, class Allocator>
   void _copy_for_Str(const _MY_STL::basic_string<CharType,Traits,Allocator>& _Str,
                      typename _MY_STL::basic_string<CharType,Traits,Allocator>::size_type _Pos,
                      typename _MY_STL::basic_string<CharType,Traits,Allocator>::size_type _Count);
+  void _adjust()
+  {
+    _get_high() &= (~((~static_cast<value_type>(0))<<HIGH_OFF_SET_));
+  }
 };
 
 /*template<
@@ -358,63 +639,17 @@ _copy_for_Str(const _MY_STL::basic_string<CharType,Traits,Allocator>& _Str,
               typename _MY_STL::basic_string<CharType,Traits,Allocator>::size_type _Pos,
               typename _MY_STL::basic_string<CharType,Traits,Allocator>::size_type _Count)
 {
-  for (size_t index=0; index!=_Count && index!=BIT_NUM; ++index)
+  for (size_t index=0; index!=_Count && index!=BIT_NUM_; ++index)
     switch (_Str[index + _Pos]-'0') {
       case 0:
         break;
       case 1:
-        this->flip(index);
+        this->flip(BIT_NUM_-index-1);
         break;
       default:
         MINI_STL_THROW_INVALID_ERROR("bitset");
         break;
-      }
-}
-
-template <size_t Num>
-bitset<Num>& bitset<Num>::operator<<=(size_t _Pos)
-{
-  if (_Pos >= BIT_NUM) {
-    _do_reset();
-    return *this;
-  }
-  const size_t offset = _get_offset(_Pos);
-  const size_t move_limit = _Pos / _WORD_BIT_NUM;
-  if (offset == 0) {
-    for (int n=ARRAY_SIZE_-1; n>=move_limit; --n)
-      c_[n] = c_[n - move_limit];
-  } else {
-    const size_t sub_offset = _WORD_BIT_NUM - offset;
-    for (int n=ARRAY_SIZE_-1; n>move_limit; --n)
-      c_[n] = (c_[n-move_limit] << offset) |
-              (c_[n-move_limit-1] >> sub_offset);
-    c_[move_limit] = c_[0] << offset;
-  }
-  _adjust();
-  return *this;
-}
-
-template <size_t Num>
-bitset<Num>& bitset<Num>::operator>>=(size_t _Pos)
-{
-  if (_Pos >= BIT_NUM) {
-    _do_reset();
-    return *this;
-  }
-  const size_t offset = _get_offset(_Pos);
-  const size_t move_limit = _Pos / _WORD_BIT_NUM;
-  if (offset == 0) {
-    for (int n = 0; n <= move_limit; ++n)
-      c_[n] = c_[n + move_limit];
-  } else {
-    const size_t sub_offset = _WORD_BIT_NUM - offset;
-    for (int n = 0; n<move_limit; ++n)
-      c_[n] = (c_[n+move_limit] >> offset) |
-              (c_[n+move_limit+1] << sub_offset);
-    c_[move_limit] = c_[0] >> offset;
-  }
-  _adjust();
-  return *this;
+    }
 }
 
 template <size_t Num>
