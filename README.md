@@ -266,6 +266,22 @@ int main()<br>
 
 ###(6):sort
 
+int main()<br>
+{<br>
+  const size_t ARRAY_SIZE = 1000000;<br>
+  char testArray[ARRAY_SIZE];<br>
+  ULONGLONG startTime;<br>
+  for (size_t i=0; i!=ARRAY_SIZE; ++i)<br>
+    testArray[i] = rand();<br>
+  startTime = GetTickCount64();<br>
+  //Mini_STL::sort(testArray, testArray + ARRAY_SIZE);<br>
+  std::sort(testArray, testArray + ARRAY_SIZE);<br>
+  std::cout << "total time:"<br>
+            << GetTickCount64() - startTime<br>
+            << std::endl;<br>
+}<br>
+
+
 |algorithm|quantity|debug time(ms)|release time(ms)|  
 |---------|--------|--------|--------|  
 |MiniSTL::sort|10万|31|16|  
