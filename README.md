@@ -127,3 +127,12 @@ MiniSTL性能测试:
 测试结果:
 ----------
 ###(1):vector<int>
+
+|container|quantity|time(ms)|  
+|---------|--------|--------|  
+|MiniSTL::vector&lt;int>|10万|2|  
+|MiniSTL::vector&lt;int>|100万|11|  
+|MiniSTL::vector&lt;int>|1000万|129|  
+|std::vector&lt;int>|10万|6|  
+|std::vector&lt;int>|100万|16|  
+|std::vector&lt;int>|1000万|210|   
