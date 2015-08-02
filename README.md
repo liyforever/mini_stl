@@ -128,6 +128,19 @@ MiniSTL性能测试:
 ----------
 ###(1):vector<int>
 
+int main()
+{
+  Mini_STL::vector<int> Vec;
+  //std::vector<int> Vec;
+  ULONGLONG startTime;
+  startTime = GetTickCount64();
+  for (int i=0; i!=10000000; ++i)
+    Vec.push_back(i);
+  std::cout << "Total time:"
+            << GetTickCount() - startTime
+            << std::endl;
+}
+
 |container|quantity|debug time(ms)|release time(ms)|  
 |---------|--------|--------|--------|  
 |MiniSTL::vector&lt;int>|10万|0|0|  
@@ -136,3 +149,32 @@ MiniSTL性能测试:
 |std::vector&lt;int>|10万|0|0|  
 |std::vector&lt;int>|100万|62|16| 
 |std::vector&lt;int>|1000万|781|78|   
+
+###(2):deque<int>
+
+int main()
+{
+  Mini_STL::deque<int> idq;
+  //std::deque<int> idq;
+  ULONGLONG startTime;
+  startTime = GetTickCount64();
+  const int max = 10000000;
+  for (int i=0; i!=max/2; ++i)
+    idq.push_front(i);
+  for (int i=0; i!=max/2; ++i)
+    idq.push_back(i);
+  std::cout << "Total time:"
+            << GetTickCount() - startTime
+            << std::endl;
+}
+
+|container|quantity|debug time(ms)|release time(ms)|  
+|---------|--------|--------|--------|  
+|MiniSTL::dequer&lt;int>|10万|0|0|  
+|MiniSTL::deque&lt;int>|100万|16|16|  
+|MiniSTL::deque&lt;int>|1000万|141|31|  
+|std::deque&lt;int>|10万|16|0|  
+|std::deque&lt;int>|100万|141|16| 
+|std::deque&lt;int>|1000万|1328|203|   
+
+###ps : 因为采用内存池所以效率提高,但是内存池只实现了linux下加锁,故windows下不是现成安全,翻看VCstl是封装new所以是线程安全.
