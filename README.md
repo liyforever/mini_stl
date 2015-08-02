@@ -16,8 +16,8 @@ MiniSTL
 完成进度:
 ==========
 *STL的极大基本组建
-  *type_traits : 100%
-  *pool_allocator : 100%
+  *type_traits : 100% <br> 
+  *pool_allocator : 100% <br>
   *iterator_traits : 100%
   *reverse_iterator : 100%
   *vector : 100%
