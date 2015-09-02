@@ -1,4 +1,0 @@
-#ifndef MINISTACK_H
-#define MINISTACK_H
-#include "mini_stl_stack.h"
-#endif // MINISTACK_H

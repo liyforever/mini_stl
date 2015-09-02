@@ -1,6 +1,6 @@
 #ifndef MINI_STL_UNINITIALIZED_H
 #define MINI_STL_UNINITIALIZED_H
-#include <new.h>
+#include <new>
 #include "mini_stl_config.h"
 #include "mini_stl_iterator.h"
 #include "mini_stl_type_traits.h"

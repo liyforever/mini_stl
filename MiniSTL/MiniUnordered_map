@@ -1,5 +1,0 @@
-#ifndef MINIUNORDERED_MAP_H
-#define MINIUNORDERED_MAP_H
-#include "mini_stl_unordered_map.h"
-#include "mini_stl_unordered_multimap.h"
-#endif // MINIUNORDERED_MAP_H

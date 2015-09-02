@@ -27,6 +27,7 @@ adjacent_find(ForwardIterator _First,
   return _Last;
 }
 
+
 template<class ForwardIterator , class BinaryPredicate>
 inline ForwardIterator
 adjacent_find(ForwardIterator _First,
@@ -962,33 +963,6 @@ mismatch(InputIterator1 _First1,
   return _MY_STL::pair<InputIterator1, InputIterator2>
                       (_First1, _First2);
 }
-#ifdef MINI_STL_RVALUE_REFS
-template<class InputIterator, class OutputIterator>
-inline OutputIterator
-move(InputIterator _First,
-     InputIterator _Last,
-     OutputIterator _Dest)
-{
-  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "move");
-  MINI_STL_DEBUG_POINTER_FOR_N(_Dest, DISTANCE(_First, _Last), "move");
-  for (; _First != _Last; ++_First,++_Dest)
-    *_Dest = _MY_STL::move(*_First);
-  return _Dest;
-}
-
-template<class BidirectionalIterator1, class BidirectionalIterator2>
-inline BidirectionalIterator2
-move_backward(BidirectionalIterator1 _First,
-              BidirectionalIterator1 _Last,
-              BidirectionalIterator2 _Dest)
-{
-  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "move_backward");
-  MINI_STL_DEBUG_POINTER_FOR_N(_Dest, DISTANCE(_First, _Last), "move_backward");
-  while (_First != _Last)
-    *--_Dest = _MY_STL::move(*--_Last);
-  return _Dest;
-}
-#endif //MINI_STL_RVALUE_REFS
 
 template<class InputIterator1, class InputIterator2, class OutputIterator>
 inline OutputIterator

@@ -300,6 +300,19 @@ typename remove_reference<Type>::type&&
   return (typename remove_reference<Type>::type&&)
       (_Arg);
 }
+
+template<class Type> inline
+Type&& forward(typename remove_reference<Type>::type&& _Arg)
+{
+  return (static_cast<Type&&>(_Arg));
+}
+
+template<class Type> inline
+Type&& forward(typename remove_reference<Type>::type& _Arg)
+{
+  return (static_cast<Type&&>(_Arg));
+}
+
 #endif //MINI_STL_RVALUE_REFS
 
 MINI_STL_END

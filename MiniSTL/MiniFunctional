@@ -1,4 +1,0 @@
-#ifndef MINIFUNCTIONAL_H
-#define MINIFUNCTIONAL_H
-#include "mini_stl_function.h"
-#endif // MINIFUNCTIONAL_H

@@ -1,8 +1,9 @@
 #ifndef MINI_STL_BITSET_H
 #define MINI_STL_BITSET_H
-#include <limits.h>
 #include "mini_stl_string.h"
 #include "mini_stl_config.h"
+
+#include <limits.h>
 #include <stddef.h>
 #include <stdexcept>
 #include <bitset>

@@ -1,5 +1,0 @@
-#ifndef MINIUNORDERED_SET_H
-#define MINIUNORDERED_SET_H
-#include "mini_stl_unordered_set.h"
-#include "mini_stl_unordered_multiset.h"
-#endif // MINIUNORDERED_SET_H

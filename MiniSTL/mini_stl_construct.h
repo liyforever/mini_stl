@@ -3,7 +3,7 @@
 #include "mini_stl_config.h"
 #include "mini_stl_type_traits.h"
 #include "mini_stl_iterator.h"
-#include <new.h>
+#include <new>
 
 MINI_STL_BEGIN
 
@@ -78,9 +78,7 @@ inline void destroy(char*, char*) {}
 inline void destroy(long*, long*) {}
 inline void destroy(float*, float*) {}
 inline void destroy(double*, double*) {}
-#ifdef MINI_STL_HAS_WCHAR_T
 inline void destroy(wchar_t*, wchar_t*) {}
-#endif // MINI_STL_HAS_WCHAR_T
 
 MINI_STL_END
 #endif // MINI_STL_CONSTRUCT_H

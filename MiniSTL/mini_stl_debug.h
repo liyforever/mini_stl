@@ -2,6 +2,7 @@
 #define MINI_STL_DEBUG_H
 #include "mini_stl_config.h"
 #include <stddef.h>
+#include <assert.h>
 #include <stdexcept>
 
 #define MINI_STL_THROW_BAD_ALLOC (throw std::bad_alloc())

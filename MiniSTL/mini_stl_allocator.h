@@ -4,9 +4,89 @@
 #include <cstddef>
 #include <cstdlib>
 #include <climits>
+
 #include "mini_stl_config.h"
 
+#if defined(OS_LINUX)
+#include <pthread.h>
+#elif defined(OS_WIN)
+#include "Windows.h"
+#endif
+
 MINI_STL_BEGIN
+
+#if defined(OS_LINUX)
+class MutexLock
+{
+private:
+  pthread_mutex_t Mymutex_;
+public:
+  MutexLock()
+  {
+    pthread_mutex_init(&Mymutex_, NULL);
+  }
+
+  ~MutexLock()
+  {
+    pthread_mutex_destroy(&Mymutex_);
+  }
+
+  void lock()
+  {
+    pthread_mutex_lock(&Mymutex_);
+  }
+
+  void unlock()
+  {
+    pthread_mutex_unlock(&Mymutex_);
+  }
+};
+
+#elif defined(OS_WIN)
+class MutexLock
+{
+private:
+  HANDLE Mymutex_;
+public:
+  MutexLock()
+  {
+    Mymutex_ = CreateMutex(NULL, FALSE, NULL);
+  }
+
+  ~MutexLock()
+  {
+    CloseHandle(Mymutex_);
+  }
+
+  void lock() const
+  {
+    WaitForSingleObject(Mymutex_, INFINITE);
+  }
+
+  void unlock() const
+  {
+    ReleaseMutex(Mymutex_);
+  }
+};
+
+#endif
+
+class MutexLockGuard
+{
+private:
+  MutexLock &Mymutex_;
+public:
+  explicit MutexLockGuard(MutexLock &_Mutex)
+    : Mymutex_(_Mutex)
+  {
+    Mymutex_.lock();
+  }
+
+  ~MutexLockGuard()
+  {
+    Mymutex_.unlock();
+  }
+};
 
 class malloc_allocator
 {
@@ -68,7 +148,7 @@ void *malloc_allocator::oom_malloc(size_t _Num)
 void *malloc_allocator::oom_realloc(void *_Ptr, size_t _Num)
 {
   void *result;
-  for (;;) {
+  for ( ; ; ) {
     if(!malloc_alloc_oom_handler)
     {
       MINI_STL_THROW_BAD_ALLOC;
@@ -100,10 +180,8 @@ private:
   static char *start_free_;
   static char *end_free_;
   static size_t heap_size_;
-#if defined (MINI_STL_USE_THREAD) && defined (OS_WIN)
-
-#else
-  static pthread_mutex_t lock_;
+#if defined(MINI_STL_USE_THREAD)
+  static MutexLock mutex_;
 #endif
   static size_t free_list_index(size_t _Bytes)
   {
@@ -123,10 +201,8 @@ public:
   {
     if (_Num > (size_t)MAX_BYTES)
       return malloc_allocator::allocate(_Num);
-#if defined (MINI_STL_USE_THREAD) && defined (OS_WIN)
-
-#else
-    pthread_mutex_lock(&lock_);
+#if defined(MINI_STL_USE_THREAD)
+    MutexLockGuard lock(mutex_);
 #endif
     obj * volatile *my_free_list = free_list_ + free_list_index(_Num);
     obj * result = *my_free_list;
@@ -135,11 +211,6 @@ public:
       return r;
     }
     *my_free_list = result->free_list_link;
-#if defined (MINI_STL_USE_THREAD) && defined (OS_WIN)
-
-#else
-    pthread_mutex_unlock(&lock_);
-#endif
     return result;
   }
 
@@ -147,21 +218,13 @@ public:
   {
     if (_Num > (size_t)MAX_BYTES)
       return malloc_allocator::deallocate(_Ptr, _Num);
-
-#if defined (MINI_STL_USE_THREAD) && defined (OS_WIN)
-
-#else
-    pthread_mutex_lock(&lock_);
+#if defined(MINI_STL_USE_THREAD)
+    MutexLockGuard lock(mutex_);
 #endif
     obj *q = (obj*)_Ptr;
     obj * volatile *my_free_list = free_list_ + free_list_index(_Num);
     q->free_list_link = *my_free_list;
     *my_free_list = q;
-#if defined (MINI_STL_USE_THREAD) && defined (OS_WIN)
-
-#else
-    pthread_mutex_unlock(&lock_);
-#endif
   }
 
   static void *reallocate(void *_Ptr, size_t _OldSize, size_t _NewSize);
@@ -176,10 +239,8 @@ default_allocator::free_list_[FREELISTNUM] = {0,0,0,0,
                                               0,0,0,0,
                                               0,0,0,0};
 
-#if defined (MINI_STL_USE_THREAD) && defined (OS_WIN)
-
-#else
-  pthread_mutex_t default_allocator::lock_= PTHREAD_MUTEX_INITIALIZER;
+#if defined(MINI_STL_USE_THREAD)
+    MutexLock default_allocator::mutex_;
 #endif
 
 

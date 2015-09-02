@@ -1,4 +1,0 @@
-#ifndef MINIDEQUE_H
-#define MINIDEQUE_H
-#include "mini_stl_deque.h"
-#endif // MINIDEQUE_H

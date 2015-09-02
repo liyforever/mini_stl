@@ -24,7 +24,6 @@ struct my_iterator_base
   typedef Type&                   reference;
   typedef const Type&             const_reference;
 };
-#ifdef MINI_STL_CLASS_PARTIAL_SPECIALIZATION
 
 template <class Iterator>
 struct iterator_traits
@@ -222,11 +221,6 @@ DISTANCE_TYPE(const Iter&)
 {
   return static_cast<typename iterator_traits<Iter>::difference_type*>(0);
 }
-
-#else // MINI_STL_CLASS_PARTIAL_SPECIALIZATION
-
-
-#endif
 
 template <class InputIterator>
 inline typename iterator_traits<InputIterator>::difference_type

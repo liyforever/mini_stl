@@ -1,10 +1,8 @@
 #ifndef MINI_STL_VECTOR_H
 #define MINI_STL_VECTOR_H
 #include "mini_stl_memory.h"
-#include "mini_stl_algorithm.h"
-#include <iostream>
-using std::cerr;
-using std::endl;
+#include "mini_stl_algobase.h"
+
 MINI_STL_BEGIN
 
 template <class Type, class Alloc = _MY_STL::default_allocator>

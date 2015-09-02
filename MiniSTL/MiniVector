@@ -1,4 +1,0 @@
-#ifndef MINIVECTOR_H
-#define MINIVECTOR_H
-#include "mini_stl_vector.h"
-#endif // MINIVECTOR_H

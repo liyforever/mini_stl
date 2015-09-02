@@ -4,30 +4,32 @@
 #define MINI_STL_BEGIN  namespace Mini_STL{
 #define MINI_STL_END    }
 #define _MY_STL         Mini_STL
-
 #define MINI_STL_USE_THREAD
 
 #ifndef NDEBUG
 #   define MINI_STL_DEBUG
 #endif
 
+//check os
 #if defined (WIN32) || defined (WIN64)
 #     define OS_WIN
 #endif
 
-#if defined (linux)
-#     define OS_LINUX
+#if defined (__linux) || defined (__linux__)
+#  define OS_LINUX
+#endif
+
+//check compiler capacity
+#if __cplusplus >= 201103L
+#   define MINI_STL_RVALUE_REFS
+#   define MINI_STL_CLASS_PARTIAL_SPECIALIZATION
 #endif
 
 // Microsoft compiler.
-#ifdef _MSC_VER
-#   if _MSC_VER >= 1500
-#       define MINI_STL_CLASS_PARTIAL_SPECIALIZATION
-#       define MINI_STL_HAS_WCHAR_T
-#       define MINI_STL_RVALUE_REFS
-#   endif
+#if defined(_MSC_VER) && _MSC_VER>=1500
+#   define MINI_STL_RVALUE_REFS
+#   define MINI_STL_CLASS_PARTIAL_SPECIALIZATION
 #endif
-
 
 # ifdef MINI_STL_USE_EXCEPTIONS
 #   define MINI_STL_TRY try

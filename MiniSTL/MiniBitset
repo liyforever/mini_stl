@@ -1,4 +1,0 @@
-#ifndef MINIBITSET_H
-#define MINIBITSET_H
-#include "mini_stl_bitset.h"
-#endif // MINIBITSET_H

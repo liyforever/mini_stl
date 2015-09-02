@@ -1,5 +1,0 @@
-#ifndef MINIUTILITY_H
-#define MINIUTILITY_H
-#include "mini_stl_pair.h"
-#include "mini_stl_debug.h"
-#endif // MINIUTILITY_H

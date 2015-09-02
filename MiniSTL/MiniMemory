@@ -1,4 +1,0 @@
-#ifndef MINIMEMORY_H
-#define MINIMEMORY_H
-#include "mini_stl_memory.h"
-#endif // MINIMEMORY_H

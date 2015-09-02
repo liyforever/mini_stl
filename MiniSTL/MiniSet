@@ -1,5 +1,0 @@
-#ifndef MINISET_H
-#define MINISET_H
-#include "mini_stl_set.h"
-#include "mini_stl_multiset.h"
-#endif // MINISET_H

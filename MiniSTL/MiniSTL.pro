@@ -2,9 +2,9 @@ TEMPLATE = app
 CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
-
+CONFIG += C++11
 SOURCES += main.cpp
-
+LIBS += -lpthread
 HEADERS += \
     mini_stl_construct.h \
     mini_stl_iterator.h \
@@ -34,27 +34,11 @@ HEADERS += \
     mini_stl_unordered_map.h \
     mini_stl_unordered_multimap.h \
     mini_stl_bitset.h \
-    tmp.h \
     mini_stl_algorithm.h \
     mini_stl_debug.h \
     mini_stl_numeric.h \
     mini_stl_memory.h \
-    MiniVector \
-    MiniDeque \
-    MiniMap \
-    MiniSet \
-    MiniMemory \
-    MiniAlgorithm \
-    MiniList \
-    MiniUnordered_set \
-    MiniUnordered_map \
-    MiniNumeric \
-    MiniString \
-    MiniStack \
-    MiniQueue \
-    MiniBitset \
-    MiniUtility \
-    MiniFunctional
+    mini_stl_shared_ptr.h
 
 OTHER_FILES += \
     info.txt

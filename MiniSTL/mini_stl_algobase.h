@@ -5,6 +5,7 @@
 #include "mini_stl_type_traits.h"
 #include "mini_stl_function.h"
 #include "mini_stl_debug.h"
+
 #include <string.h>
 #include <wchar.h>
 
@@ -465,6 +466,34 @@ copy_backward(BidirectionalIterator1 _First,
                                  _DestEnd,
                                  VALUE_TYPE(_First));
 }
+
+#ifdef MINI_STL_RVALUE_REFS
+template<class InputIterator, class OutputIterator>
+inline OutputIterator
+move(InputIterator _First,
+     InputIterator _Last,
+     OutputIterator _Dest)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "move");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Dest, DISTANCE(_First, _Last), "move");
+  for (; _First != _Last; ++_First,++_Dest)
+    *_Dest = _MY_STL::move(*_First);
+  return _Dest;
+}
+
+template<class BidirectionalIterator1, class BidirectionalIterator2>
+inline BidirectionalIterator2
+move_backward(BidirectionalIterator1 _First,
+              BidirectionalIterator1 _Last,
+              BidirectionalIterator2 _Dest)
+{
+  MINI_STL_DEBUG_RANGE_OF_ITERATOR(_First, _Last, "move_backward");
+  MINI_STL_DEBUG_POINTER_FOR_N(_Dest, DISTANCE(_First, _Last), "move_backward");
+  while (_First != _Last)
+    *--_Dest = _MY_STL::move(*--_Last);
+  return _Dest;
+}
+#endif //MINI_STL_RVALUE_REFS
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <class RandomAccessIter, class OutputIter, class Distance>
